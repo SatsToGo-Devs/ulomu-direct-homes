@@ -11,19 +11,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'POST') {
     try {
-      const { targetAmount, deadline, frequency } = req.body;
-      
-      const savingsGoal = await prisma.savingsGoal.create({
+      const { targetAmount, goalName } = req.body;
+      const goal = await prisma.savingsGoal.create({
         data: {
           userId: session.user.id,
           targetAmount,
-          deadline: new Date(deadline),
-          frequency,
+          currentAmount: 0,
+          goalName,
           status: 'ACTIVE',
         },
       });
-
-      return res.status(201).json(savingsGoal);
+      return res.status(201).json(goal);
     } catch (error) {
       return res.status(500).json({ error: 'Failed to create savings goal' });
     }
@@ -31,11 +29,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     try {
-      const savingsGoals = await prisma.savingsGoal.findMany({
+      const goals = await prisma.savingsGoal.findMany({
         where: { userId: session.user.id },
-        include: { payments: true },
+        orderBy: { createdAt: 'desc' },
       });
-      return res.status(200).json(savingsGoals);
+      return res.status(200).json(goals);
     } catch (error) {
       return res.status(500).json({ error: 'Failed to fetch savings goals' });
     }

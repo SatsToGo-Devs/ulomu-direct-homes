@@ -1,4 +1,12 @@
-// Add these models to your schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./node_modules/@prisma/client"
+}
 
 model Property {
   id          String    @id @default(uuid())
@@ -16,7 +24,7 @@ model Unit {
   unitNumber  String
   propertyId  String
   property    Property  @relation(fields: [propertyId], references: [id])
-  tenantId    String?
+  tenantId    String?   @unique
   tenant      User?     @relation("TenantUnit", fields: [tenantId], references: [id])
   rentAmount  Decimal
   leaseStart  DateTime?
@@ -28,15 +36,44 @@ model Unit {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  name          String
-  email         String
-  phone         String
-  properties  Property[]
-  rentedUnit  Unit[]     @relation("TenantUnit")
-  escrowAccount   EscrowAccount?
-  savingsGoals SavingsGoal[]
-  invoices    Invoice[]
+  id                String        @id @default(uuid())
+  name              String?
+  email             String        @unique
+  password          String
+  userType          String        // 'landlord' or 'tenant'
+  properties        Property[]
+  rentedUnit        Unit?         @relation("TenantUnit")
+  escrowAccount     EscrowAccount?
+  invoices          Invoice[]
+  savingsGoals      SavingsGoal[]
+  sentMessages      Message[]     @relation("SentMessages")
+  receivedMessages  Message[]     @relation("ReceivedMessages")
+  transactions      Transaction[]
+}
+
+model Transaction {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  amount          Decimal
+  type            String    // DEPOSIT, WITHDRAWAL, PAYMENT
+  status          String    // PENDING, COMPLETED, FAILED
+  escrowAccountId String
+  escrowAccount   EscrowAccount @relation(fields: [escrowAccountId], references: [id])
+  invoiceId       String?
+  invoice         Invoice?  @relation(fields: [invoiceId], references: [id])
+  createdAt       DateTime  @default(now())
+}
+
+model SavingsGoal {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  targetAmount    Decimal
+  currentAmount   Decimal
+  status          String    // ACTIVE, COMPLETED
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model Invoice {
@@ -47,6 +84,7 @@ model Invoice {
   tenantId      String
   tenant        User      @relation(fields: [tenantId], references: [id])
   amount        Decimal
+  transactions  Transaction[]
   dueDate       DateTime
   status        String    // PENDING, PAID, OVERDUE
   items         InvoiceItem[]
@@ -62,4 +100,24 @@ model InvoiceItem {
   amount      Decimal
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+model EscrowAccount {
+  id            String        @id @default(uuid())
+  balance       Decimal
+  userId        String        @unique
+  user          User          @relation(fields: [userId], references: [id])
+  transactions  Transaction[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  content     String
+  senderId    String
+  receiverId  String
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  createdAt   DateTime @default(now())
 }

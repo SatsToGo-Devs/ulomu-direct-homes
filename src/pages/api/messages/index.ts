@@ -18,8 +18,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           senderId: session.user.id,
           receiverId,
         },
+        include: {
+          sender: {
+            select: { name: true },
+          },
+        },
       });
-      return res.status(200).json(message);
+      return res.status(201).json(message);
     } catch (error) {
       return res.status(500).json({ error: 'Failed to send message' });
     }

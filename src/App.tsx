@@ -1,35 +1,21 @@
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import LandlordDashboard from './components/Landlord/Dashboard';
+import SignIn from './pages/auth/SignIn';
+import SignUp from './pages/auth/SignUp';
+import TenantDashboard from './components/Tenant/Dashboard';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Properties from "./pages/Properties";
-import PropertyDetail from "./pages/PropertyDetail";
-import HowItWorksPage from "./pages/HowItWorks";
-import NotFound from "./pages/NotFound";
-import LandlordDashboard from "./pages/LandlordDashboard";
-
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/properties" element={<Properties />} />
-          <Route path="/properties/:id" element={<PropertyDetail />} />
-          <Route path="/how-it-works" element={<HowItWorksPage />} />
-          <Route path="/landlord/dashboard" element={<LandlordDashboard />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Navigate to="/auth/signin" replace />} />
+        <Route path="/auth/signin" element={<SignIn />} />
+        <Route path="/auth/signup" element={<SignUp />} />
+        <Route path="/landlord/dashboard" element={<LandlordDashboard />} />
+        <Route path="/tenant/dashboard" element={<TenantDashboard />} />
+      </Routes>
+    </Router>
+  );
+}
 
 export default App;
