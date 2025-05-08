@@ -1,19 +1,12 @@
-import express from 'express';
-import authRoutes from './api/routes/auth';
-import propertyRoutes from './api/routes/property';
-import tenantRoutes from './api/routes/tenant';
-import escrowRoutes from './api/routes/escrow';
-import messageRoutes from './api/routes/message';
+import express, { Request, Response } from 'express';
 
 const app = express();
 app.use(express.json());
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/properties', propertyRoutes);
-app.use('/api/tenant', tenantRoutes);
-app.use('/api/escrow', escrowRoutes);
-app.use('/api/messages', messageRoutes);
+// Basic health check endpoint
+app.get('/api/health', (_req: Request, res: Response) => {
+  res.json({ status: 'ok' });
+});
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
