@@ -1,0 +1,39 @@
+// Add these models to your schema.prisma
+
+model Property {
+  id          String    @id @default(uuid())
+  name        String
+  address     String
+  units       Unit[]
+  landlordId  String
+  landlord    User      @relation(fields: [landlordId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Unit {
+  id          String    @id @default(uuid())
+  unitNumber  String
+  propertyId  String
+  property    Property  @relation(fields: [propertyId], references: [id])
+  tenantId    String?
+  tenant      User?     @relation("TenantUnit", fields: [tenantId], references: [id])
+  rentAmount  Decimal
+  leaseStart  DateTime?
+  leaseEnd    DateTime?
+  status      String    // VACANT, OCCUPIED, MAINTENANCE
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Update User model
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String
+  phone         String
+  properties  Property[]
+  rentedUnit  Unit[]     @relation("TenantUnit")
+  escrowAccount   EscrowAccount?
+  savingsGoals SavingsGoal[]
+}
