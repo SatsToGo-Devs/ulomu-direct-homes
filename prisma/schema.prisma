@@ -24,9 +24,9 @@ model Unit {
   status      String    // VACANT, OCCUPIED, MAINTENANCE
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  invoices    Invoice[]
 }
 
-// Update User model
 model User {
   id            String    @id @default(uuid())
   name          String
@@ -36,4 +36,30 @@ model User {
   rentedUnit  Unit[]     @relation("TenantUnit")
   escrowAccount   EscrowAccount?
   savingsGoals SavingsGoal[]
+  invoices    Invoice[]
+}
+
+model Invoice {
+  id            String    @id @default(uuid())
+  invoiceNumber String    @unique
+  unitId        String
+  unit          Unit      @relation(fields: [unitId], references: [id])
+  tenantId      String
+  tenant        User      @relation(fields: [tenantId], references: [id])
+  amount        Decimal
+  dueDate       DateTime
+  status        String    // PENDING, PAID, OVERDUE
+  items         InvoiceItem[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model InvoiceItem {
+  id          String    @id @default(uuid())
+  invoiceId   String
+  invoice     Invoice   @relation(fields: [invoiceId], references: [id])
+  description String
+  amount      Decimal
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }

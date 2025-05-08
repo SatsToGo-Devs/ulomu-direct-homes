@@ -161,6 +161,12 @@ export default function LandlordDashboard() {
                         <p>Tenant: {unit.tenant.name}</p>
                         <p>Email: {unit.tenant.email}</p>
                       </div>
+                      // Add this to your existing Dashboard component's render method, inside the unit mapping
+                      {unit.tenant && (
+                        <div className="mt-4">
+                          <InvoiceGenerator unitId={unit.id} tenantId={unit.tenant.id} />
+                        </div>
+                      )}
                     )}
                   </div>
                 ))}
