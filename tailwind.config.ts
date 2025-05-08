@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,12 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Custom colors for Ulomu
+				terracotta: '#C45B39',
+				forest: '#2C5530',
+				beige: '#F5F0E6',
+				gold: '#D4A64A',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
