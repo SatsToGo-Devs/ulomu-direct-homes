@@ -1,172 +1,269 @@
-import React, { useState, useEffect } from 'react';
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import InvoicePDF from './InvoicePDF';
 
-interface InvoiceItem {
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Plus, Trash2, FileText, Download, Send } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface ServiceCharge {
+  id: string;
   description: string;
   amount: number;
 }
 
-interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  amount: number;
-  dueDate: string;
-  status: string;
-  items: InvoiceItem[];
-  tenant: {
-    name: string;
-    email: string;
-  };
-  unit: {
-    unitNumber: string;
-    property: {
-      name: string;
-      address: string;
-    };
-  };
+interface InvoiceGeneratorProps {
+  unitId: string;
+  tenantId: string;
+  rentAmount?: number;
 }
 
-export default function InvoiceGenerator({ unitId, tenantId }: { unitId: string; tenantId: string }) {
-  const [items, setItems] = useState<InvoiceItem[]>([
-    { description: 'Monthly Rent', amount: 0 },
-  ]);
-  const [dueDate, setDueDate] = useState('');
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+export default function InvoiceGenerator({ unitId, tenantId, rentAmount = 0 }: InvoiceGeneratorProps) {
+  const [invoice, setInvoice] = useState({
+    unitId,
+    tenantId,
+    dueDate: new Date().toISOString().split('T')[0],
+    items: [{ description: 'Monthly Rent', amount: rentAmount }],
+    amount: rentAmount
+  });
+  
+  const [serviceCharges, setServiceCharges] = useState<ServiceCharge[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const fetchInvoices = async () => {
-    const response = await fetch('/api/invoices');
-    const data = await response.json();
-    setInvoices(data);
-  };
+  // Fetch service charges for this unit
+  useEffect(() => {
+    const fetchServiceCharges = async () => {
+      try {
+        const response = await fetch(`/api/landlord/service-charges?unitId=${unitId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setServiceCharges(data);
+        }
+      } catch (error) {
+        console.error('Error fetching service charges:', error);
+      }
+    };
+
+    fetchServiceCharges();
+  }, [unitId]);
 
   const addItem = () => {
-    setItems([...items, { description: '', amount: 0 }]);
+    setInvoice({
+      ...invoice,
+      items: [
+        ...invoice.items,
+        { description: '', amount: 0 }
+      ]
+    });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
+  const removeItem = (index: number) => {
+    const newItems = [...invoice.items];
+    newItems.splice(index, 1);
+    
+    setInvoice({
+      ...invoice,
+      items: newItems,
+      amount: calculateTotal(newItems)
+    });
+  };
 
+  const handleItemChange = (index: number, field: string, value: string) => {
+    const newItems = [...invoice.items];
+    
+    if (field === 'amount') {
+      newItems[index] = { 
+        ...newItems[index], 
+        [field]: parseFloat(value) || 0 
+      };
+    } else {
+      newItems[index] = { ...newItems[index], [field]: value };
+    }
+    
+    setInvoice({
+      ...invoice,
+      items: newItems,
+      amount: calculateTotal(newItems)
+    });
+  };
+
+  const calculateTotal = (items = invoice.items) => {
+    return items.reduce((sum, item) => sum + (parseFloat(item.amount.toString()) || 0), 0);
+  };
+
+  const addServiceCharge = (charge: ServiceCharge) => {
+    const newItems = [
+      ...invoice.items,
+      { description: charge.description, amount: charge.amount }
+    ];
+    
+    setInvoice({
+      ...invoice,
+      items: newItems,
+      amount: calculateTotal(newItems)
+    });
+  };
+
+  const generateInvoice = async () => {
+    if (invoice.items.some(item => !item.description || !item.amount)) {
+      toast.error('Please fill in all item details');
+      return;
+    }
+
+    setIsLoading(true);
+    
     try {
       const response = await fetch('/api/invoices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          unitId,
-          tenantId,
-          amount: totalAmount,
-          dueDate,
-          items,
-        }),
+          unitId: invoice.unitId,
+          tenantId: invoice.tenantId,
+          amount: invoice.amount,
+          dueDate: invoice.dueDate,
+          items: invoice.items.map(item => ({
+            description: item.description,
+            amount: item.amount
+          }))
+        })
       });
 
       if (response.ok) {
-        fetchInvoices();
-        setItems([{ description: 'Monthly Rent', amount: 0 }]);
-        setDueDate('');
+        const data = await response.json();
+        toast.success('Invoice generated successfully');
+        
+        // Reset form to initial state except for IDs
+        setInvoice({
+          unitId,
+          tenantId,
+          dueDate: new Date().toISOString().split('T')[0],
+          items: [{ description: 'Monthly Rent', amount: rentAmount }],
+          amount: rentAmount
+        });
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to generate invoice');
       }
     } catch (error) {
-      console.error('Failed to create invoice:', error);
+      console.error('Error generating invoice:', error);
+      toast.error('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchInvoices();
-  }, []);
-
   return (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Generate New Invoice</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Due Date</label>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-
-          <div className="space-y-4">
-            {items.map((item, index) => (
-              <div key={index} className="flex gap-2">
-                <input
-                  type="text"
-                  value={item.description}
-                  onChange={(e) => {
-                    const newItems = [...items];
-                    newItems[index].description = e.target.value;
-                    setItems(newItems);
-                  }}
-                  placeholder="Description"
-                  className="flex-1 p-2 border rounded"
-                  required
-                />
-                <input
-                  type="number"
-                  value={item.amount}
-                  onChange={(e) => {
-                    const newItems = [...items];
-                    newItems[index].amount = parseFloat(e.target.value);
-                    setItems(newItems);
-                  }}
-                  placeholder="Amount"
-                  className="w-32 p-2 border rounded"
-                  required
-                />
-              </div>
-            ))}
-          </div>
-
-          <button
-            type="button"
-            onClick={addItem}
-            className="w-full bg-gray-100 text-gray-700 py-2 rounded hover:bg-gray-200"
-          >
-            Add Item
-          </button>
-
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-          >
-            Generate Invoice
-          </button>
-        </form>
-      </div>
-
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Invoice History</h2>
-        <div className="space-y-4">
-          {invoices.map((invoice) => (
-            <div key={invoice.id} className="border rounded-lg p-4">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold">{invoice.invoiceNumber}</h3>
-                <span className={`px-2 py-1 rounded text-sm ${
-                  invoice.status === 'PAID' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {invoice.status}
-                </span>
-              </div>
-              <p className="text-gray-600">Amount: ${invoice.amount}</p>
-              <p className="text-gray-600">Due Date: {new Date(invoice.dueDate).toLocaleDateString()}</p>
-              <div className="mt-2">
-                <PDFDownloadLink
-                  document={<InvoicePDF invoice={invoice} />}
-                  fileName={`${invoice.invoiceNumber}.pdf`}
-                  className="text-blue-500 hover:text-blue-600"
-                >
-                  Download PDF
-                </PDFDownloadLink>
-              </div>
-            </div>
-          ))}
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5" />
+          Generate Invoice
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="dueDate">Due Date</Label>
+          <Input
+            id="dueDate"
+            type="date"
+            value={invoice.dueDate}
+            onChange={(e) => setInvoice({ ...invoice, dueDate: e.target.value })}
+          />
         </div>
-      </div>
-    </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>Invoice Items</Label>
+            <Button type="button" size="sm" variant="outline" onClick={addItem} className="flex items-center gap-1">
+              <Plus className="h-4 w-4" />
+              Add Item
+            </Button>
+          </div>
+          
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Description</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead className="w-[80px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {invoice.items.map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <Input
+                      value={item.description}
+                      onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                      placeholder="Description"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={item.amount}
+                      onChange={(e) => handleItemChange(index, 'amount', e.target.value)}
+                      placeholder="0.00"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {index > 0 && (
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => removeItem(index)}
+                        className="h-8 w-8"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+              <TableRow>
+                <TableCell colSpan={2} className="text-right font-bold">
+                  Total Amount
+                </TableCell>
+                <TableCell>${invoice.amount.toFixed(2)}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+
+        {serviceCharges.length > 0 && (
+          <div className="space-y-2">
+            <Label>Add Service Charges</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {serviceCharges.map((charge) => (
+                <Button
+                  key={charge.id}
+                  type="button"
+                  variant="outline"
+                  className="justify-between"
+                  onClick={() => addServiceCharge(charge)}
+                >
+                  <span>{charge.description}</span>
+                  <span>${charge.amount.toFixed(2)}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button variant="outline" disabled={isLoading} className="gap-2">
+          <Download className="h-4 w-4" />
+          Preview
+        </Button>
+        <Button onClick={generateInvoice} disabled={isLoading} className="gap-2">
+          <Send className="h-4 w-4" />
+          Generate & Send
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }

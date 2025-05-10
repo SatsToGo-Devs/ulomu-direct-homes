@@ -1,3 +1,4 @@
+
 // Add these models to your schema.prisma
 
 model Property {
@@ -9,6 +10,14 @@ model Property {
   landlord    User      @relation(fields: [landlordId], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  // Adding property type to distinguish between residential and agricultural properties
+  propertyType String   @default("RESIDENTIAL")  // RESIDENTIAL or AGRICULTURAL
+  maintenanceRequests MaintenanceRequest[]
+  // For agricultural properties
+  size        Float?    // size in acres
+  soilType    String?
+  waterSource String?
+  farmRentals FarmRental[]
 }
 
 model Unit {
@@ -25,6 +34,8 @@ model Unit {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   invoices    Invoice[]
+  // Adding service charges for the unit
+  serviceCharges ServiceCharge[]
 }
 
 model User {
@@ -32,11 +43,16 @@ model User {
   name          String
   email         String
   phone         String
-  properties  Property[]
-  rentedUnit  Unit[]     @relation("TenantUnit")
-  escrowAccount   EscrowAccount?
-  savingsGoals SavingsGoal[]
-  invoices    Invoice[]
+  properties    Property[]
+  rentedUnit    Unit[]     @relation("TenantUnit")
+  escrowAccount EscrowAccount?
+  savingsGoals  SavingsGoal[]
+  invoices      Invoice[]
+  // Adding new fields for user type and farming specialization
+  userType      String    @default("TENANT") // TENANT, LANDLORD, FARMER
+  farmingType   String?   // For farmers: CROP, LIVESTOCK, MIXED
+  farmRentals   FarmRental[]
+  maintenanceRequests MaintenanceRequest[]
 }
 
 model Invoice {
@@ -62,4 +78,69 @@ model InvoiceItem {
   amount      Decimal
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+// New model for service charges
+model ServiceCharge {
+  id          String    @id @default(uuid())
+  unitId      String
+  unit        Unit      @relation(fields: [unitId], references: [id])
+  description String
+  amount      Decimal
+  frequency   String    // MONTHLY, QUARTERLY, ANNUAL
+  nextDueDate DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// New model for maintenance requests
+model MaintenanceRequest {
+  id          String    @id @default(uuid())
+  propertyId  String
+  property    Property  @relation(fields: [propertyId], references: [id])
+  tenantId    String
+  tenant      User      @relation(fields: [tenantId], references: [id])
+  title       String
+  description String
+  status      String    // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  priority    String    // LOW, MEDIUM, HIGH, EMERGENCY
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// New model for agricultural land rentals
+model FarmRental {
+  id          String    @id @default(uuid())
+  propertyId  String
+  property    Property  @relation(fields: [propertyId], references: [id])
+  farmerId    String
+  farmer      User      @relation(fields: [farmerId], references: [id])
+  startDate   DateTime
+  endDate     DateTime
+  rentAmount  Decimal
+  farmingPurpose String
+  status      String    // ACTIVE, EXPIRED, TERMINATED
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model EscrowAccount {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  balance   Decimal  @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SavingsGoal {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  name        String
+  targetAmount Decimal
+  currentAmount Decimal @default(0)
+  deadline    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
