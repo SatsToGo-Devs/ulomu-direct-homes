@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Bot } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -15,37 +16,39 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="w-10 h-10 bg-terracotta rounded-lg flex items-center justify-center">
               <Bot className="h-6 w-6 text-white" />
             </div>
             <span className="text-2xl font-bold text-gray-900">Ulomu</span>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <a href="/" className="text-gray-700 hover:text-blue-600 font-medium">
+            <Link to="/" className="text-gray-700 hover:text-terracotta font-medium">
               Home
-            </a>
-            <a href="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium">
+            </Link>
+            <Link to="/how-it-works" className="text-gray-700 hover:text-terracotta font-medium">
+              How It Works
+            </Link>
+            <Link to="/dashboard" className="text-gray-700 hover:text-terracotta font-medium">
               Dashboard
-            </a>
-            <a href="/maintenance" className="text-gray-700 hover:text-blue-600 font-medium">
+            </Link>
+            <Link to="/maintenance" className="text-gray-700 hover:text-terracotta font-medium">
               Maintenance
-            </a>
-            <a href="/ai-insights" className="text-gray-700 hover:text-blue-600 font-medium">
+            </Link>
+            <Link to="/ai-insights" className="text-gray-700 hover:text-terracotta font-medium">
               AI Insights
-            </a>
-            <a href="/properties" className="text-gray-700 hover:text-blue-600 font-medium">
-              Properties
-            </a>
+            </Link>
           </div>
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost">Sign In</Button>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              Start Free Trial
+            <Button variant="ghost" asChild>
+              <Link to="/login">Sign In</Link>
+            </Button>
+            <Button className="bg-terracotta hover:bg-terracotta/90 text-white" asChild>
+              <Link to="/signup">Start Free Trial</Link>
             </Button>
           </div>
 
@@ -61,27 +64,27 @@ const Navbar = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t">
             <div className="flex flex-col space-y-4">
-              <a href="/" className="text-gray-700 hover:text-blue-600 font-medium">
+              <Link to="/" className="text-gray-700 hover:text-terracotta font-medium">
                 Home
-              </a>
-              <a href="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium">
+              </Link>
+              <Link to="/how-it-works" className="text-gray-700 hover:text-terracotta font-medium">
+                How It Works
+              </Link>
+              <Link to="/dashboard" className="text-gray-700 hover:text-terracotta font-medium">
                 Dashboard
-              </a>
-              <a href="/maintenance" className="text-gray-700 hover:text-blue-600 font-medium">
+              </Link>
+              <Link to="/maintenance" className="text-gray-700 hover:text-terracotta font-medium">
                 Maintenance
-              </a>
-              <a href="/ai-insights" className="text-gray-700 hover:text-blue-600 font-medium">
+              </Link>
+              <Link to="/ai-insights" className="text-gray-700 hover:text-terracotta font-medium">
                 AI Insights
-              </a>
-              <a href="/properties" className="text-gray-700 hover:text-blue-600 font-medium">
-                Properties
-              </a>
+              </Link>
               <div className="pt-4 space-y-2">
-                <Button variant="ghost" className="w-full justify-start">
-                  Sign In
+                <Button variant="ghost" className="w-full justify-start" asChild>
+                  <Link to="/login">Sign In</Link>
                 </Button>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                  Start Free Trial
+                <Button className="w-full bg-terracotta hover:bg-terracotta/90 text-white" asChild>
+                  <Link to="/signup">Start Free Trial</Link>
                 </Button>
               </div>
             </div>

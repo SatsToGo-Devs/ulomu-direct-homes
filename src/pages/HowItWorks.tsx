@@ -3,76 +3,61 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { User, Home, MessageCircle, Calendar, CheckCheck, FileCheck } from "lucide-react";
+import { Upload, Brain, Bell, Wrench, CheckCircle, ArrowRight } from "lucide-react";
 
 const HowItWorksPage = () => {
   const steps = [
     {
-      icon: <User className="h-16 w-16 text-terracotta" />,
-      title: "Create an Account",
-      description: "Sign up as a tenant or landlord. Complete your profile with all necessary information to build trust with other users.",
+      icon: <Upload className="h-16 w-16 text-terracotta" />,
+      title: "Connect Your Properties",
+      description: "Add your properties and integrate with existing systems. Ulomu learns about your assets and maintenance history to provide intelligent recommendations.",
       details: [
-        "Choose your account type: Tenant or Landlord",
-        "Add your personal information",
-        "Upload a profile photo",
-        "Verify your identity (required for landlords)"
+        "Upload property details and photos",
+        "Connect existing maintenance records",
+        "Set up tenant information",
+        "Install IoT sensors (optional)"
       ]
     },
     {
-      icon: <Home className="h-16 w-16 text-terracotta" />,
-      title: "Browse or List Properties",
-      description: "As a tenant, search for properties using our advanced filters. As a landlord, list your properties with detailed information and high-quality photos.",
+      icon: <Brain className="h-16 w-16 text-terracotta" />,
+      title: "AI Analysis & Prediction",
+      description: "Our AI analyzes property data, weather patterns, usage history, and tenant feedback to predict maintenance needs before issues occur.",
       details: [
-        "Search by location, price, property type, and more",
-        "View high-quality photos and virtual tours",
-        "Check property details and amenities",
-        "Save favorites for later"
+        "Predictive maintenance alerts",
+        "Weather-based recommendations",
+        "Usage pattern analysis",
+        "Cost optimization suggestions"
       ]
     },
     {
-      icon: <MessageCircle className="h-16 w-16 text-terracotta" />,
-      title: "Connect Directly",
-      description: "Chat with landlords or tenants directly through our secure messaging system, without any intermediaries.",
+      icon: <Bell className="h-16 w-16 text-terracotta" />,
+      title: "Smart Alerts & Scheduling",
+      description: "Receive intelligent alerts about upcoming maintenance needs and automatically schedule with your trusted vendor network.",
       details: [
-        "Ask questions about the property",
-        "Negotiate terms directly",
-        "Share additional documents if needed",
-        "Get quick responses without agent delays"
+        "Automated maintenance scheduling",
+        "Vendor matching and booking",
+        "Tenant notification system",
+        "Priority-based task management"
       ]
     },
     {
-      icon: <Calendar className="h-16 w-16 text-terracotta" />,
-      title: "Schedule a Visit",
-      description: "Book property viewings at times that work for both you and the landlord, all through the Ulomu platform.",
+      icon: <Wrench className="h-16 w-16 text-terracotta" />,
+      title: "Seamless Execution",
+      description: "Vendors complete work with photo documentation and real-time updates. Track progress and costs through your centralized dashboard.",
       details: [
-        "Select from available viewing times",
-        "Receive confirmation directly from the landlord",
-        "Get reminders before your scheduled visit",
-        "Reschedule if necessary with easy calendar management"
-      ]
-    },
-    {
-      icon: <CheckCheck className="h-16 w-16 text-terracotta" />,
-      title: "Make Your Decision",
-      description: "After viewing the property, decide if it meets your needs. If yes, proceed with the application process.",
-      details: [
-        "Review all property details again",
-        "Consider location, amenities, and price",
-        "Compare with other viewed properties",
-        "Make an informed decision without pressure"
-      ]
-    },
-    {
-      icon: <FileCheck className="h-16 w-16 text-terracotta" />,
-      title: "Complete the Process",
-      description: "Finalize the agreement directly with the landlord, sign the necessary documents, and move into your new home.",
-      details: [
-        "Submit required documents",
-        "Sign the rental agreement",
-        "Pay the agreed amount directly to the landlord",
-        "Schedule move-in date"
+        "Real-time progress tracking",
+        "Photo documentation",
+        "Quality assurance checks",
+        "Automated invoicing and payments"
       ]
     }
+  ];
+
+  const benefits = [
+    "Reduce maintenance costs by up to 35%",
+    "Prevent 90% of emergency repairs",
+    "Increase tenant satisfaction by 40%",
+    "Save 15+ hours per week on maintenance management"
   ];
 
   return (
@@ -80,43 +65,68 @@ const HowItWorksPage = () => {
       <Navbar />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-beige py-16">
+        <section className="bg-gradient-to-br from-beige to-beige/50 py-20">
           <div className="container mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">How Ulomu Works</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
+              How Ulomu <span className="text-terracotta">Transforms</span> Property Maintenance
+            </h1>
             <p className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto mb-8">
-              We've simplified the rental process by removing unnecessary middlemen and enabling direct connections between property owners and tenants.
+              From reactive repairs to predictive maintenance - discover how AI-powered property management 
+              can revolutionize your business and keep your properties in perfect condition.
             </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" className="bg-terracotta hover:bg-terracotta/90 text-white" asChild>
+                <Link to="/signup">
+                  Start Free Trial
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button variant="outline" size="lg" className="border-forest text-forest hover:bg-forest hover:text-white">
+                Watch Demo
+              </Button>
+            </div>
           </div>
         </section>
         
         {/* Steps Section */}
-        <section className="py-16">
+        <section className="py-20 bg-white">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Simple, Intelligent, Automated
+              </h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Transform your property maintenance in four easy steps
+              </p>
+            </div>
+            
+            <div className="max-w-6xl mx-auto">
               {steps.map((step, index) => (
-                <div key={index} className="mb-16 last:mb-0">
-                  <div className="flex flex-col md:flex-row gap-6 items-start">
-                    <div className="flex-shrink-0 bg-beige rounded-full p-4">
-                      {step.icon}
-                    </div>
-                    <div>
-                      <div className="flex items-center mb-2">
-                        <span className="w-8 h-8 rounded-full bg-terracotta text-white flex items-center justify-center font-bold mr-3">
+                <div key={index} className="mb-20 last:mb-0">
+                  <div className={`flex flex-col lg:flex-row gap-12 items-center ${
+                    index % 2 === 1 ? 'lg:flex-row-reverse' : ''
+                  }`}>
+                    <div className="flex-1">
+                      <div className="flex items-center mb-6">
+                        <div className="w-12 h-12 rounded-full bg-terracotta text-white flex items-center justify-center font-bold text-xl mr-4">
                           {index + 1}
-                        </span>
-                        <h2 className="text-2xl font-bold">{step.title}</h2>
+                        </div>
+                        <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{step.title}</h3>
                       </div>
-                      <p className="text-lg text-gray-700 mb-4">{step.description}</p>
-                      <ul className="bg-gray-50 p-4 rounded-md space-y-2">
+                      <p className="text-lg text-gray-700 mb-6 leading-relaxed">{step.description}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {step.details.map((detail, i) => (
-                          <li key={i} className="flex items-start">
-                            <div className="h-5 w-5 rounded-full bg-terracotta/20 text-terracotta flex items-center justify-center mr-2 mt-1 flex-shrink-0">
-                              <CheckCheck size={12} />
-                            </div>
-                            <span>{detail}</span>
-                          </li>
+                          <div key={i} className="flex items-center">
+                            <CheckCircle className="h-5 w-5 text-forest mr-3" />
+                            <span className="text-gray-700">{detail}</span>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <div className="w-32 h-32 bg-beige rounded-2xl flex items-center justify-center shadow-lg">
+                        {step.icon}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -125,64 +135,56 @@ const HowItWorksPage = () => {
           </div>
         </section>
         
-        {/* FAQ Section */}
-        <section className="py-16 bg-beige">
+        {/* Benefits Section */}
+        <section className="py-20 bg-beige/30">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">Frequently Asked Questions</h2>
-              <p className="text-lg text-gray-700 max-w-3xl mx-auto">
-                Still have questions about how Ulomu works? Check out our most commonly asked questions below.
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Proven Results for Property Owners
+              </h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Join thousands of property owners who have transformed their maintenance operations
               </p>
             </div>
             
-            <div className="max-w-3xl mx-auto divide-y">
-              <div className="py-6">
-                <h3 className="text-xl font-semibold mb-2">Is Ulomu completely free for tenants?</h3>
-                <p className="text-gray-700">
-                  Yes! Tenants can use Ulomu to search for properties, contact landlords, and schedule viewings for free. 
-                  There are no hidden fees or charges.
-                </p>
-              </div>
-              <div className="py-6">
-                <h3 className="text-xl font-semibold mb-2">How do you verify landlords?</h3>
-                <p className="text-gray-700">
-                  We verify landlords through a combination of document verification, property ownership proof, and identity checks. 
-                  Verified landlords receive a special badge on their profile.
-                </p>
-              </div>
-              <div className="py-6">
-                <h3 className="text-xl font-semibold mb-2">What if I have issues with a landlord?</h3>
-                <p className="text-gray-700">
-                  We have a dispute resolution system in place. You can report any issues through our platform, 
-                  and our team will investigate and help mediate the situation.
-                </p>
-              </div>
-              <div className="py-6">
-                <h3 className="text-xl font-semibold mb-2">How do I pay rent through Ulomu?</h3>
-                <p className="text-gray-700">
-                  Ulomu facilitates direct connections between landlords and tenants, but rent payments are handled directly between parties. 
-                  We recommend using secure payment methods and getting proper receipts.
-                </p>
-              </div>
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {benefits.map((benefit, index) => (
+                <div key={index} className="bg-white p-6 rounded-xl shadow-sm border border-beige/50">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-forest/10 rounded-full flex items-center justify-center mr-4">
+                      <CheckCircle className="h-6 w-6 text-forest" />
+                    </div>
+                    <p className="text-lg font-semibold text-gray-900">{benefit}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
         
         {/* CTA Section */}
-        <section className="py-16 bg-terracotta text-white">
+        <section className="py-20 bg-gradient-to-br from-terracotta to-terracotta/90 text-white">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
-            <p className="text-lg mb-8 max-w-2xl mx-auto">
-              Join thousands of Nigerians who are already enjoying a better rental experience without agent fees.
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+              Ready to Transform Your Property Maintenance?
+            </h2>
+            <p className="text-xl text-white/90 max-w-2xl mx-auto mb-8">
+              Start your free 14-day trial today and experience the future of property management
             </p>
-            <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
-              <Button asChild size="lg" className="bg-white text-terracotta hover:bg-gray-100">
-                <Link to="/properties">Browse Properties</Link>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Button size="lg" className="bg-white text-terracotta hover:bg-beige hover:text-terracotta" asChild>
+                <Link to="/signup">
+                  Start Free Trial
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="border-white text-white hover:bg-terracotta/90">
-                <Link to="/signup">Create an Account</Link>
+              <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-terracotta">
+                Schedule a Demo
               </Button>
             </div>
+            <p className="text-sm text-white/80 mt-6">
+              No credit card required • Set up in under 5 minutes
+            </p>
           </div>
         </section>
       </main>
