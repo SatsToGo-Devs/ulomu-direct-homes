@@ -80,14 +80,14 @@ const MaintenanceHub = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <div className="bg-blue-600 text-white py-8">
+      <div className="bg-gradient-to-r from-forest to-forest/90 text-white py-8">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl font-bold">Maintenance Hub</h1>
-          <p className="text-blue-100">Manage all your property maintenance with AI-powered efficiency</p>
+          <p className="text-white/90">Manage all your property maintenance with AI-powered efficiency</p>
         </div>
       </div>
       
-      <main className="flex-1 bg-gray-50 py-8">
+      <main className="flex-1 bg-beige/20 py-8">
         <div className="container mx-auto px-4">
           <Tabs defaultValue="requests" className="space-y-6">
             <TabsList className="grid w-full grid-cols-3">
@@ -100,11 +100,11 @@ const MaintenanceHub = () => {
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Maintenance Requests</h2>
                 <div className="flex gap-4">
-                  <Button variant="outline">
+                  <Button variant="outline" className="border-forest text-forest hover:bg-forest hover:text-white">
                     <Filter className="h-4 w-4 mr-2" />
                     Filter
                   </Button>
-                  <Button>
+                  <Button className="bg-terracotta hover:bg-terracotta/90 text-white">
                     <Plus className="h-4 w-4 mr-2" />
                     New Request
                   </Button>
@@ -168,7 +168,7 @@ const MaintenanceHub = () => {
             <TabsContent value="scheduled" className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Scheduled Maintenance</h2>
-                <Button>
+                <Button className="bg-gold hover:bg-gold/90 text-white">
                   <Calendar className="h-4 w-4 mr-2" />
                   Schedule New
                 </Button>
@@ -201,32 +201,32 @@ const MaintenanceHub = () => {
             <TabsContent value="analytics" className="space-y-6">
               <h2 className="text-2xl font-bold">Maintenance Analytics</h2>
               <div className="grid md:grid-cols-3 gap-6">
-                <Card>
+                <Card className="border-beige/50">
                   <CardHeader>
                     <CardTitle>Response Time</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-green-600">4.2 hrs</div>
+                    <div className="text-3xl font-bold text-forest">4.2 hrs</div>
                     <p className="text-sm text-gray-600">Average response time</p>
                   </CardContent>
                 </Card>
                 
-                <Card>
+                <Card className="border-beige/50">
                   <CardHeader>
                     <CardTitle>Cost Savings</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-blue-600">35%</div>
+                    <div className="text-3xl font-bold text-terracotta">35%</div>
                     <p className="text-sm text-gray-600">Reduction in maintenance costs</p>
                   </CardContent>
                 </Card>
                 
-                <Card>
+                <Card className="border-beige/50">
                   <CardHeader>
                     <CardTitle>Completion Rate</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-purple-600">94%</div>
+                    <div className="text-3xl font-bold text-gold">94%</div>
                     <p className="text-sm text-gray-600">Tasks completed on time</p>
                   </CardContent>
                 </Card>

@@ -21,25 +21,25 @@ const UlomuDashboard = () => {
       title: "Total Properties",
       value: "24",
       icon: Building,
-      color: "text-blue-600"
+      color: "text-terracotta"
     },
     {
       title: "Active Tenants",
       value: "87",
       icon: Users,
-      color: "text-green-600"
+      color: "text-forest"
     },
     {
       title: "Monthly Revenue",
       value: "₦2.4M",
       icon: DollarSign,
-      color: "text-purple-600"
+      color: "text-gold"
     },
     {
       title: "Cost Savings",
       value: "35%",
       icon: TrendingUp,
-      color: "text-orange-600"
+      color: "text-terracotta"
     }
   ];
 
@@ -81,13 +81,13 @@ const UlomuDashboard = () => {
       type: "Cost Optimization",
       message: "Switch to LED lighting across 5 properties to save ₦120,000 annually.",
       icon: Brain,
-      color: "text-blue-500"
+      color: "text-terracotta"
     },
     {
       type: "Scheduling Recommendation",
       message: "Bundle 3 plumbing repairs in Surulere area for 40% cost reduction.",
       icon: Calendar,
-      color: "text-green-500"
+      color: "text-forest"
     }
   ];
 
@@ -96,7 +96,7 @@ const UlomuDashboard = () => {
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((stat, index) => (
-          <Card key={index}>
+          <Card key={index} className="border-beige/50">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -112,16 +112,16 @@ const UlomuDashboard = () => {
 
       <div className="grid lg:grid-cols-2 gap-8">
         {/* AI Insights */}
-        <Card>
+        <Card className="border-beige/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Brain className="h-5 w-5 text-blue-600" />
+              <Brain className="h-5 w-5 text-terracotta" />
               AI Insights & Recommendations
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {aiInsights.map((insight, index) => (
-              <div key={index} className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-start gap-3 p-4 bg-beige/30 rounded-lg">
                 <insight.icon className={`h-5 w-5 mt-0.5 ${insight.color}`} />
                 <div>
                   <p className="font-medium text-sm text-gray-700">{insight.type}</p>
@@ -129,28 +129,32 @@ const UlomuDashboard = () => {
                 </div>
               </div>
             ))}
-            <Button className="w-full mt-4">View All Insights</Button>
+            <Button className="w-full mt-4 bg-terracotta hover:bg-terracotta/90 text-white">View All Insights</Button>
           </CardContent>
         </Card>
 
         {/* Maintenance Requests */}
-        <Card>
+        <Card className="border-beige/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Wrench className="h-5 w-5 text-orange-600" />
+              <Wrench className="h-5 w-5 text-gold" />
               Recent Maintenance Requests
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {maintenanceRequests.map((request) => (
-                <div key={request.id} className="border-l-4 border-blue-500 pl-4 py-3">
+                <div key={request.id} className="border-l-4 border-terracotta pl-4 py-3">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium text-gray-900">{request.property}</h4>
                     <Badge 
                       variant={
                         request.status === 'Completed' ? 'default' : 
                         request.status === 'In Progress' ? 'secondary' : 'outline'
+                      }
+                      className={
+                        request.status === 'Completed' ? 'bg-forest text-white' :
+                        request.status === 'In Progress' ? 'bg-gold text-white' : ''
                       }
                     >
                       {request.status}
@@ -170,31 +174,31 @@ const UlomuDashboard = () => {
                 </div>
               ))}
             </div>
-            <Button variant="outline" className="w-full mt-4">View All Requests</Button>
+            <Button variant="outline" className="w-full mt-4 border-forest text-forest hover:bg-forest hover:text-white">View All Requests</Button>
           </CardContent>
         </Card>
       </div>
 
       {/* Quick Actions */}
-      <Card className="mt-8">
+      <Card className="mt-8 border-beige/50">
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button className="h-20 flex-col">
+            <Button className="h-20 flex-col bg-terracotta hover:bg-terracotta/90 text-white">
               <Calendar className="h-6 w-6 mb-2" />
               Schedule Maintenance
             </Button>
-            <Button variant="outline" className="h-20 flex-col">
+            <Button variant="outline" className="h-20 flex-col border-forest text-forest hover:bg-forest hover:text-white">
               <Brain className="h-6 w-6 mb-2" />
               AI Predictions
             </Button>
-            <Button variant="outline" className="h-20 flex-col">
+            <Button variant="outline" className="h-20 flex-col border-gold text-gold hover:bg-gold hover:text-white">
               <Building className="h-6 w-6 mb-2" />
               Add Property
             </Button>
-            <Button variant="outline" className="h-20 flex-col">
+            <Button variant="outline" className="h-20 flex-col border-terracotta text-terracotta hover:bg-terracotta hover:text-white">
               <Users className="h-6 w-6 mb-2" />
               Tenant Portal
             </Button>
