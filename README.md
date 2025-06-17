@@ -1,73 +1,94 @@
-# Welcome to your Lovable project
+# Ulomu Direct Homes
 
-## Project info
+A modern real estate platform that revolutionizes property management and maintenance through AI-powered solutions.
 
-**URL**: https://lovable.dev/projects/5d0736c5-6a40-48e4-8d08-9995ce4b2708
+## 🌟 Features
 
-## How can I edit this code?
+- **AI-Powered Maintenance Hub**: Intelligent property maintenance management system
+- **Property Listings**: Showcase and browse available properties
+- **Landlord Dashboard**: Comprehensive property management tools
+- **Tenant Portal**: Streamlined tenant experience
+- **Escrow Services**: Secure payment handling
+- **Savings Management**: Financial planning tools
 
-There are several ways of editing your application.
+## 🚀 Tech Stack
 
-**Use Lovable**
+- **Frontend**: React with TypeScript
+- **Styling**: Tailwind CSS with Shadcn UI components
+- **State Management**: React Query
+- **UI Components**:
+  - Radix UI primitives
+  - Lucide React icons
+  - Embla Carousel
+- **Form Handling**: React Hook Form
+- **Build Tool**: Vite
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5d0736c5-6a40-48e4-8d08-9995ce4b2708) and start prompting.
+## 🛠️ Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js (Latest LTS version recommended)
+- npm or bun package manager
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Clone the repository:
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```bash
+git clone <repository-url>
 ```
 
-**Edit a file directly in GitHub**
+2. Navigate to the project directory:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+cd ulomu-direct-homes
+```
 
-**Use GitHub Codespaces**
+3. Install dependencies:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```bash
+npm install
+# or
+bun install
+```
 
-## What technologies are used for this project?
+4. Start the development server:
 
-This project is built with:
+```bash
+npm run dev
+# or
+bun dev
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 📦 Available Scripts
 
-## How can I deploy this project?
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run build:dev` - Build for development
+- `npm run lint` - Run ESLint
+- `npm run preview` - Preview production build
 
-Simply open [Lovable](https://lovable.dev/projects/5d0736c5-6a40-48e4-8d08-9995ce4b2708) and click on Share -> Publish.
+## 🏗️ Project Structure
 
-## Can I connect a custom domain to my Lovable project?
+```
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── pages/         # Application pages/routes
+│   ├── hooks/         # Custom React hooks
+│   ├── lib/           # Utility functions
+│   └── data/          # Static data and constants
+├── public/            # Static assets
+└── prisma/           # Database schema and migrations
+```
 
-Yes, you can!
+## 🤝 Contributing
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 📄 License
+
+This project is proprietary software. All rights reserved.
+
+---
+
+Built with ❤️ by Ulomu Team
