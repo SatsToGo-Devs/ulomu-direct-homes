@@ -2,6 +2,9 @@
 
 A modern real estate platform that revolutionizes property management and maintenance through AI-powered solutions.
 
+![image](https://github.com/user-attachments/assets/53bc7fb2-cd31-4447-b3bc-cd7417fa1d44)
+
+
 ## 🌟 Features
 
 - **AI-Powered Maintenance Hub**: Intelligent property maintenance management system
@@ -10,6 +13,9 @@ A modern real estate platform that revolutionizes property management and mainte
 - **Tenant Portal**: Streamlined tenant experience
 - **Escrow Services**: Secure payment handling
 - **Savings Management**: Financial planning tools
+
+![image](https://github.com/user-attachments/assets/c94ec07b-4205-4c8a-8470-bde19c71f679)
+
 
 ## 🚀 Tech Stack
 
@@ -80,6 +86,9 @@ bun dev
 ├── public/            # Static assets
 └── prisma/           # Database schema and migrations
 ```
+
+![image](https://github.com/user-attachments/assets/4cc195c0-0cb0-4b3d-967e-efd51fbd0834)
+
 
 ## 🤝 Contributing
 
