@@ -1,11 +1,11 @@
 
 import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
-import HowItWorks from "@/components/HowItWorks";
-import FeaturedProperties from "@/components/FeaturedProperties";
-import WhyChooseUs from "@/components/WhyChooseUs";
-import Testimonials from "@/components/Testimonials";
-import CtaSection from "@/components/CtaSection";
+import UlomuHero from "@/components/Ulomu/Hero";
+import AIFeatures from "@/components/Ulomu/AIFeatures";
+import HowItWorks from "@/components/Ulomu/HowItWorks";
+import PropertyOwnerBenefits from "@/components/Ulomu/PropertyOwnerBenefits";
+import Testimonials from "@/components/Ulomu/Testimonials";
+import CtaSection from "@/components/Ulomu/CtaSection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -13,10 +13,10 @@ const Index = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1">
-        <Hero />
-        <WhyChooseUs />
+        <UlomuHero />
+        <AIFeatures />
         <HowItWorks />
-        <FeaturedProperties />
+        <PropertyOwnerBenefits />
         <Testimonials />
         <CtaSection />
       </main>

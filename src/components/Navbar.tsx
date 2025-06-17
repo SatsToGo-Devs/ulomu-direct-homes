@@ -1,85 +1,94 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Bot } from "lucide-react";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link to="/" className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-full bg-terracotta flex items-center justify-center">
-            <span className="text-white font-bold text-lg">U</span>
-          </div>
-          <span className="font-bold text-xl text-terracotta">Ulomu</span>
-        </Link>
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-6">
-          <Link to="/" className="text-gray-600 hover:text-terracotta font-medium">
-            Home
-          </Link>
-          <Link to="/properties" className="text-gray-600 hover:text-terracotta font-medium">
-            Properties
-          </Link>
-          <Link to="/how-it-works" className="text-gray-600 hover:text-terracotta font-medium">
-            How It Works
-          </Link>
-          <div className="pl-4 flex space-x-2">
-            <Button variant="outline">Sign In</Button>
-            <Button className="bg-terracotta hover:bg-terracotta/90">
-              Sign Up
+  return (
+    <nav className="bg-white shadow-sm border-b">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <div className="flex items-center space-x-2">
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Bot className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-2xl font-bold text-gray-900">Ulomu</span>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            <a href="/" className="text-gray-700 hover:text-blue-600 font-medium">
+              Home
+            </a>
+            <a href="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium">
+              Dashboard
+            </a>
+            <a href="/maintenance" className="text-gray-700 hover:text-blue-600 font-medium">
+              Maintenance
+            </a>
+            <a href="/ai-insights" className="text-gray-700 hover:text-blue-600 font-medium">
+              AI Insights
+            </a>
+            <a href="/properties" className="text-gray-700 hover:text-blue-600 font-medium">
+              Properties
+            </a>
+          </div>
+
+          {/* Desktop CTA */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Button variant="ghost">Sign In</Button>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              Start Free Trial
             </Button>
           </div>
-        </nav>
 
-        {/* Mobile menu button */}
-        <button 
-          className="md:hidden text-gray-600"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-
-      {/* Mobile navigation */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-white border-t">
-          <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
-            <Link 
-              to="/" 
-              className="text-gray-600 hover:text-terracotta font-medium py-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link 
-              to="/properties" 
-              className="text-gray-600 hover:text-terracotta font-medium py-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Properties
-            </Link>
-            <Link 
-              to="/how-it-works" 
-              className="text-gray-600 hover:text-terracotta font-medium py-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              How It Works
-            </Link>
-            <div className="flex flex-col space-y-2 pt-2">
-              <Button variant="outline">Sign In</Button>
-              <Button className="bg-terracotta hover:bg-terracotta/90">
-                Sign Up
-              </Button>
-            </div>
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <Button variant="ghost" size="sm" onClick={toggleMenu}>
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
           </div>
         </div>
-      )}
-    </header>
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden py-4 border-t">
+            <div className="flex flex-col space-y-4">
+              <a href="/" className="text-gray-700 hover:text-blue-600 font-medium">
+                Home
+              </a>
+              <a href="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium">
+                Dashboard
+              </a>
+              <a href="/maintenance" className="text-gray-700 hover:text-blue-600 font-medium">
+                Maintenance
+              </a>
+              <a href="/ai-insights" className="text-gray-700 hover:text-blue-600 font-medium">
+                AI Insights
+              </a>
+              <a href="/properties" className="text-gray-700 hover:text-blue-600 font-medium">
+                Properties
+              </a>
+              <div className="pt-4 space-y-2">
+                <Button variant="ghost" className="w-full justify-start">
+                  Sign In
+                </Button>
+                <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                  Start Free Trial
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </nav>
   );
 };
 
