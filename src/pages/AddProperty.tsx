@@ -1,4 +1,3 @@
-
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
-import { Building, MapPin, DollarSign, Users } from "lucide-react";
+import { Building, MapPin, DollarSign, Users, Calendar, Brain } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const AddProperty = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -48,7 +50,7 @@ const AddProperty = () => {
       
       <main className="flex-1 bg-beige/20 py-8">
         <div className="container mx-auto px-4 max-w-4xl">
-          <Card className="border-beige/50">
+          <Card className="border-beige/50 mb-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building className="h-5 w-5 text-terracotta" />
@@ -195,6 +197,48 @@ const AddProperty = () => {
                   </Button>
                 </div>
               </form>
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card className="border-beige/50">
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Button 
+                  className="h-20 flex-col bg-terracotta hover:bg-terracotta/90 text-white"
+                  onClick={() => navigate('/maintenance')}
+                >
+                  <Calendar className="h-6 w-6 mb-2" />
+                  Schedule Maintenance
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col border-forest text-forest hover:bg-forest hover:text-white"
+                  onClick={() => navigate('/ai-predictions')}
+                >
+                  <Brain className="h-6 w-6 mb-2" />
+                  AI Predictions
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col border-gold text-gold hover:bg-gold hover:text-white"
+                  onClick={() => navigate('/dashboard')}
+                >
+                  <Building className="h-6 w-6 mb-2" />
+                  Dashboard
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col border-terracotta text-terracotta hover:bg-terracotta hover:text-white"
+                  onClick={() => navigate('/tenant-portal')}
+                >
+                  <Users className="h-6 w-6 mb-2" />
+                  Tenant Portal
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

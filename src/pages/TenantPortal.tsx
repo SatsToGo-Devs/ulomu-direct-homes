@@ -1,4 +1,3 @@
-
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,10 +12,15 @@ import {
   AlertCircle,
   CheckCircle,
   Calendar,
-  DollarSign
+  DollarSign,
+  Brain,
+  Building
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const TenantPortal = () => {
+  const navigate = useNavigate();
+
   const tenants = [
     {
       id: 1,
@@ -290,6 +294,48 @@ const TenantPortal = () => {
               </div>
             </TabsContent>
           </Tabs>
+
+          {/* Quick Actions */}
+          <Card className="mt-8 border-beige/50">
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Button 
+                  className="h-20 flex-col bg-terracotta hover:bg-terracotta/90 text-white"
+                  onClick={() => navigate('/maintenance')}
+                >
+                  <Calendar className="h-6 w-6 mb-2" />
+                  Schedule Maintenance
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col border-forest text-forest hover:bg-forest hover:text-white"
+                  onClick={() => navigate('/ai-predictions')}
+                >
+                  <Brain className="h-6 w-6 mb-2" />
+                  AI Predictions
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col border-gold text-gold hover:bg-gold hover:text-white"
+                  onClick={() => navigate('/add-property')}
+                >
+                  <Building className="h-6 w-6 mb-2" />
+                  Add Property
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col border-terracotta text-terracotta hover:bg-terracotta hover:text-white"
+                  onClick={() => navigate('/dashboard')}
+                >
+                  <Users className="h-6 w-6 mb-2" />
+                  Dashboard
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
       

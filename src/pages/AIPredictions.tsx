@@ -1,4 +1,3 @@
-
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,10 +11,15 @@ import {
   DollarSign,
   Wrench,
   Zap,
-  Shield
+  Shield,
+  Building,
+  Users
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const AIPredictions = () => {
+  const navigate = useNavigate();
+
   const predictions = [
     {
       id: 1,
@@ -122,7 +126,7 @@ const AIPredictions = () => {
           </div>
 
           {/* AI Predictions */}
-          <Card className="border-beige/50">
+          <Card className="border-beige/50 mb-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Brain className="h-5 w-5 text-terracotta" />
@@ -171,6 +175,48 @@ const AIPredictions = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card className="border-beige/50">
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Button 
+                  className="h-20 flex-col bg-terracotta hover:bg-terracotta/90 text-white"
+                  onClick={() => navigate('/maintenance')}
+                >
+                  <Calendar className="h-6 w-6 mb-2" />
+                  Schedule Maintenance
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col border-forest text-forest hover:bg-forest hover:text-white"
+                  onClick={() => navigate('/dashboard')}
+                >
+                  <Brain className="h-6 w-6 mb-2" />
+                  Dashboard
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col border-gold text-gold hover:bg-gold hover:text-white"
+                  onClick={() => navigate('/add-property')}
+                >
+                  <Building className="h-6 w-6 mb-2" />
+                  Add Property
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col border-terracotta text-terracotta hover:bg-terracotta hover:text-white"
+                  onClick={() => navigate('/tenant-portal')}
+                >
+                  <Users className="h-6 w-6 mb-2" />
+                  Tenant Portal
+                </Button>
               </div>
             </CardContent>
           </Card>
