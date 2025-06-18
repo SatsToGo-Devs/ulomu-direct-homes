@@ -49,10 +49,12 @@ model User {
   savingsGoals  SavingsGoal[]
   invoices      Invoice[]
   // Adding new fields for user type and farming specialization
-  userType      String    @default("TENANT") // TENANT, LANDLORD, FARMER
+  userType      String    @default("TENANT") // TENANT, LANDLORD, FARMER, SERVICE_AGENT
   farmingType   String?   // For farmers: CROP, LIVESTOCK, MIXED
   farmRentals   FarmRental[]
   maintenanceRequests MaintenanceRequest[]
+  sentTransactions EscrowTransaction[] @relation("SenderTransactions")
+  receivedTransactions EscrowTransaction[] @relation("ReceiverTransactions")
 }
 
 model Invoice {
@@ -80,7 +82,7 @@ model InvoiceItem {
   updatedAt   DateTime  @updatedAt
 }
 
-// New model for service charges
+// Enhanced model for service charges
 model ServiceCharge {
   id          String    @id @default(uuid())
   unitId      String
@@ -89,8 +91,24 @@ model ServiceCharge {
   amount      Decimal
   frequency   String    // MONTHLY, QUARTERLY, ANNUAL
   nextDueDate DateTime
+  status      String    @default("ACTIVE") // ACTIVE, PAID, OVERDUE
+  escrowHeld  Decimal   @default(0) // Amount held in escrow for this charge
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  payments    ServiceChargePayment[]
+}
+
+// New model for service charge payments
+model ServiceChargePayment {
+  id              String       @id @default(uuid())
+  serviceChargeId String
+  serviceCharge   ServiceCharge @relation(fields: [serviceChargeId], references: [id])
+  amount          Decimal
+  paymentDate     DateTime     @default(now())
+  status          String       // PENDING, COMPLETED, FAILED
+  escrowReleased  Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 }
 
 // New model for maintenance requests
@@ -104,6 +122,10 @@ model MaintenanceRequest {
   description String
   status      String    // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
   priority    String    // LOW, MEDIUM, HIGH, EMERGENCY
+  estimatedCost Decimal?
+  actualCost    Decimal?
+  serviceAgentId String?
+  escrowAmount   Decimal @default(0) // Amount held in escrow for this work
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
@@ -124,13 +146,37 @@ model FarmRental {
   updatedAt   DateTime  @updatedAt
 }
 
+// Enhanced escrow account model
 model EscrowAccount {
   id        String   @id @default(uuid())
   userId    String   @unique
   user      User     @relation(fields: [userId], references: [id])
   balance   Decimal  @default(0)
+  frozenBalance Decimal @default(0) // Amount held for pending transactions
+  accountType String @default("GENERAL") // GENERAL, SERVICE_AGENT, LANDLORD
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  transactions EscrowTransaction[]
+}
+
+// New model for escrow transactions
+model EscrowTransaction {
+  id          String        @id @default(uuid())
+  fromUserId  String?
+  fromUser    User?         @relation("SenderTransactions", fields: [fromUserId], references: [id])
+  toUserId    String?
+  toUser      User?         @relation("ReceiverTransactions", fields: [toUserId], references: [id])
+  escrowAccountId String
+  escrowAccount   EscrowAccount @relation(fields: [escrowAccountId], references: [id])
+  amount      Decimal
+  type        String        // DEPOSIT, WITHDRAWAL, TRANSFER, HOLD, RELEASE
+  status      String        // PENDING, COMPLETED, FAILED, HELD
+  purpose     String?       // SERVICE_CHARGE, MAINTENANCE, RENT
+  description String?
+  releaseConditions String? // Conditions for releasing held funds
+  scheduledRelease DateTime? // When funds should be automatically released
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 model SavingsGoal {

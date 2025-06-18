@@ -14,6 +14,7 @@ import TenantPortal from "./pages/TenantPortal";
 import HowItWorks from "./pages/HowItWorks";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import EscrowHub from "./pages/EscrowHub";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/maintenance" element={<MaintenanceHub />} />
           <Route path="/ai-insights" element={<AIInsights />} />
           <Route path="/tenant-portal" element={<TenantPortal />} />
+          <Route path="/escrow" element={<EscrowHub />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

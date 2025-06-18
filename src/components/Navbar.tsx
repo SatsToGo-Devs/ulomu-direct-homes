@@ -37,6 +37,9 @@ const Navbar = () => {
             <Link to="/maintenance" className="text-gray-700 hover:text-terracotta font-medium">
               Maintenance
             </Link>
+            <Link to="/escrow" className="text-gray-700 hover:text-terracotta font-medium">
+              Escrow
+            </Link>
             <Link to="/ai-insights" className="text-gray-700 hover:text-terracotta font-medium">
               AI Insights
             </Link>
@@ -75,6 +78,9 @@ const Navbar = () => {
               </Link>
               <Link to="/maintenance" className="text-gray-700 hover:text-terracotta font-medium">
                 Maintenance
+              </Link>
+              <Link to="/escrow" className="text-gray-700 hover:text-terracotta font-medium">
+                Escrow
               </Link>
               <Link to="/ai-insights" className="text-gray-700 hover:text-terracotta font-medium">
                 AI Insights
