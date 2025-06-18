@@ -31,7 +31,7 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-beige/30">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -48,13 +48,13 @@ const HowItWorks = () => {
             <Card key={index} className="relative border-none shadow-lg hover:shadow-xl transition-shadow bg-white">
               <CardContent className="p-8 text-center">
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                  <div className="w-8 h-8 bg-terracotta text-white rounded-full flex items-center justify-center text-sm font-bold">
                     {step.step}
                   </div>
                 </div>
                 
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 mt-4">
-                  <step.icon className="h-8 w-8 text-blue-600" />
+                <div className="w-16 h-16 bg-terracotta/10 rounded-full flex items-center justify-center mx-auto mb-6 mt-4">
+                  <step.icon className="h-8 w-8 text-terracotta" />
                 </div>
                 
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">

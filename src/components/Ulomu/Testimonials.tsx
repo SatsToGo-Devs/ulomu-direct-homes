@@ -1,45 +1,44 @@
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Star } from "lucide-react";
+import { Star, Quote } from "lucide-react";
 
 const Testimonials = () => {
   const testimonials = [
     {
       name: "Adebayo Johnson",
-      role: "Property Developer",
-      company: "Lagos Properties Ltd",
-      content: "Ulomu has transformed how we maintain our 50+ properties. The AI predictions saved us from 3 major HVAC failures last month alone. Our maintenance costs dropped 35%.",
+      role: "Property Manager",
+      location: "Lagos",
       rating: 5,
+      text: "Ulomu has completely transformed how I manage my 15 properties. The AI predictions are incredibly accurate, and I've reduced my maintenance costs by 40% while keeping tenants happier than ever.",
       avatar: "AJ"
     },
     {
-      name: "Chioma Okafor",
-      role: "Landlord",
-      company: "Multiple Properties",
-      content: "The tenant chatbot is incredible. It handles 80% of requests automatically, and I only get alerted for real issues. My tenants love the instant responses.",
+      name: "Sarah Okafor",
+      role: "Real Estate Investor",
+      location: "Abuja",
       rating: 5,
-      avatar: "CO"
+      text: "The escrow payment system gives me complete transparency over service charges. My tenants now trust that their money is being used properly, and contractors get paid fairly.",
+      avatar: "SO"
     },
     {
-      name: "Michael Adeleke",
-      role: "Real Estate Manager",
-      company: "Ikoyi Estates",
-      content: "We manage 200+ units and Ulomu's AI scheduling has been a game-changer. No more double bookings or missed maintenance. Everything runs like clockwork.",
+      name: "Michael Ugwu",
+      role: "Facility Manager",
+      location: "Port Harcourt",
       rating: 5,
-      avatar: "MA"
+      text: "Before Ulomu, I was constantly dealing with emergency repairs. Now, the predictive maintenance alerts help me prevent issues before they become expensive problems.",
+      avatar: "MU"
     }
   ];
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-beige/30">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
             What Property Owners Say
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Join hundreds of satisfied property owners who trust Ulomu to keep 
-            their properties in perfect condition.
+            Join thousands of property owners who have transformed their maintenance operations with Ulomu
           </p>
         </div>
         
@@ -49,22 +48,24 @@ const Testimonials = () => {
               <CardContent className="p-8">
                 <div className="flex items-center mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                    <Star key={i} className="h-5 w-5 text-gold fill-current" />
                   ))}
                 </div>
                 
-                <p className="text-gray-700 mb-6 leading-relaxed">
-                  "{testimonial.content}"
-                </p>
+                <div className="relative mb-6">
+                  <Quote className="h-8 w-8 text-terracotta/20 absolute -top-2 -left-2" />
+                  <p className="text-gray-700 leading-relaxed pl-6">
+                    "{testimonial.text}"
+                  </p>
+                </div>
                 
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold mr-4">
+                  <div className="w-12 h-12 bg-terracotta rounded-full flex items-center justify-center text-white font-semibold mr-4">
                     {testimonial.avatar}
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
-                    <p className="text-sm text-gray-600">{testimonial.role}</p>
-                    <p className="text-sm text-gray-500">{testimonial.company}</p>
+                    <p className="text-sm text-gray-600">{testimonial.role}, {testimonial.location}</p>
                   </div>
                 </div>
               </CardContent>

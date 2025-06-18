@@ -2,6 +2,7 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import EscrowDashboard from "@/components/Escrow/EscrowDashboard";
+import ServiceChargeOverview from "@/components/Escrow/ServiceChargeOverview";
 import ServiceChargeManager from "@/components/Landlord/ServiceChargeManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -143,9 +144,10 @@ const EscrowHub = () => {
 
           {/* Main Dashboard */}
           <Tabs defaultValue="dashboard" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="dashboard">Escrow Dashboard</TabsTrigger>
-              <TabsTrigger value="service-charges">Service Charges</TabsTrigger>
+              <TabsTrigger value="service-overview">Service Charges</TabsTrigger>
+              <TabsTrigger value="service-manager">Manage Charges</TabsTrigger>
               <TabsTrigger value="help">Help & Support</TabsTrigger>
             </TabsList>
 
@@ -153,7 +155,11 @@ const EscrowHub = () => {
               <EscrowDashboard />
             </TabsContent>
 
-            <TabsContent value="service-charges">
+            <TabsContent value="service-overview">
+              <ServiceChargeOverview />
+            </TabsContent>
+
+            <TabsContent value="service-manager">
               <ServiceChargeManager unitId="demo-unit-id" />
             </TabsContent>
 
