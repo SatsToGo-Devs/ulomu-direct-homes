@@ -80,7 +80,7 @@ const MaintenanceHub = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <div className="bg-gradient-to-r from-forest to-forest/90 text-white py-8">
+      <div className="bg-gradient-to-r from-terracotta to-terracotta/90 text-white py-8">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl font-bold">Maintenance Hub</h1>
           <p className="text-white/90">Manage all your property maintenance with AI-powered efficiency</p>
@@ -100,7 +100,7 @@ const MaintenanceHub = () => {
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Maintenance Requests</h2>
                 <div className="flex gap-4">
-                  <Button variant="outline" className="border-forest text-forest hover:bg-forest hover:text-white">
+                  <Button variant="outline" className="border-terracotta text-terracotta hover:bg-terracotta hover:text-white">
                     <Filter className="h-4 w-4 mr-2" />
                     Filter
                   </Button>
@@ -113,7 +113,7 @@ const MaintenanceHub = () => {
 
               <div className="grid gap-4">
                 {maintenanceRequests.map((request) => (
-                  <Card key={request.id}>
+                  <Card key={request.id} className="border-beige/50">
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start mb-4">
                         <div>
@@ -124,6 +124,10 @@ const MaintenanceHub = () => {
                           variant={
                             request.status === 'Completed' ? 'default' : 
                             request.status === 'In Progress' ? 'secondary' : 'outline'
+                          }
+                          className={
+                            request.status === 'Completed' ? 'bg-forest text-white' :
+                            request.status === 'In Progress' ? 'bg-gold text-white' : ''
                           }
                         >
                           {request.status}
@@ -143,8 +147,8 @@ const MaintenanceHub = () => {
                           <span className="text-gray-500">Priority:</span>
                           <p className={`font-medium ${
                             request.priority === 'High' ? 'text-red-600' :
-                            request.priority === 'Medium' ? 'text-yellow-600' :
-                            'text-green-600'
+                            request.priority === 'Medium' ? 'text-gold' :
+                            'text-forest'
                           }`}>
                             {request.priority}
                           </p>
@@ -156,8 +160,8 @@ const MaintenanceHub = () => {
                       </div>
                       
                       <div className="flex justify-end mt-4 gap-2">
-                        <Button variant="outline" size="sm">View Details</Button>
-                        <Button size="sm">Update Status</Button>
+                        <Button variant="outline" size="sm" className="border-terracotta text-terracotta hover:bg-terracotta hover:text-white">View Details</Button>
+                        <Button size="sm" className="bg-terracotta hover:bg-terracotta/90">Update Status</Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -176,7 +180,7 @@ const MaintenanceHub = () => {
 
               <div className="grid gap-4">
                 {upcomingMaintenance.map((item, index) => (
-                  <Card key={index}>
+                  <Card key={index} className="border-beige/50">
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start">
                         <div>
@@ -190,7 +194,7 @@ const MaintenanceHub = () => {
                             <span className="text-gray-500">Vendor: {item.vendor}</span>
                           </div>
                         </div>
-                        <Badge variant="outline">{item.type}</Badge>
+                        <Badge variant="outline" className="border-forest text-forest">{item.type}</Badge>
                       </div>
                     </CardContent>
                   </Card>

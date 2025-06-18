@@ -12,6 +12,8 @@ import Properties from "./pages/Properties";
 import PropertyDetail from "./pages/PropertyDetail";
 import MaintenanceHub from "./pages/MaintenanceHub";
 import AIInsights from "./pages/AIInsights";
+import AIPredictions from "./pages/AIPredictions";
+import AddProperty from "./pages/AddProperty";
 import TenantPortal from "./pages/TenantPortal";
 import HowItWorks from "./pages/HowItWorks";
 import Login from "./pages/Login";
@@ -39,6 +41,8 @@ const App: React.FC = () => {
               <Route path="/properties/:id" element={<PropertyDetail />} />
               <Route path="/maintenance" element={<MaintenanceHub />} />
               <Route path="/ai-insights" element={<AIInsights />} />
+              <Route path="/ai-predictions" element={<AIPredictions />} />
+              <Route path="/add-property" element={<AddProperty />} />
               <Route path="/tenant-portal" element={<TenantPortal />} />
               <Route path="/escrow" element={<EscrowHub />} />
               <Route path="*" element={<NotFound />} />

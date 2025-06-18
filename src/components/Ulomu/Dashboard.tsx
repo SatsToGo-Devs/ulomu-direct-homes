@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +13,11 @@ import {
   Users,
   DollarSign
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const UlomuDashboard = () => {
+  const navigate = useNavigate();
+
   const stats = [
     {
       title: "Total Properties",
@@ -174,7 +176,13 @@ const UlomuDashboard = () => {
                 </div>
               ))}
             </div>
-            <Button variant="outline" className="w-full mt-4 border-forest text-forest hover:bg-forest hover:text-white">View All Requests</Button>
+            <Button 
+              variant="outline" 
+              className="w-full mt-4 border-forest text-forest hover:bg-forest hover:text-white"
+              onClick={() => navigate('/maintenance')}
+            >
+              View All Requests
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -186,19 +194,34 @@ const UlomuDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button className="h-20 flex-col bg-terracotta hover:bg-terracotta/90 text-white">
+            <Button 
+              className="h-20 flex-col bg-terracotta hover:bg-terracotta/90 text-white"
+              onClick={() => navigate('/maintenance')}
+            >
               <Calendar className="h-6 w-6 mb-2" />
               Schedule Maintenance
             </Button>
-            <Button variant="outline" className="h-20 flex-col border-forest text-forest hover:bg-forest hover:text-white">
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col border-forest text-forest hover:bg-forest hover:text-white"
+              onClick={() => navigate('/ai-predictions')}
+            >
               <Brain className="h-6 w-6 mb-2" />
               AI Predictions
             </Button>
-            <Button variant="outline" className="h-20 flex-col border-gold text-gold hover:bg-gold hover:text-white">
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col border-gold text-gold hover:bg-gold hover:text-white"
+              onClick={() => navigate('/add-property')}
+            >
               <Building className="h-6 w-6 mb-2" />
               Add Property
             </Button>
-            <Button variant="outline" className="h-20 flex-col border-terracotta text-terracotta hover:bg-terracotta hover:text-white">
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col border-terracotta text-terracotta hover:bg-terracotta hover:text-white"
+              onClick={() => navigate('/tenant-portal')}
+            >
               <Users className="h-6 w-6 mb-2" />
               Tenant Portal
             </Button>
