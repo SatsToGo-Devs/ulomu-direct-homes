@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/hooks/useSession';
 
 interface SavingsGoal {
   id: string;
@@ -29,24 +30,28 @@ export default function SavingsDashboard() {
   });
 
   const fetchGoals = async () => {
-    const response = await fetch('/api/savings');
-    const data = await response.json();
-    setGoals(data);
+    // Mock data for now
+    const mockGoals: SavingsGoal[] = [
+      {
+        id: '1',
+        targetAmount: 1000000,
+        currentAmount: 750000,
+        deadline: '2024-12-31',
+        frequency: 'MONTHLY',
+        status: 'ACTIVE',
+        payments: []
+      }
+    ];
+    setGoals(mockGoals);
   };
 
   const createGoal = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/savings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newGoal),
-      });
-
-      if (response.ok) {
-        fetchGoals();
-        setNewGoal({ targetAmount: '', deadline: '', frequency: 'MONTHLY' });
-      }
+      // Mock creation for now
+      console.log('Creating goal:', newGoal);
+      fetchGoals();
+      setNewGoal({ targetAmount: '', deadline: '', frequency: 'MONTHLY' });
     } catch (error) {
       console.error('Failed to create goal:', error);
     }
@@ -108,7 +113,7 @@ export default function SavingsDashboard() {
             <div key={goal.id} className="border rounded-lg p-4">
               <div className="flex justify-between items-center mb-2">
                 <h3 className="font-semibold">
-                  ${goal.targetAmount.toFixed(2)} - {goal.frequency.toLowerCase()}
+                  ₦{goal.targetAmount.toLocaleString()} - {goal.frequency.toLowerCase()}
                 </h3>
                 <span className={`px-2 py-1 rounded text-sm ${
                   goal.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100'
@@ -128,7 +133,7 @@ export default function SavingsDashboard() {
                 Due by: {new Date(goal.deadline).toLocaleDateString()}
               </p>
               <p className="text-sm text-gray-600">
-                Progress: ${goal.currentAmount.toFixed(2)} / ${goal.targetAmount.toFixed(2)}
+                Progress: ₦{goal.currentAmount.toLocaleString()} / ₦{goal.targetAmount.toLocaleString()}
               </p>
             </div>
           ))}
