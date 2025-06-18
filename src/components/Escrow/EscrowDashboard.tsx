@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Progress } from '@/components/ui/progress';
 import { 
   Wallet, 
   Shield, 
@@ -15,7 +16,9 @@ import {
   AlertCircle,
   DollarSign,
   TrendingUp,
-  Lock
+  Lock,
+  Wrench,
+  User
 } from 'lucide-react';
 
 interface EscrowAccount {
@@ -50,91 +53,226 @@ interface ServiceCharge {
   };
 }
 
+interface MaintenanceWork {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  amount: number;
+  escrowHeld: number;
+  progress: number;
+  vendor: string;
+  createdAt: string;
+  completedAt?: string;
+}
+
 export default function EscrowDashboard() {
   const [account, setAccount] = useState<EscrowAccount | null>(null);
   const [serviceCharges, setServiceCharges] = useState<ServiceCharge[]>([]);
+  const [maintenanceWork, setMaintenanceWork] = useState<MaintenanceWork[]>([]);
   const [amount, setAmount] = useState('');
   const [recipient, setRecipient] = useState('');
   const [purpose, setPurpose] = useState('');
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchAccount = async () => {
-    try {
-      const response = await fetch('/api/escrow');
-      const data = await response.json();
-      setAccount(data);
-    } catch (error) {
-      console.error('Failed to fetch escrow account:', error);
-    }
+  // Mock data for demonstration
+  const mockAccount: EscrowAccount = {
+    id: '1',
+    balance: 125000,
+    frozenBalance: 85000,
+    accountType: 'ESCROW',
+    transactions: [
+      {
+        id: '1',
+        amount: 45000,
+        type: 'SERVICE_CHARGE',
+        status: 'COMPLETED',
+        purpose: 'Security Services',
+        description: 'Monthly security service payment',
+        createdAt: '2024-01-15T10:30:00Z',
+        fromUser: { name: 'John Adebayo' },
+        toUser: { name: 'SecureGuard Ltd' }
+      },
+      {
+        id: '2',
+        amount: 25000,
+        type: 'MAINTENANCE',
+        status: 'HELD',
+        purpose: 'Plumbing Repair',
+        description: 'Kitchen sink repair work',
+        createdAt: '2024-01-14T14:20:00Z',
+        fromUser: { name: 'Sarah Okafor' },
+        toUser: { name: 'FixIt Plumbing' }
+      },
+      {
+        id: '3',
+        amount: 35000,
+        type: 'SERVICE_CHARGE',
+        status: 'COMPLETED',
+        purpose: 'Cleaning Services',
+        description: 'Monthly cleaning service',
+        createdAt: '2024-01-12T09:15:00Z',
+        fromUser: { name: 'Mike Johnson' },
+        toUser: { name: 'CleanPro Services' }
+      },
+      {
+        id: '4',
+        amount: 15000,
+        type: 'MAINTENANCE',
+        status: 'PENDING',
+        purpose: 'Electrical Work',
+        description: 'Light fixture installation',
+        createdAt: '2024-01-10T16:45:00Z',
+        fromUser: { name: 'Grace Nwosu' },
+        toUser: { name: 'ElectroFix Ltd' }
+      },
+      {
+        id: '5',
+        amount: 55000,
+        type: 'SERVICE_CHARGE',
+        status: 'COMPLETED',
+        purpose: 'Generator Maintenance',
+        description: 'Quarterly generator servicing',
+        createdAt: '2024-01-08T11:30:00Z',
+        fromUser: { name: 'John Adebayo' },
+        toUser: { name: 'PowerTech Services' }
+      }
+    ]
   };
 
-  const fetchServiceCharges = async () => {
-    try {
-      const response = await fetch('/api/escrow/service-charges');
-      const data = await response.json();
-      setServiceCharges(data);
-    } catch (error) {
-      console.error('Failed to fetch service charges:', error);
+  const mockServiceCharges: ServiceCharge[] = [
+    {
+      id: '1',
+      description: 'Security Services',
+      amount: 45000,
+      status: 'PAID',
+      escrowHeld: 45000,
+      unit: {
+        unitNumber: '3B',
+        property: { name: 'Marina Heights Apartment' }
+      }
+    },
+    {
+      id: '2',
+      description: 'Cleaning Services',
+      amount: 35000,
+      status: 'PAID',
+      escrowHeld: 35000,
+      unit: {
+        unitNumber: '12A',
+        property: { name: 'Lekki Phase 2 Complex' }
+      }
+    },
+    {
+      id: '3',
+      description: 'Waste Management',
+      amount: 15000,
+      status: 'PENDING',
+      escrowHeld: 15000,
+      unit: {
+        unitNumber: '205',
+        property: { name: 'Victoria Island Office' }
+      }
     }
-  };
+  ];
+
+  const mockMaintenanceWork: MaintenanceWork[] = [
+    {
+      id: '1',
+      title: 'Kitchen Sink Repair',
+      description: 'Fix leaking kitchen sink and replace faucet',
+      status: 'IN_PROGRESS',
+      priority: 'HIGH',
+      amount: 25000,
+      escrowHeld: 25000,
+      progress: 75,
+      vendor: 'FixIt Plumbing',
+      createdAt: '2024-01-14T14:20:00Z'
+    },
+    {
+      id: '2',
+      title: 'Light Fixture Installation',
+      description: 'Install new LED light fixtures in living room',
+      status: 'PENDING',
+      priority: 'MEDIUM',
+      amount: 15000,
+      escrowHeld: 15000,
+      progress: 0,
+      vendor: 'ElectroFix Ltd',
+      createdAt: '2024-01-10T16:45:00Z'
+    },
+    {
+      id: '3',
+      title: 'Air Conditioning Service',
+      description: 'Complete AC unit maintenance and cleaning',
+      status: 'COMPLETED',
+      priority: 'LOW',
+      amount: 20000,
+      escrowHeld: 0,
+      progress: 100,
+      vendor: 'CoolAir Services',
+      createdAt: '2024-01-05T09:30:00Z',
+      completedAt: '2024-01-07T15:00:00Z'
+    },
+    {
+      id: '4',
+      title: 'Roof Waterproofing',
+      description: 'Emergency roof leak repair and waterproofing',
+      status: 'COMPLETED',
+      priority: 'EMERGENCY',
+      amount: 75000,
+      escrowHeld: 0,
+      progress: 100,
+      vendor: 'RoofMasters Ltd',
+      createdAt: '2024-01-02T08:00:00Z',
+      completedAt: '2024-01-04T17:30:00Z'
+    }
+  ];
+
+  useEffect(() => {
+    setAccount(mockAccount);
+    setServiceCharges(mockServiceCharges);
+    setMaintenanceWork(mockMaintenanceWork);
+  }, []);
 
   const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    try {
-      const response = await fetch('/api/escrow/transaction', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: parseFloat(amount),
-          toUserId: recipient,
-          purpose,
-          description,
-          type: 'TRANSFER'
-        }),
-      });
-
-      if (response.ok) {
-        fetchAccount();
-        setAmount('');
-        setRecipient('');
-        setPurpose('');
-        setDescription('');
-      }
-    } catch (error) {
-      console.error('Failed to process transfer:', error);
-    } finally {
+    
+    // Simulate API call
+    setTimeout(() => {
       setIsLoading(false);
-    }
+      setAmount('');
+      setRecipient('');
+      setPurpose('');
+      setDescription('');
+    }, 2000);
   };
 
   const releaseEscrowFunds = async (transactionId: string) => {
-    try {
-      const response = await fetch(`/api/escrow/release/${transactionId}`, {
-        method: 'POST',
-      });
-      if (response.ok) {
-        fetchAccount();
-        fetchServiceCharges();
-      }
-    } catch (error) {
-      console.error('Failed to release funds:', error);
-    }
+    console.log('Releasing funds for transaction:', transactionId);
   };
-
-  useEffect(() => {
-    fetchAccount();
-    fetchServiceCharges();
-  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'COMPLETED': return 'bg-green-500';
-      case 'PENDING': return 'bg-yellow-500';
-      case 'HELD': return 'bg-blue-500';
-      case 'FAILED': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      case 'COMPLETED': return 'bg-forest text-white';
+      case 'PENDING': return 'bg-gold text-white';
+      case 'HELD': return 'bg-terracotta text-white';
+      case 'FAILED': return 'bg-red-500 text-white';
+      case 'IN_PROGRESS': return 'bg-blue-500 text-white';
+      default: return 'bg-gray-500 text-white';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'EMERGENCY': return 'bg-red-500 text-white';
+      case 'HIGH': return 'bg-orange-500 text-white';
+      case 'MEDIUM': return 'bg-gold text-white';
+      case 'LOW': return 'bg-forest text-white';
+      default: return 'bg-gray-500 text-white';
     }
   };
 
@@ -204,6 +342,7 @@ export default function EscrowDashboard() {
                   <TableRow>
                     <TableHead>Date</TableHead>
                     <TableHead>Type</TableHead>
+                    <TableHead>From/To</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Purpose</TableHead>
@@ -216,7 +355,27 @@ export default function EscrowDashboard() {
                       <TableCell>
                         {new Date(transaction.createdAt).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="capitalize">{transaction.type}</TableCell>
+                      <TableCell className="capitalize">
+                        <div className="flex items-center gap-2">
+                          {transaction.type === 'SERVICE_CHARGE' ? (
+                            <DollarSign className="h-4 w-4 text-terracotta" />
+                          ) : (
+                            <Wrench className="h-4 w-4 text-blue-600" />
+                          )}
+                          {transaction.type.replace('_', ' ')}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1 text-sm">
+                            <User className="h-3 w-3" />
+                            {transaction.fromUser?.name}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            → {transaction.toUser?.name}
+                          </div>
+                        </div>
+                      </TableCell>
                       <TableCell className="font-medium">
                         ₦{transaction.amount.toLocaleString()}
                       </TableCell>
@@ -225,7 +384,7 @@ export default function EscrowDashboard() {
                           {transaction.status}
                         </Badge>
                       </TableCell>
-                      <TableCell>{transaction.purpose || 'N/A'}</TableCell>
+                      <TableCell>{transaction.purpose}</TableCell>
                       <TableCell>
                         {transaction.status === 'HELD' && (
                           <Button 
@@ -342,7 +501,7 @@ export default function EscrowDashboard() {
                         ₦{charge.escrowHeld.toLocaleString()}
                       </TableCell>
                       <TableCell>
-                        <Badge className={charge.status === 'PAID' ? 'bg-green-500' : 'bg-yellow-500'}>
+                        <Badge className={getStatusColor(charge.status)}>
                           {charge.status}
                         </Badge>
                       </TableCell>
@@ -358,15 +517,70 @@ export default function EscrowDashboard() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-terracotta" />
-                Maintenance Escrow
+                <Wrench className="h-5 w-5 text-terracotta" />
+                Maintenance Work Progress & Fund Releases
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <Clock className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p>Maintenance escrow tracking coming soon.</p>
-                <p className="text-sm">This will show maintenance work progress and fund releases.</p>
+              <div className="space-y-4">
+                {maintenanceWork.map((work) => (
+                  <div key={work.id} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-lg">{work.title}</h4>
+                        <p className="text-gray-600 text-sm">{work.description}</p>
+                        <div className="flex items-center gap-4 mt-2">
+                          <Badge className={getStatusColor(work.status)}>
+                            {work.status.replace('_', ' ')}
+                          </Badge>
+                          <Badge className={getPriorityColor(work.priority)}>
+                            {work.priority}
+                          </Badge>
+                          <span className="text-sm text-gray-500">
+                            Vendor: {work.vendor}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold">₦{work.amount.toLocaleString()}</div>
+                        <div className="text-sm text-blue-600">
+                          Escrow: ₦{work.escrowHeld.toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">Progress</span>
+                        <span className="text-sm text-gray-600">{work.progress}%</span>
+                      </div>
+                      <Progress value={work.progress} className="h-2" />
+                    </div>
+                    
+                    <div className="flex justify-between items-center text-sm text-gray-500">
+                      <span>Started: {new Date(work.createdAt).toLocaleDateString()}</span>
+                      {work.completedAt && (
+                        <span>Completed: {new Date(work.completedAt).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                    
+                    {work.status === 'COMPLETED' && work.escrowHeld === 0 && (
+                      <div className="flex items-center gap-2 text-green-600 text-sm">
+                        <CheckCircle className="h-4 w-4" />
+                        Funds released to vendor
+                      </div>
+                    )}
+                    
+                    {work.escrowHeld > 0 && work.progress === 100 && (
+                      <Button 
+                        size="sm"
+                        className="bg-terracotta hover:bg-terracotta/90"
+                      >
+                        Release Escrow Funds
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
