@@ -2,10 +2,10 @@
 import { useAuth } from '@/contexts/AuthContext';
 
 export const useSession = () => {
-  const { user, loading } = useAuth();
+  const { user, session, loading } = useAuth();
   
   return {
-    data: user ? { user } : null,
-    status: loading ? 'loading' : user ? 'authenticated' : 'unauthenticated'
+    data: session ? { user, session } : null,
+    status: loading ? 'loading' : session ? 'authenticated' : 'unauthenticated'
   };
 };

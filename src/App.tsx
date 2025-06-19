@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Properties from "./pages/Properties";
@@ -36,15 +37,51 @@ const App: React.FC = () => {
               <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/properties" element={<Properties />} />
-              <Route path="/properties/:id" element={<PropertyDetail />} />
-              <Route path="/maintenance" element={<MaintenanceHub />} />
-              <Route path="/ai-insights" element={<AIInsights />} />
-              <Route path="/ai-predictions" element={<AIPredictions />} />
-              <Route path="/add-property" element={<AddProperty />} />
-              <Route path="/tenant-portal" element={<TenantPortal />} />
-              <Route path="/escrow" element={<EscrowHub />} />
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/properties" element={
+                <ProtectedRoute>
+                  <Properties />
+                </ProtectedRoute>
+              } />
+              <Route path="/properties/:id" element={
+                <ProtectedRoute>
+                  <PropertyDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="/maintenance" element={
+                <ProtectedRoute>
+                  <MaintenanceHub />
+                </ProtectedRoute>
+              } />
+              <Route path="/ai-insights" element={
+                <ProtectedRoute>
+                  <AIInsights />
+                </ProtectedRoute>
+              } />
+              <Route path="/ai-predictions" element={
+                <ProtectedRoute>
+                  <AIPredictions />
+                </ProtectedRoute>
+              } />
+              <Route path="/add-property" element={
+                <ProtectedRoute>
+                  <AddProperty />
+                </ProtectedRoute>
+              } />
+              <Route path="/tenant-portal" element={
+                <ProtectedRoute>
+                  <TenantPortal />
+                </ProtectedRoute>
+              } />
+              <Route path="/escrow" element={
+                <ProtectedRoute>
+                  <EscrowHub />
+                </ProtectedRoute>
+              } />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

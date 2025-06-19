@@ -1,14 +1,61 @@
 
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from "react-router-dom";
 import { Bot, ArrowRight } from "lucide-react";
 
 const Login = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn, user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  if (user) {
+    navigate("/dashboard");
+    return null;
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        toast({
+          title: "Error signing in",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "You have been signed in successfully.",
+        });
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -28,13 +75,16 @@ const Login = () => {
                 </p>
               </CardHeader>
               <CardContent className="space-y-6">
-                <form className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
                     <Input
                       id="email"
                       type="email"
                       placeholder="you@company.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
                       className="border-beige focus:border-terracotta focus:ring-terracotta"
                     />
                   </div>
@@ -45,6 +95,9 @@ const Login = () => {
                       id="password"
                       type="password"
                       placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
                       className="border-beige focus:border-terracotta focus:ring-terracotta"
                     />
                   </div>
@@ -59,31 +112,15 @@ const Login = () => {
                     </Link>
                   </div>
                   
-                  <Button className="w-full bg-terracotta hover:bg-terracotta/90 text-white">
-                    Sign In
+                  <Button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="w-full bg-terracotta hover:bg-terracotta/90 text-white"
+                  >
+                    {isLoading ? "Signing In..." : "Sign In"}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </form>
-                
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-beige" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-gray-500">Or continue with</span>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" className="border-beige hover:bg-beige">
-                    <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4 mr-2" />
-                    Google
-                  </Button>
-                  <Button variant="outline" className="border-beige hover:bg-beige">
-                    <img src="https://www.microsoft.com/favicon.ico" alt="Microsoft" className="w-4 h-4 mr-2" />
-                    Microsoft
-                  </Button>
-                </div>
                 
                 <div className="text-center text-sm text-gray-600">
                   Don't have an account?{" "}

@@ -1,20 +1,83 @@
 
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from "react-router-dom";
 import { Bot, ArrowRight, CheckCircle } from "lucide-react";
 
 const Signup = () => {
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    company: "",
+    password: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const { signUp, user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  if (user) {
+    navigate("/dashboard");
+    return null;
+  }
+
   const benefits = [
     "14-day free trial",
     "No credit card required",
     "Cancel anytime",
     "Full access to all features"
   ];
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const { error } = await signUp(formData.email, formData.password, {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        company: formData.company,
+      });
+      
+      if (error) {
+        toast({
+          title: "Error creating account",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Account created successfully!",
+          description: "Please check your email to verify your account.",
+        });
+        navigate("/login");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    });
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -71,7 +134,7 @@ const Signup = () => {
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <form className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="firstName">First Name</Label>
@@ -79,6 +142,9 @@ const Signup = () => {
                             id="firstName"
                             type="text"
                             placeholder="John"
+                            value={formData.firstName}
+                            onChange={handleInputChange}
+                            required
                             className="border-beige focus:border-terracotta focus:ring-terracotta"
                           />
                         </div>
@@ -88,6 +154,9 @@ const Signup = () => {
                             id="lastName"
                             type="text"
                             placeholder="Doe"
+                            value={formData.lastName}
+                            onChange={handleInputChange}
+                            required
                             className="border-beige focus:border-terracotta focus:ring-terracotta"
                           />
                         </div>
@@ -99,6 +168,9 @@ const Signup = () => {
                           id="email"
                           type="email"
                           placeholder="you@company.com"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          required
                           className="border-beige focus:border-terracotta focus:ring-terracotta"
                         />
                       </div>
@@ -109,6 +181,9 @@ const Signup = () => {
                           id="company"
                           type="text"
                           placeholder="Your Property Company"
+                          value={formData.company}
+                          onChange={handleInputChange}
+                          required
                           className="border-beige focus:border-terracotta focus:ring-terracotta"
                         />
                       </div>
@@ -119,12 +194,16 @@ const Signup = () => {
                           id="password"
                           type="password"
                           placeholder="Create a secure password"
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          required
+                          minLength={6}
                           className="border-beige focus:border-terracotta focus:ring-terracotta"
                         />
                       </div>
                       
                       <div className="flex items-start space-x-2">
-                        <input type="checkbox" className="rounded border-beige mt-1" />
+                        <input type="checkbox" required className="rounded border-beige mt-1" />
                         <p className="text-sm text-gray-600">
                           I agree to the{" "}
                           <Link to="/terms" className="text-terracotta hover:text-terracotta/80">
@@ -137,8 +216,12 @@ const Signup = () => {
                         </p>
                       </div>
                       
-                      <Button className="w-full bg-terracotta hover:bg-terracotta/90 text-white">
-                        Start Free Trial
+                      <Button 
+                        type="submit" 
+                        disabled={isLoading}
+                        className="w-full bg-terracotta hover:bg-terracotta/90 text-white"
+                      >
+                        {isLoading ? "Creating Account..." : "Start Free Trial"}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </form>
