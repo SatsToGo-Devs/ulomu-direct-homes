@@ -3,9 +3,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Bot } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import UserProfile from "./UserProfile";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -31,28 +34,38 @@ const Navbar = () => {
             <Link to="/how-it-works" className="text-gray-700 hover:text-terracotta font-medium">
               How It Works
             </Link>
-            <Link to="/dashboard" className="text-gray-700 hover:text-terracotta font-medium">
-              Dashboard
-            </Link>
-            <Link to="/maintenance" className="text-gray-700 hover:text-terracotta font-medium">
-              Maintenance
-            </Link>
-            <Link to="/escrow" className="text-gray-700 hover:text-terracotta font-medium">
-              Escrow
-            </Link>
-            <Link to="/ai-insights" className="text-gray-700 hover:text-terracotta font-medium">
-              AI Insights
-            </Link>
+            {user && (
+              <>
+                <Link to="/dashboard" className="text-gray-700 hover:text-terracotta font-medium">
+                  Dashboard
+                </Link>
+                <Link to="/maintenance" className="text-gray-700 hover:text-terracotta font-medium">
+                  Maintenance
+                </Link>
+                <Link to="/escrow" className="text-gray-700 hover:text-terracotta font-medium">
+                  Escrow
+                </Link>
+                <Link to="/ai-insights" className="text-gray-700 hover:text-terracotta font-medium">
+                  AI Insights
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" asChild>
-              <Link to="/login">Sign In</Link>
-            </Button>
-            <Button className="bg-terracotta hover:bg-terracotta/90 text-white" asChild>
-              <Link to="/signup">Start Free Trial</Link>
-            </Button>
+            {user ? (
+              <UserProfile />
+            ) : (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link to="/login">Sign In</Link>
+                </Button>
+                <Button className="bg-terracotta hover:bg-terracotta/90 text-white" asChild>
+                  <Link to="/signup">Start Free Trial</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -73,25 +86,40 @@ const Navbar = () => {
               <Link to="/how-it-works" className="text-gray-700 hover:text-terracotta font-medium">
                 How It Works
               </Link>
-              <Link to="/dashboard" className="text-gray-700 hover:text-terracotta font-medium">
-                Dashboard
-              </Link>
-              <Link to="/maintenance" className="text-gray-700 hover:text-terracotta font-medium">
-                Maintenance
-              </Link>
-              <Link to="/escrow" className="text-gray-700 hover:text-terracotta font-medium">
-                Escrow
-              </Link>
-              <Link to="/ai-insights" className="text-gray-700 hover:text-terracotta font-medium">
-                AI Insights
-              </Link>
+              {user && (
+                <>
+                  <Link to="/dashboard" className="text-gray-700 hover:text-terracotta font-medium">
+                    Dashboard
+                  </Link>
+                  <Link to="/maintenance" className="text-gray-700 hover:text-terracotta font-medium">
+                    Maintenance
+                  </Link>
+                  <Link to="/escrow" className="text-gray-700 hover:text-terracotta font-medium">
+                    Escrow
+                  </Link>
+                  <Link to="/ai-insights" className="text-gray-700 hover:text-terracotta font-medium">
+                    AI Insights
+                  </Link>
+                </>
+              )}
               <div className="pt-4 space-y-2">
-                <Button variant="ghost" className="w-full justify-start" asChild>
-                  <Link to="/login">Sign In</Link>
-                </Button>
-                <Button className="w-full bg-terracotta hover:bg-terracotta/90 text-white" asChild>
-                  <Link to="/signup">Start Free Trial</Link>
-                </Button>
+                {user ? (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">
+                      {user.user_metadata?.first_name || user.email}
+                    </span>
+                    <UserProfile />
+                  </div>
+                ) : (
+                  <>
+                    <Button variant="ghost" className="w-full justify-start" asChild>
+                      <Link to="/login">Sign In</Link>
+                    </Button>
+                    <Button className="w-full bg-terracotta hover:bg-terracotta/90 text-white" asChild>
+                      <Link to="/signup">Start Free Trial</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
