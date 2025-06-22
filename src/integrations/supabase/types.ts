@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_generated_content: {
+        Row: {
+          content_type: string
+          context_data: Json | null
+          created_at: string | null
+          feedback_rating: number | null
+          generated_content: string
+          id: string
+          original_prompt: string | null
+          updated_at: string | null
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content_type: string
+          context_data?: Json | null
+          created_at?: string | null
+          feedback_rating?: number | null
+          generated_content: string
+          id?: string
+          original_prompt?: string | null
+          updated_at?: string | null
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content_type?: string
+          context_data?: Json | null
+          created_at?: string | null
+          feedback_rating?: number | null
+          generated_content?: string
+          id?: string
+          original_prompt?: string | null
+          updated_at?: string | null
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_insights: {
         Row: {
           confidence_score: number | null
@@ -61,6 +100,161 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_predictions: {
+        Row: {
+          confidence_score: number | null
+          created_at: string | null
+          data_sources: string[] | null
+          description: string
+          estimated_cost: number | null
+          id: string
+          predicted_date: string | null
+          prediction_type: string
+          prevention_actions: string[] | null
+          property_id: string | null
+          status: string | null
+          title: string
+          unit_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string | null
+          data_sources?: string[] | null
+          description: string
+          estimated_cost?: number | null
+          id?: string
+          predicted_date?: string | null
+          prediction_type: string
+          prevention_actions?: string[] | null
+          property_id?: string | null
+          status?: string | null
+          title: string
+          unit_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string | null
+          data_sources?: string[] | null
+          description?: string
+          estimated_cost?: number | null
+          id?: string
+          predicted_date?: string | null
+          prediction_type?: string
+          prevention_actions?: string[] | null
+          property_id?: string | null
+          status?: string | null
+          title?: string
+          unit_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_predictions_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_predictions_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      escrow_accounts: {
+        Row: {
+          account_type: string | null
+          balance: number | null
+          created_at: string | null
+          frozen_balance: number | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_type?: string | null
+          balance?: number | null
+          created_at?: string | null
+          frozen_balance?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_type?: string | null
+          balance?: number | null
+          created_at?: string | null
+          frozen_balance?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      escrow_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string | null
+          escrow_account_id: string
+          from_user_id: string | null
+          id: string
+          purpose: string | null
+          release_conditions: string | null
+          scheduled_release: string | null
+          status: string | null
+          to_user_id: string | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description?: string | null
+          escrow_account_id: string
+          from_user_id?: string | null
+          id?: string
+          purpose?: string | null
+          release_conditions?: string | null
+          scheduled_release?: string | null
+          status?: string | null
+          to_user_id?: string | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string | null
+          escrow_account_id?: string
+          from_user_id?: string | null
+          id?: string
+          purpose?: string | null
+          release_conditions?: string | null
+          scheduled_release?: string | null
+          status?: string | null
+          to_user_id?: string | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escrow_transactions_escrow_account_id_fkey"
+            columns: ["escrow_account_id"]
+            isOneToOne: false
+            referencedRelation: "escrow_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -133,6 +327,56 @@ export type Database = {
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_work_progress: {
+        Row: {
+          created_at: string | null
+          escrow_amount: number | null
+          id: string
+          images: string[] | null
+          maintenance_request_id: string
+          progress_percentage: number | null
+          status_update: string | null
+          updated_at: string | null
+          updated_by: string | null
+          vendor_name: string | null
+          work_description: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          escrow_amount?: number | null
+          id?: string
+          images?: string[] | null
+          maintenance_request_id: string
+          progress_percentage?: number | null
+          status_update?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          vendor_name?: string | null
+          work_description?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          escrow_amount?: number | null
+          id?: string
+          images?: string[] | null
+          maintenance_request_id?: string
+          progress_percentage?: number | null
+          status_update?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          vendor_name?: string | null
+          work_description?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_work_progress_maintenance_request_id_fkey"
+            columns: ["maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -307,6 +551,94 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      service_charge_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          escrow_released: boolean | null
+          id: string
+          payment_date: string | null
+          service_charge_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          escrow_released?: boolean | null
+          id?: string
+          payment_date?: string | null
+          service_charge_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          escrow_released?: boolean | null
+          id?: string
+          payment_date?: string | null
+          service_charge_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_charge_payments_service_charge_id_fkey"
+            columns: ["service_charge_id"]
+            isOneToOne: false
+            referencedRelation: "service_charges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_charges: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string
+          escrow_held: number | null
+          frequency: string | null
+          id: string
+          next_due_date: string
+          status: string | null
+          unit_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description: string
+          escrow_held?: number | null
+          frequency?: string | null
+          id?: string
+          next_due_date: string
+          status?: string | null
+          unit_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string
+          escrow_held?: number | null
+          frequency?: string | null
+          id?: string
+          next_due_date?: string
+          status?: string | null
+          unit_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_charges_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       units: {
         Row: {

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,6 +20,9 @@ import AIPredictions from "./pages/AIPredictions";
 import AddProperty from "./pages/AddProperty";
 import ProfileSettingsPage from "./pages/ProfileSettings";
 import NotFound from "./pages/NotFound";
+import MaintenanceHub from "./pages/MaintenanceHub";
+import EscrowHub from "./pages/EscrowHub";
+import AIPredictions from "./pages/AIPredictions";
 
 const queryClient = new QueryClient();
 
