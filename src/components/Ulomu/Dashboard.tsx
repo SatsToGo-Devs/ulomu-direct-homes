@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -5,91 +6,62 @@ import {
   Brain, 
   Calendar, 
   AlertTriangle, 
-  CheckCircle, 
-  Clock, 
-  Wrench,
-  TrendingUp,
   Building,
   Users,
-  DollarSign
+  DollarSign,
+  TrendingUp,
+  Wrench
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useDashboardData } from "@/hooks/useDashboardData";
+import { formatDistanceToNow } from "date-fns";
 
 const UlomuDashboard = () => {
   const navigate = useNavigate();
+  const { stats, maintenanceRequests, aiInsights, loading } = useDashboardData();
 
-  const stats = [
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-terracotta"></div>
+        </div>
+      </div>
+    );
+  }
+
+  const statsCards = [
     {
       title: "Total Properties",
-      value: "24",
+      value: stats.totalProperties.toString(),
       icon: Building,
       color: "text-terracotta"
     },
     {
       title: "Active Tenants",
-      value: "87",
+      value: stats.activeTenants.toString(),
       icon: Users,
       color: "text-forest"
     },
     {
       title: "Monthly Revenue",
-      value: "₦2.4M",
+      value: formatCurrency(stats.monthlyRevenue),
       icon: DollarSign,
       color: "text-gold"
     },
     {
       title: "Cost Savings",
-      value: "35%",
+      value: `${stats.costSavings}%`,
       icon: TrendingUp,
       color: "text-terracotta"
-    }
-  ];
-
-  const maintenanceRequests = [
-    {
-      id: 1,
-      property: "Lekki Phase 1 Apartment",
-      issue: "Air conditioning not cooling",
-      priority: "High",
-      status: "In Progress",
-      tenant: "John Adebayo"
-    },
-    {
-      id: 2,
-      property: "Victoria Island Office",
-      issue: "Plumbing leak in bathroom",
-      priority: "Medium",
-      status: "Scheduled",
-      tenant: "Sarah Okafor"
-    },
-    {
-      id: 3,
-      property: "Ikeja Duplex",
-      issue: "Electrical socket not working",
-      priority: "Low",
-      status: "Completed",
-      tenant: "Mike Johnson"
-    }
-  ];
-
-  const aiInsights = [
-    {
-      type: "Predictive Alert",
-      message: "HVAC system at Marina Heights likely to fail within 10 days. Schedule maintenance now.",
-      icon: AlertTriangle,
-      color: "text-red-500"
-    },
-    {
-      type: "Cost Optimization",
-      message: "Switch to LED lighting across 5 properties to save ₦120,000 annually.",
-      icon: Brain,
-      color: "text-terracotta"
-    },
-    {
-      type: "Scheduling Recommendation",
-      message: "Bundle 3 plumbing repairs in Surulere area for 40% cost reduction.",
-      icon: Calendar,
-      color: "text-forest"
     }
   ];
 
@@ -97,7 +69,7 @@ const UlomuDashboard = () => {
     <div className="container mx-auto px-4 py-8">
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => (
+        {statsCards.map((stat, index) => (
           <Card key={index} className="border-beige/50">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -122,16 +94,44 @@ const UlomuDashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {aiInsights.map((insight, index) => (
-              <div key={index} className="flex items-start gap-3 p-4 bg-beige/30 rounded-lg">
-                <insight.icon className={`h-5 w-5 mt-0.5 ${insight.color}`} />
-                <div>
-                  <p className="font-medium text-sm text-gray-700">{insight.type}</p>
-                  <p className="text-sm text-gray-600 mt-1">{insight.message}</p>
-                </div>
+            {aiInsights.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Brain className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No insights available yet.</p>
+                <p className="text-sm">We're analyzing your data to generate insights.</p>
               </div>
-            ))}
-            <Button className="w-full mt-4 bg-terracotta hover:bg-terracotta/90 text-white">View All Insights</Button>
+            ) : (
+              <>
+                {aiInsights.slice(0, 3).map((insight, index) => (
+                  <div key={index} className="flex items-start gap-3 p-4 bg-beige/30 rounded-lg">
+                    <AlertTriangle className={`h-5 w-5 mt-0.5 ${
+                      insight.priority === 'HIGH' ? 'text-red-500' : 
+                      insight.priority === 'MEDIUM' ? 'text-orange-500' : 'text-green-500'
+                    }`} />
+                    <div className="flex-1">
+                      <p className="font-medium text-sm text-gray-700">{insight.insight_type.replace('_', ' ')}</p>
+                      <p className="text-sm text-gray-600 mt-1">{insight.title}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="outline" className="text-xs">
+                          {Math.round(insight.confidence_score * 100)}% confidence
+                        </Badge>
+                        {insight.estimated_savings && (
+                          <span className="text-xs text-green-600 font-medium">
+                            Save {formatCurrency(insight.estimated_savings)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <Button 
+                  className="w-full mt-4 bg-terracotta hover:bg-terracotta/90 text-white"
+                  onClick={() => navigate('/ai-insights')}
+                >
+                  View All Insights
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -145,36 +145,44 @@ const UlomuDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {maintenanceRequests.map((request) => (
-                <div key={request.id} className="border-l-4 border-terracotta pl-4 py-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium text-gray-900">{request.property}</h4>
-                    <Badge 
-                      variant={
-                        request.status === 'Completed' ? 'default' : 
-                        request.status === 'In Progress' ? 'secondary' : 'outline'
-                      }
-                      className={
-                        request.status === 'Completed' ? 'bg-forest text-white' :
-                        request.status === 'In Progress' ? 'bg-gold text-white' : ''
-                      }
-                    >
-                      {request.status}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-1">{request.issue}</p>
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span>Tenant: {request.tenant}</span>
-                    <span className={`px-2 py-1 rounded ${
-                      request.priority === 'High' ? 'bg-red-100 text-red-600' :
-                      request.priority === 'Medium' ? 'bg-yellow-100 text-yellow-600' :
-                      'bg-green-100 text-green-600'
-                    }`}>
-                      {request.priority} Priority
-                    </span>
-                  </div>
+              {maintenanceRequests.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Wrench className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>No maintenance requests yet.</p>
                 </div>
-              ))}
+              ) : (
+                maintenanceRequests.map((request) => (
+                  <div key={request.id} className="border-l-4 border-terracotta pl-4 py-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium text-gray-900">{request.property_name}</h4>
+                      <Badge 
+                        variant={
+                          request.status === 'COMPLETED' ? 'default' : 
+                          request.status === 'IN_PROGRESS' ? 'secondary' : 'outline'
+                        }
+                        className={
+                          request.status === 'COMPLETED' ? 'bg-forest text-white' :
+                          request.status === 'IN_PROGRESS' ? 'bg-gold text-white' : ''
+                        }
+                      >
+                        {request.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-1">{request.title}</p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>Tenant: {request.tenant_name}</span>
+                      <span className={`px-2 py-1 rounded ${
+                        request.priority === 'HIGH' ? 'bg-red-100 text-red-600' :
+                        request.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-600' :
+                        'bg-green-100 text-green-600'
+                      }`}>
+                        {request.priority} Priority
+                      </span>
+                      <span>{formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
             <Button 
               variant="outline" 
@@ -204,10 +212,10 @@ const UlomuDashboard = () => {
             <Button 
               variant="outline" 
               className="h-20 flex-col border-forest text-forest hover:bg-forest hover:text-white"
-              onClick={() => navigate('/ai-predictions')}
+              onClick={() => navigate('/ai-insights')}
             >
               <Brain className="h-6 w-6 mb-2" />
-              AI Predictions
+              AI Insights
             </Button>
             <Button 
               variant="outline" 
