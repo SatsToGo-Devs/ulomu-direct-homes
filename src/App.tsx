@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,16 +14,13 @@ import PropertyDetail from "./pages/PropertyDetail";
 import HowItWorks from "./pages/HowItWorks";
 import LandlordDashboard from "./pages/LandlordDashboard";
 import TenantPortal from "./pages/TenantPortal";
-import MaintenanceHub from "./pages/MaintenanceHub";
-import EscrowHub from "./pages/EscrowHub";
+import MaintenanceHubPage from "./pages/MaintenanceHub";
+import EscrowHubPage from "./pages/EscrowHub";
 import AIInsights from "./pages/AIInsights";
-import AIPredictions from "./pages/AIPredictions";
+import AIPredictionsPage from "./pages/AIPredictions";
 import AddProperty from "./pages/AddProperty";
 import ProfileSettingsPage from "./pages/ProfileSettings";
 import NotFound from "./pages/NotFound";
-import MaintenanceHub from "./pages/MaintenanceHub";
-import EscrowHub from "./pages/EscrowHub";
-import AIPredictions from "./pages/AIPredictions";
 
 const queryClient = new QueryClient();
 
@@ -43,10 +41,10 @@ const App = () => (
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/landlord-dashboard" element={<LandlordDashboard />} />
             <Route path="/tenant-portal" element={<TenantPortal />} />
-            <Route path="/maintenance" element={<MaintenanceHub />} />
-            <Route path="/escrow" element={<EscrowHub />} />
+            <Route path="/maintenance" element={<MaintenanceHubPage />} />
+            <Route path="/escrow" element={<EscrowHubPage />} />
             <Route path="/ai-insights" element={<AIInsights />} />
-            <Route path="/ai-predictions" element={<AIPredictions />} />
+            <Route path="/ai-predictions" element={<AIPredictionsPage />} />
             <Route path="/add-property" element={<AddProperty />} />
             <Route path="/profile-settings" element={<ProfileSettingsPage />} />
             <Route path="*" element={<NotFound />} />

@@ -112,9 +112,17 @@ export const useEscrowData = () => {
 
   const createTransaction = async (transactionData: Partial<EscrowTransaction>) => {
     try {
+      // Ensure required fields are present
+      const completeTransactionData = {
+        ...transactionData,
+        escrow_account_id: account?.id || '',
+        amount: transactionData.amount || 0,
+        type: transactionData.type || 'DEPOSIT'
+      };
+
       const { data, error } = await supabase
         .from('escrow_transactions')
-        .insert([{ ...transactionData, escrow_account_id: account?.id }])
+        .insert([completeTransactionData])
         .select()
         .single();
 

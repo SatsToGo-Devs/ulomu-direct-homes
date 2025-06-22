@@ -71,9 +71,17 @@ export const useMaintenanceData = () => {
 
   const createMaintenanceRequest = async (requestData: Partial<MaintenanceRequest>) => {
     try {
+      // Ensure required fields are present
+      const completeRequestData = {
+        ...requestData,
+        tenant_id: user?.id,
+        property_id: requestData.property_id || '',
+        title: requestData.title || ''
+      };
+
       const { data, error } = await supabase
         .from('maintenance_requests')
-        .insert([{ ...requestData, tenant_id: user?.id }])
+        .insert([completeRequestData])
         .select()
         .single();
 
