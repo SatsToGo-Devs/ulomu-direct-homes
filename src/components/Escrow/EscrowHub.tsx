@@ -5,8 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEscrowData } from '@/hooks/useEscrowData';
-import { DollarSign, Shield, Clock, TrendingUp } from 'lucide-react';
+import { DollarSign, Shield, Clock, TrendingUp, CreditCard } from 'lucide-react';
 import ServiceChargeOverview from './ServiceChargeOverview';
+import EscrowPaymentModal from './EscrowPaymentModal';
+import ChatAssistant from '../AI/ChatAssistant';
 
 const EscrowHub = () => {
   const { account, transactions, serviceCharges, loading } = useEscrowData();
@@ -40,17 +42,21 @@ const EscrowHub = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-forest">Escrow Hub</h2>
-        <p className="text-gray-600">Secure financial transactions and service charge management</p>
+      {/* Header with Payment Action */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-forest">Escrow Hub</h2>
+          <p className="text-gray-600">Secure financial transactions and service charge management</p>
+        </div>
+        <EscrowPaymentModal />
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
           <TabsTrigger value="service-charges">Service Charges</TabsTrigger>
+          <TabsTrigger value="ai-assistant">AI Assistant</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
@@ -96,6 +102,41 @@ const EscrowHub = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <EscrowPaymentModal 
+                  trigger={
+                    <div className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                      <CreditCard className="h-8 w-8 text-terracotta mb-2" />
+                      <h3 className="font-medium">Make Payment</h3>
+                      <p className="text-sm text-gray-600">Send money via escrow</p>
+                    </div>
+                  }
+                />
+                <div className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <Shield className="h-8 w-8 text-gold mb-2" />
+                  <h3 className="font-medium">Release Funds</h3>
+                  <p className="text-sm text-gray-600">Complete transactions</p>
+                </div>
+                <div className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <Clock className="h-8 w-8 text-blue-600 mb-2" />
+                  <h3 className="font-medium">View History</h3>
+                  <p className="text-sm text-gray-600">Transaction records</p>
+                </div>
+                <div className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <TrendingUp className="h-8 w-8 text-green-600 mb-2" />
+                  <h3 className="font-medium">Reports</h3>
+                  <p className="text-sm text-gray-600">Financial insights</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Recent Transactions */}
           <Card>
@@ -187,6 +228,37 @@ const EscrowHub = () => {
 
         <TabsContent value="service-charges">
           <ServiceChargeOverview />
+        </TabsContent>
+
+        <TabsContent value="ai-assistant">
+          <div className="grid lg:grid-cols-2 gap-6">
+            <ChatAssistant userType="tenant" context="escrow" />
+            <Card>
+              <CardHeader>
+                <CardTitle>Escrow AI Features</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="font-medium text-blue-900 mb-2">Smart Transaction Analysis</h4>
+                  <p className="text-sm text-blue-700">
+                    AI monitors your escrow transactions for patterns, potential savings, and optimization opportunities.
+                  </p>
+                </div>
+                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                  <h4 className="font-medium text-green-900 mb-2">Fraud Detection</h4>
+                  <p className="text-sm text-green-700">
+                    Advanced AI helps identify suspicious activities and protects your funds from fraudulent transactions.
+                  </p>
+                </div>
+                <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                  <h4 className="font-medium text-purple-900 mb-2">Predictive Insights</h4>
+                  <p className="text-sm text-purple-700">
+                    Get predictions on cash flow, payment patterns, and optimal timing for fund releases.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="settings">
