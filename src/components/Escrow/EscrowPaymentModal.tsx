@@ -12,7 +12,7 @@ import { CreditCard, Shield, DollarSign } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_key_here');
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_key_here');
 
 interface EscrowPaymentModalProps {
   trigger?: React.ReactNode;
@@ -66,7 +66,7 @@ const PaymentForm = ({ onSuccess }: { onSuccess: () => void }) => {
       });
 
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Payment error:', error);
       toast({
         title: "Payment Failed",
