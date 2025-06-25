@@ -1,3 +1,4 @@
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,28 +8,72 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
-import { Building, MapPin, DollarSign, Users, Calendar, Brain } from "lucide-react";
+import { Building, MapPin, DollarSign, Users, Calendar, Brain, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useProperties } from "@/hooks/useProperties";
+import ImageUpload from "@/components/ImageUpload";
+import { useToast } from "@/hooks/use-toast";
 
 const AddProperty = () => {
   const navigate = useNavigate();
+  const { addProperty } = useProperties();
+  const { toast } = useToast();
 
   const [formData, setFormData] = useState({
     name: '',
     address: '',
     city: '',
     state: '',
-    propertyType: '',
-    units: '',
-    rentAmount: '',
+    property_type: '',
+    units_count: '',
     description: '',
     amenities: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Property data:', formData);
-    // Handle form submission
+    
+    if (!formData.name || !formData.address) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      
+      const amenitiesArray = formData.amenities 
+        ? formData.amenities.split(',').map(item => item.trim()).filter(item => item)
+        : [];
+
+      await addProperty({
+        name: formData.name,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        property_type: formData.property_type,
+        units_count: parseInt(formData.units_count) || 1,
+        description: formData.description,
+        amenities: amenitiesArray,
+      }, imageFiles);
+
+      toast({
+        title: "Success!",
+        description: "Property has been added successfully",
+      });
+
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error adding property:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -62,17 +107,18 @@ const AddProperty = () => {
                 {/* Basic Information */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Property Name</Label>
+                    <Label htmlFor="name">Property Name *</Label>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       placeholder="e.g., Marina Heights Apartment"
+                      required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="propertyType">Property Type</Label>
-                    <Select onValueChange={(value) => handleInputChange('propertyType', value)}>
+                    <Label htmlFor="property_type">Property Type</Label>
+                    <Select onValueChange={(value) => handleInputChange('property_type', value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select property type" />
                       </SelectTrigger>
@@ -94,12 +140,13 @@ const AddProperty = () => {
                     Location Details
                   </h3>
                   <div className="space-y-2">
-                    <Label htmlFor="address">Street Address</Label>
+                    <Label htmlFor="address">Street Address *</Label>
                     <Input
                       id="address"
                       value={formData.address}
                       onChange={(e) => handleInputChange('address', e.target.value)}
                       placeholder="123 Main Street"
+                      required
                     />
                   </div>
                   <div className="grid md:grid-cols-2 gap-6">
@@ -130,34 +177,32 @@ const AddProperty = () => {
                   </div>
                 </div>
 
-                {/* Financial & Capacity */}
+                {/* Property Details */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-gold" />
-                    Financial & Capacity Details
+                    Property Details
                   </h3>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="units">Number of Units</Label>
-                      <Input
-                        id="units"
-                        type="number"
-                        value={formData.units}
-                        onChange={(e) => handleInputChange('units', e.target.value)}
-                        placeholder="e.g., 12"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="rentAmount">Monthly Rent (₦)</Label>
-                      <Input
-                        id="rentAmount"
-                        type="number"
-                        value={formData.rentAmount}
-                        onChange={(e) => handleInputChange('rentAmount', e.target.value)}
-                        placeholder="500000"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="units_count">Number of Units</Label>
+                    <Input
+                      id="units_count"
+                      type="number"
+                      value={formData.units_count}
+                      onChange={(e) => handleInputChange('units_count', e.target.value)}
+                      placeholder="e.g., 12"
+                      min="1"
+                    />
                   </div>
+                </div>
+
+                {/* Images Upload */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Property Images</h3>
+                  <ImageUpload 
+                    onImagesChange={setImageFiles}
+                    maxImages={5}
+                  />
                 </div>
 
                 {/* Description & Amenities */}
@@ -189,11 +234,27 @@ const AddProperty = () => {
                 </div>
 
                 <div className="flex gap-4 pt-6">
-                  <Button type="button" variant="outline" className="flex-1">
-                    Save as Draft
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => navigate('/dashboard')}
+                  >
+                    Cancel
                   </Button>
-                  <Button type="submit" className="flex-1 bg-terracotta hover:bg-terracotta/90">
-                    Add Property
+                  <Button 
+                    type="submit" 
+                    className="flex-1 bg-terracotta hover:bg-terracotta/90"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      "Adding Property..."
+                    ) : (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Add Property
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>

@@ -2,23 +2,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Brain, 
-  Calendar, 
-  AlertTriangle, 
-  Building,
-  Users,
-  DollarSign,
-  TrendingUp,
-  Wrench
-} from "lucide-react";
+import { Building, Users, DollarSign, TrendingUp, Plus, Brain, Wrench } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { formatDistanceToNow } from "date-fns";
+import { useProperties } from "@/hooks/useProperties";
+import PropertyCard from "@/components/PropertyCard";
 
 const UlomuDashboard = () => {
   const navigate = useNavigate();
-  const { stats, maintenanceRequests, aiInsights, loading } = useDashboardData();
+  const { stats, loading } = useDashboardData();
+  const { properties } = useProperties();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -28,214 +21,188 @@ const UlomuDashboard = () => {
     }).format(amount);
   };
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-terracotta"></div>
-        </div>
-      </div>
-    );
-  }
-
-  const statsCards = [
-    {
-      title: "Total Properties",
-      value: stats.totalProperties.toString(),
-      icon: Building,
-      color: "text-terracotta"
-    },
-    {
-      title: "Active Tenants",
-      value: stats.activeTenants.toString(),
-      icon: Users,
-      color: "text-forest"
-    },
-    {
-      title: "Monthly Revenue",
-      value: formatCurrency(stats.monthlyRevenue),
-      icon: DollarSign,
-      color: "text-gold"
-    },
-    {
-      title: "Cost Savings",
-      value: `${stats.costSavings}%`,
-      icon: TrendingUp,
-      color: "text-terracotta"
-    }
-  ];
-
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {statsCards.map((stat, index) => (
-          <Card key={index} className="border-beige/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-                </div>
-                <stat.icon className={`h-8 w-8 ${stat.color}`} />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-8">
-        {/* AI Insights */}
-        <Card className="border-beige/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="h-5 w-5 text-terracotta" />
-              AI Insights & Recommendations
-            </CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Properties</CardTitle>
+            <Building className="h-4 w-4 text-terracotta" />
           </CardHeader>
-          <CardContent className="space-y-4">
-            {aiInsights.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Brain className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No insights available yet.</p>
-                <p className="text-sm">We're analyzing your data to generate insights.</p>
-              </div>
-            ) : (
-              <>
-                {aiInsights.slice(0, 3).map((insight, index) => (
-                  <div key={index} className="flex items-start gap-3 p-4 bg-beige/30 rounded-lg">
-                    <AlertTriangle className={`h-5 w-5 mt-0.5 ${
-                      insight.priority === 'HIGH' ? 'text-red-500' : 
-                      insight.priority === 'MEDIUM' ? 'text-orange-500' : 'text-green-500'
-                    }`} />
-                    <div className="flex-1">
-                      <p className="font-medium text-sm text-gray-700">{insight.insight_type.replace('_', ' ')}</p>
-                      <p className="text-sm text-gray-600 mt-1">{insight.title}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Badge variant="outline" className="text-xs">
-                          {Math.round(insight.confidence_score * 100)}% confidence
-                        </Badge>
-                        {insight.estimated_savings && (
-                          <span className="text-xs text-green-600 font-medium">
-                            Save {formatCurrency(insight.estimated_savings)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <Button 
-                  className="w-full mt-4 bg-terracotta hover:bg-terracotta/90 text-white"
-                  onClick={() => navigate('/ai-insights')}
-                >
-                  View All Insights
-                </Button>
-              </>
-            )}
+          <CardContent>
+            <div className="text-2xl font-bold">{loading ? "..." : stats.totalProperties}</div>
+            <p className="text-xs text-muted-foreground">
+              {properties.length > 0 ? "Active portfolio" : "Start adding properties"}
+            </p>
           </CardContent>
         </Card>
 
-        {/* Maintenance Requests */}
-        <Card className="border-beige/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Wrench className="h-5 w-5 text-gold" />
-              Recent Maintenance Requests
-            </CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Tenants</CardTitle>
+            <Users className="h-4 w-4 text-forest" />
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {maintenanceRequests.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Wrench className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>No maintenance requests yet.</p>
-                </div>
-              ) : (
-                maintenanceRequests.map((request) => (
-                  <div key={request.id} className="border-l-4 border-terracotta pl-4 py-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-gray-900">{request.property_name}</h4>
-                      <Badge 
-                        variant={
-                          request.status === 'COMPLETED' ? 'default' : 
-                          request.status === 'IN_PROGRESS' ? 'secondary' : 'outline'
-                        }
-                        className={
-                          request.status === 'COMPLETED' ? 'bg-forest text-white' :
-                          request.status === 'IN_PROGRESS' ? 'bg-gold text-white' : ''
-                        }
-                      >
-                        {request.status.replace('_', ' ')}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-1">{request.title}</p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span>Tenant: {request.tenant_name}</span>
-                      <span className={`px-2 py-1 rounded ${
-                        request.priority === 'HIGH' ? 'bg-red-100 text-red-600' :
-                        request.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-600' :
-                        'bg-green-100 text-green-600'
-                      }`}>
-                        {request.priority} Priority
-                      </span>
-                      <span>{formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}</span>
-                    </div>
-                  </div>
-                ))
-              )}
+            <div className="text-2xl font-bold">{loading ? "..." : stats.activeTenants}</div>
+            <p className="text-xs text-muted-foreground">
+              Occupied units
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-gold" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {loading ? "..." : formatCurrency(stats.monthlyRevenue)}
             </div>
-            <Button 
-              variant="outline" 
-              className="w-full mt-4 border-forest text-forest hover:bg-forest hover:text-white"
-              onClick={() => navigate('/maintenance')}
-            >
-              View All Requests
-            </Button>
+            <p className="text-xs text-muted-foreground">
+              From all properties
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">AI Cost Savings</CardTitle>
+            <TrendingUp className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{loading ? "..." : stats.costSavings}%</div>
+            <p className="text-xs text-muted-foreground">
+              Efficiency improvement
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Properties Section */}
+      <div className="mb-8">
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Your Properties</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {properties.length} properties in your portfolio
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/properties')}
+                >
+                  View All
+                </Button>
+                <Button
+                  onClick={() => navigate('/add-property')}
+                  className="bg-terracotta hover:bg-terracotta/90"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Property
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {properties.length === 0 ? (
+              <div className="text-center py-8">
+                <Building className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Properties Yet</h3>
+                <p className="text-gray-500 mb-4">Start building your property portfolio with AI-powered management</p>
+                <Button 
+                  onClick={() => navigate('/add-property')}
+                  className="bg-terracotta hover:bg-terracotta/90"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Property
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {properties.slice(0, 3).map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    property={property}
+                    onView={(prop) => navigate(`/property/${prop.id}`)}
+                    onEdit={(prop) => console.log('Edit property:', prop)}
+                  />
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
       {/* Quick Actions */}
-      <Card className="mt-8 border-beige/50">
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button 
-              className="h-20 flex-col bg-terracotta hover:bg-terracotta/90 text-white"
-              onClick={() => navigate('/maintenance')}
-            >
-              <Calendar className="h-6 w-6 mb-2" />
-              Schedule Maintenance
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col border-forest text-forest hover:bg-forest hover:text-white"
-              onClick={() => navigate('/ai-insights')}
-            >
-              <Brain className="h-6 w-6 mb-2" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5 text-terracotta" />
               AI Insights
-            </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">
+              Get AI-powered insights for your properties
+            </p>
             <Button 
-              variant="outline" 
-              className="h-20 flex-col border-gold text-gold hover:bg-gold hover:text-white"
-              onClick={() => navigate('/add-property')}
+              onClick={() => navigate('/ai-insights')}
+              className="w-full"
+              variant="outline"
             >
-              <Building className="h-6 w-6 mb-2" />
-              Add Property
+              View AI Insights
             </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wrench className="h-5 w-5 text-forest" />
+              Maintenance Hub
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">
+              Manage maintenance requests and schedules
+            </p>
             <Button 
-              variant="outline" 
-              className="h-20 flex-col border-terracotta text-terracotta hover:bg-terracotta hover:text-white"
-              onClick={() => navigate('/tenant-portal')}
+              onClick={() => navigate('/maintenance')}
+              className="w-full"
+              variant="outline"
             >
-              <Users className="h-6 w-6 mb-2" />
-              Tenant Portal
+              Open Maintenance Hub
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-gold" />
+              Escrow Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">
+              Secure payments and service charges
+            </p>
+            <Button 
+              onClick={() => navigate('/escrow')}
+              className="w-full"
+              variant="outline"
+            >
+              Manage Escrow
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
