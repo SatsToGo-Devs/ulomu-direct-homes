@@ -3,21 +3,29 @@ import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building, MapPin, Users, Edit, Eye } from 'lucide-react';
+import { Building, MapPin, Users, Eye } from 'lucide-react';
 import { Property } from '@/hooks/useProperties';
+import AddTenantModal from '@/components/TenantManagement/AddTenantModal';
+import EditPropertyModal from '@/components/PropertyManagement/EditPropertyModal';
 
 interface PropertyCardProps {
   property: Property;
   onView?: (property: Property) => void;
-  onEdit?: (property: Property) => void;
+  onPropertyUpdated?: () => void;
 }
 
-const PropertyCard = ({ property, onView, onEdit }: PropertyCardProps) => {
+const PropertyCard = ({ property, onView, onPropertyUpdated }: PropertyCardProps) => {
   const primaryImage = property.images?.[0];
   
   const formatPropertyType = (type?: string) => {
     if (!type) return 'Property';
     return type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
+  const handleRefresh = () => {
+    if (onPropertyUpdated) {
+      onPropertyUpdated();
+    }
   };
 
   return (
@@ -96,15 +104,16 @@ const PropertyCard = ({ property, onView, onEdit }: PropertyCardProps) => {
           <Eye className="h-4 w-4 mr-2" />
           View
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1"
-          onClick={() => onEdit?.(property)}
-        >
-          <Edit className="h-4 w-4 mr-2" />
-          Edit
-        </Button>
+        
+        <EditPropertyModal 
+          property={property} 
+          onPropertyUpdated={handleRefresh}
+        />
+        
+        <AddTenantModal 
+          property={property}
+          onTenantAdded={handleRefresh}
+        />
       </CardFooter>
     </Card>
   );

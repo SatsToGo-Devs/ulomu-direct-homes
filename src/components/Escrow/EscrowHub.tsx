@@ -8,10 +8,11 @@ import { useEscrowData } from '@/hooks/useEscrowData';
 import { DollarSign, Shield, Clock, TrendingUp, CreditCard } from 'lucide-react';
 import ServiceChargeOverview from './ServiceChargeOverview';
 import EscrowPaymentModal from './EscrowPaymentModal';
+import PendingTransactionsManager from './PendingTransactionsManager';
 import ChatAssistant from '../AI/ChatAssistant';
 
 const EscrowHub = () => {
-  const { account, transactions, serviceCharges, loading } = useEscrowData();
+  const { account, transactions, serviceCharges, loading, fetchEscrowData } = useEscrowData();
 
   const getTransactionIcon = (type: string) => {
     switch (type) {
@@ -52,9 +53,10 @@ const EscrowHub = () => {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
+          <TabsTrigger value="pending">Pending</TabsTrigger>
           <TabsTrigger value="service-charges">Service Charges</TabsTrigger>
           <TabsTrigger value="ai-assistant">AI Assistant</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -224,6 +226,13 @@ const EscrowHub = () => {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="pending">
+          <PendingTransactionsManager 
+            transactions={transactions}
+            onTransactionsUpdated={fetchEscrowData}
+          />
         </TabsContent>
 
         <TabsContent value="service-charges">
