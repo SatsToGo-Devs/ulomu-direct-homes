@@ -20,6 +20,7 @@ import AIInsights from "./pages/AIInsights";
 import AIPredictionsPage from "./pages/AIPredictions";
 import AddProperty from "./pages/AddProperty";
 import ProfileSettingsPage from "./pages/ProfileSettings";
+import SystemTest from "./pages/SystemTest";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/ai-predictions" element={<AIPredictionsPage />} />
             <Route path="/add-property" element={<AddProperty />} />
             <Route path="/profile-settings" element={<ProfileSettingsPage />} />
+            <Route path="/system-test" element={<SystemTest />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -36,32 +36,44 @@ serve(async (req) => {
     if (user_type === "tenant") {
       systemPrompt = `You are Ulomu AI, a helpful assistant for tenants in the Ulomu property management platform. 
       Help with rent payments, maintenance requests, service charges, lease questions, and general property management inquiries. 
-      Be friendly, professional, and provide accurate information about property management processes.`;
+      Be friendly, professional, and provide accurate information about property management processes. 
+      Keep responses concise and helpful.`;
     } else if (user_type === "landlord") {
       systemPrompt = `You are Ulomu AI, a helpful assistant for landlords in the Ulomu property management platform. 
       Help with property management, tenant communications, maintenance coordination, financial reporting, and property insights. 
-      Provide professional guidance on property management best practices.`;
+      Provide professional guidance on property management best practices. 
+      Keep responses concise and actionable.`;
     }
 
-    // Call OpenAI GPT-4o
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    if (context === "escrow") {
+      systemPrompt += " Focus on escrow payments, secure transactions, and financial management.";
+    } else if (context === "maintenance") {
+      systemPrompt += " Focus on maintenance requests, property upkeep, and preventive care.";
+    }
+
+    // Call OpenAI API
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
         ],
         temperature: 0.7,
-        max_tokens: 1000
+        max_tokens: 800
       }),
     });
 
-    const data = await response.json();
+    if (!openAIResponse.ok) {
+      throw new Error(`OpenAI API error: ${openAIResponse.status}`);
+    }
+
+    const data = await openAIResponse.json();
     const aiResponse = data.choices[0].message.content;
 
     // Store conversation in database
@@ -82,7 +94,10 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in AI chat assistant:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      response: "I'm having trouble connecting to the AI service right now. Please try again in a moment."
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
