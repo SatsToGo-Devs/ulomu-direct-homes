@@ -79,14 +79,21 @@ export const useProperties = () => {
         imageUrls.push(publicUrl);
       }
 
-      // Create property with images
+      // Create property with images - insert a single object, not an array
       const { data, error } = await supabase
         .from('properties')
-        .insert([{
-          ...propertyData,
+        .insert({
+          name: propertyData.name || '',
+          address: propertyData.address || '',
+          city: propertyData.city,
+          state: propertyData.state,
+          property_type: propertyData.property_type,
+          units_count: propertyData.units_count || 1,
+          description: propertyData.description,
+          amenities: propertyData.amenities || [],
           user_id: user.id,
           images: imageUrls,
-        }])
+        })
         .select()
         .single();
 

@@ -101,7 +101,7 @@ const LandlordDashboard = () => {
             )}
 
             {activeTab === "properties" && (
-              <Properties properties={properties} />
+              <Properties />
             )}
 
             {activeTab === "payments" && (
