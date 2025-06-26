@@ -11,7 +11,7 @@ import PropertyCard from "@/components/PropertyCard";
 const UlomuDashboard = () => {
   const navigate = useNavigate();
   const { stats, loading } = useDashboardData();
-  const { properties } = useProperties();
+  const { properties, fetchProperties } = useProperties();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -129,7 +129,7 @@ const UlomuDashboard = () => {
                     key={property.id}
                     property={property}
                     onView={(prop) => navigate(`/property/${prop.id}`)}
-                    onEdit={(prop) => console.log('Edit property:', prop)}
+                    onPropertyUpdated={fetchProperties}
                   />
                 ))}
               </div>

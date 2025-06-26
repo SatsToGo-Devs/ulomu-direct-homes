@@ -15,6 +15,15 @@ export const useEscrowActions = () => {
     try {
       setLoading(true);
 
+      // First get the user's escrow account ID
+      const { data: escrowAccount, error: accountError } = await supabase
+        .from('escrow_accounts')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (accountError) throw accountError;
+
       // Update all pending transactions to completed
       const { error } = await supabase
         .from('escrow_transactions')
@@ -23,13 +32,7 @@ export const useEscrowActions = () => {
           updated_at: new Date().toISOString()
         })
         .eq('status', 'PENDING')
-        .in('escrow_account_id', [
-          // Get user's escrow account ID
-          supabase
-            .from('escrow_accounts')
-            .select('id')
-            .eq('user_id', user.id)
-        ]);
+        .eq('escrow_account_id', escrowAccount.id);
 
       if (error) throw error;
 

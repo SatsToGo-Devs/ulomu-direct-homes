@@ -9,15 +9,10 @@ import PropertyCard from '@/components/PropertyCard';
 
 const Properties = () => {
   const navigate = useNavigate();
-  const { properties, loading } = useProperties();
+  const { properties, loading, fetchProperties } = useProperties();
 
   const handleViewProperty = (property: any) => {
     navigate(`/property/${property.id}`);
-  };
-
-  const handleEditProperty = (property: any) => {
-    // Navigate to edit page (to be implemented)
-    console.log('Edit property:', property);
   };
 
   if (loading) {
@@ -76,7 +71,7 @@ const Properties = () => {
                 key={property.id}
                 property={property}
                 onView={handleViewProperty}
-                onEdit={handleEditProperty}
+                onPropertyUpdated={fetchProperties}
               />
             ))}
           </div>
