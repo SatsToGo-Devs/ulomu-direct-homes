@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -77,7 +76,13 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({
       const { data, error } = await query.limit(50);
       if (error) throw error;
 
-      setMessages(data || []);
+      // Type assertion to ensure message_type is the correct union type
+      const typedMessages = (data || []).map(msg => ({
+        ...msg,
+        message_type: msg.message_type as 'user' | 'assistant' | 'system'
+      }));
+
+      setMessages(typedMessages);
 
       // Add welcome message if no chat history
       if (!data || data.length === 0) {
@@ -112,7 +117,11 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({
           filter: `user_id=eq.${user?.id}`
         },
         (payload) => {
-          const newMessage = payload.new as ChatMessage;
+          const newMessage = {
+            ...payload.new,
+            message_type: payload.new.message_type as 'user' | 'assistant' | 'system'
+          } as ChatMessage;
+          
           if (newMessage.message_type === 'assistant') {
             setMessages(prev => [...prev, newMessage]);
           }

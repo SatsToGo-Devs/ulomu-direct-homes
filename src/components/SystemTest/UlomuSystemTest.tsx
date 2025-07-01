@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,7 @@ import {
 
 interface TestResult {
   name: string;
-  status: 'passed' | 'failed' | 'warning' | 'running';
+  status: 'passed' | 'failed' | 'warning' | 'running' | 'pending';
   duration?: number;
   details?: string;
   error?: string;
@@ -391,16 +390,25 @@ const UlomuSystemTest: React.FC = () => {
         await testRunners[i](i);
         setProgress(((i + 1) / testRunners.length) * 100);
         
-        // Log results to database
+        // Log results to database with proper JSON serialization
         const suite = testSuites[i];
         if (suite) {
+          // Convert TestResult objects to proper JSON format
+          const testsAsJson = suite.tests.map(test => ({
+            name: test.name,
+            status: test.status,
+            duration: test.duration || null,
+            details: test.details || null,
+            error: test.error || null
+          }));
+
           await supabase.from('system_diagnostics').insert({
             user_id: user.id,
             test_type: 'system_test',
             test_name: suite.name,
             status: suite.overall === 'passed' ? 'passed' : 
                    suite.overall === 'failed' ? 'failed' : 'warning',
-            details: { tests: suite.tests }
+            details: { tests: testsAsJson }
           });
         }
       }
