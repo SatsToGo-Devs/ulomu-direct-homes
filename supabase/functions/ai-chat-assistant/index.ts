@@ -1,7 +1,11 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
+
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,90 +18,92 @@ serve(async (req) => {
   }
 
   try {
-    const { message, context = "general", user_type = "tenant" } = await req.json();
-
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
-    // Get authenticated user
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData } = await supabaseClient.auth.getUser(token);
-    const user = userData.user;
+    const { message, userId, propertyId, maintenanceRequestId } = await req.json();
     
-    if (!user) throw new Error("User not authenticated");
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Define system prompts based on user type and context
-    let systemPrompt = "";
+    // Store user message
+    await supabase.from('chat_messages').insert({
+      user_id: userId,
+      property_id: propertyId,
+      maintenance_request_id: maintenanceRequestId,
+      message_type: 'user',
+      content: message
+    });
+
+    // Get context from previous messages
+    const { data: chatHistory } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('property_id', propertyId)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    // Build context for AI
+    const context = chatHistory?.reverse().map(msg => 
+      `${msg.message_type === 'user' ? 'User' : 'Assistant'}: ${msg.content}`
+    ).join('\n') || '';
+
+    const systemPrompt = `You are Ulomu's AI assistant specializing in property management and tenant support. 
+    You help tenants with maintenance issues, property questions, and guide them through the platform.
     
-    if (user_type === "tenant") {
-      systemPrompt = `You are Ulomu AI, a helpful assistant for tenants in the Ulomu property management platform. 
-      Help with rent payments, maintenance requests, service charges, lease questions, and general property management inquiries. 
-      Be friendly, professional, and provide accurate information about property management processes. 
-      Keep responses concise and helpful.`;
-    } else if (user_type === "landlord") {
-      systemPrompt = `You are Ulomu AI, a helpful assistant for landlords in the Ulomu property management platform. 
-      Help with property management, tenant communications, maintenance coordination, financial reporting, and property insights. 
-      Provide professional guidance on property management best practices. 
-      Keep responses concise and actionable.`;
-    }
+    Key capabilities:
+    - Help tenants raise maintenance requests
+    - Provide cost estimates for common repairs
+    - Guide users through the escrow payment system
+    - Suggest maintenance categories and priorities
+    - Offer preventive maintenance tips
+    
+    Be helpful, professional, and concise. If you don't know something specific about their property, ask clarifying questions.
+    
+    Previous conversation:
+    ${context}`;
 
-    if (context === "escrow") {
-      systemPrompt += " Focus on escrow payments, secure transactions, and financial management.";
-    } else if (context === "maintenance") {
-      systemPrompt += " Focus on maintenance requests, property upkeep, and preventive care.";
-    }
-
-    // Call OpenAI API
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
         ],
-        temperature: 0.7,
-        max_tokens: 800
+        max_tokens: 500,
+        temperature: 0.7
       }),
     });
 
-    if (!openAIResponse.ok) {
-      throw new Error(`OpenAI API error: ${openAIResponse.status}`);
-    }
+    const data = await response.json();
+    const assistantReply = data.choices[0].message.content;
 
-    const data = await openAIResponse.json();
-    const aiResponse = data.choices[0].message.content;
-
-    // Store conversation in database
-    await supabaseClient.from('ai_generated_content').insert({
-      user_id: user.id,
-      content_type: 'CHAT_RESPONSE',
-      original_prompt: message,
-      generated_content: aiResponse,
-      context_data: { user_type, context }
+    // Store assistant message
+    await supabase.from('chat_messages').insert({
+      user_id: userId,
+      property_id: propertyId,
+      maintenance_request_id: maintenanceRequestId,
+      message_type: 'assistant',
+      content: assistantReply
     });
 
     return new Response(JSON.stringify({ 
-      response: aiResponse,
-      context: context
+      message: assistantReply,
+      suggestions: [
+        "Create maintenance request",
+        "Check payment status", 
+        "Contact landlord",
+        "View property info"
+      ]
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('Error in AI chat assistant:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      response: "I'm having trouble connecting to the AI service right now. Please try again in a moment."
-    }), {
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

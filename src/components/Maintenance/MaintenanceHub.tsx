@@ -1,266 +1,450 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useMaintenanceData } from '@/hooks/useMaintenanceData';
-import { useAIPredictions } from '@/hooks/useAIPredictions';
-import { Wrench, AlertTriangle, Clock, CheckCircle, Lightbulb, Sparkles } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import ChatAssistant from '@/components/AI/ChatAssistant';
+import VendorManagement from '@/components/Vendor/VendorManagement';
+import { 
+  Wrench, 
+  Bot, 
+  Users, 
+  TrendingUp, 
+  AlertTriangle, 
+  CheckCircle, 
+  Clock, 
+  DollarSign,
+  MessageCircle,
+  Camera,
+  FileText
+} from 'lucide-react';
 
-const MaintenanceHub = () => {
-  const { requests, loading: requestsLoading, createMaintenanceRequest } = useMaintenanceData();
-  const { predictions, generateContent } = useAIPredictions();
+interface MaintenanceRequest {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  priority: string;
+  category?: string;
+  estimated_cost?: number;
+  actual_cost?: number;
+  created_at: string;
+  properties: { name: string };
+  units?: { unit_number: string };
+  vendor_id?: string;
+  vendors?: { name: string; rating: number };
+}
+
+interface MaintenancePrediction {
+  id: string;
+  title: string;
+  description: string;
+  predicted_date: string;
+  confidence_score: number;
+  estimated_cost: number;
+  prevention_actions: string[];
+}
+
+const MaintenanceHub: React.FC = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
-  const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
+  const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
+  const [predictions, setPredictions] = useState<MaintenancePrediction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('requests');
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'PENDING': return <Clock className="h-4 w-4" />;
-      case 'IN_PROGRESS': return <Wrench className="h-4 w-4" />;
-      case 'COMPLETED': return <CheckCircle className="h-4 w-4" />;
-      default: return <AlertTriangle className="h-4 w-4" />;
+  useEffect(() => {
+    if (user) {
+      fetchMaintenanceData();
+      setupRealtimeSubscription();
+    }
+  }, [user]);
+
+  const fetchMaintenanceData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch maintenance requests
+      const { data: requestsData, error: requestsError } = await supabase
+        .from('maintenance_requests') 
+        .select(`
+          *,
+          properties(name),
+          units(unit_number),
+          vendors(name, rating)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (requestsError) throw requestsError;
+      setRequests(requestsData || []);
+
+      // Fetch AI predictions
+      const { data: predictionsData, error: predictionsError } = await supabase
+        .from('ai_predictions')
+        .select('*')
+        .eq('user_id', user?.id)
+        .eq('prediction_type', 'maintenance')
+        .order('confidence_score', { ascending: false });
+
+      if (predictionsError) throw predictionsError;
+      setPredictions(predictionsData || []);
+
+    } catch (error) {
+      console.error('Error fetching maintenance data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load maintenance data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const setupRealtimeSubscription = () => {
+    const channel = supabase
+      .channel('maintenance-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'maintenance_requests'
+        },
+        () => {
+          fetchMaintenanceData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
+  const generateAIPredictions = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-ai-predictions', {
+        body: {
+          userId: user?.id,
+          propertyId: 'all',
+          maintenanceHistory: requests
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "AI Predictions Generated",
+        description: `Generated ${data.predictions?.length || 0} maintenance predictions`
+      });
+
+      fetchMaintenanceData();
+    } catch (error) {
+      console.error('Error generating predictions:', error);
+      toast({
+        title: "Prediction Error",
+        description: "Failed to generate AI predictions",
+        variant: "destructive"
+      });
     }
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'PENDING': return 'bg-gold text-white';
-      case 'IN_PROGRESS': return 'bg-terracotta text-white';
-      case 'COMPLETED': return 'bg-forest text-white';
-      default: return 'bg-gray-500 text-white';
+    switch (status.toLowerCase()) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      case 'assigned': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'HIGH': return 'bg-red-500 text-white';
-      case 'MEDIUM': return 'bg-gold text-white';
-      case 'LOW': return 'bg-forest text-white';
-      default: return 'bg-gray-500 text-white';
+    switch (priority.toLowerCase()) {
+      case 'emergency': return 'bg-red-100 text-red-800';
+      case 'high': return 'bg-orange-100 text-orange-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const handleGenerateRequest = async () => {
-    try {
-      const generatedContent = await generateContent(
-        'Generate a maintenance request for HVAC system inspection',
-        'REQUEST',
-        { type: 'maintenance_request' }
-      );
+  const RequestCard: React.FC<{ request: MaintenanceRequest }> = ({ request }) => (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-lg">{request.title}</CardTitle>
+          <div className="flex gap-2">
+            <Badge className={getStatusColor(request.status)}>
+              {request.status.replace('_', ' ')}
+            </Badge>
+            <Badge className={getPriorityColor(request.priority)}>
+              {request.priority}
+            </Badge>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="text-sm text-gray-600">
+          <p><strong>Property:</strong> {request.properties?.name}</p>
+          {request.units && <p><strong>Unit:</strong> {request.units.unit_number}</p>}
+          {request.category && <p><strong>Category:</strong> {request.category}</p>}
+        </div>
+        
+        {request.description && (
+          <p className="text-sm text-gray-700">{request.description}</p>
+        )}
 
-      await createMaintenanceRequest({
-        title: 'AI-Generated: HVAC System Inspection',
-        description: generatedContent.generated_content,
-        priority: 'MEDIUM',
-        category: 'HVAC'
-      });
+        {request.vendors && (
+          <div className="flex items-center gap-2 text-sm">
+            <Users className="h-4 w-4" />
+            <span>Assigned to: {request.vendors.name}</span>
+            <div className="flex items-center">
+              {Array.from({ length: 5 }, (_, i) => (
+                <div
+                  key={i}
+                  className={`h-3 w-3 ${
+                    i < Math.floor(request.vendors?.rating || 0) 
+                      ? 'text-yellow-400' 
+                      : 'text-gray-300'
+                  }`}
+                >
+                  ★
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-      toast({
-        title: "AI Request Generated",
-        description: "A maintenance request has been created using AI assistance.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to generate maintenance request.",
-        variant: "destructive",
-      });
-    }
+        <div className="flex justify-between items-center pt-2 border-t text-sm">
+          <span className="text-gray-500">
+            {new Date(request.created_at).toLocaleDateString()}
+          </span>
+          {request.estimated_cost && (
+            <span className="font-medium text-green-600">
+              Est: ${request.estimated_cost.toLocaleString()}
+            </span>
+          )}
+        </div>
+
+        <div className="flex gap-2 pt-2">
+          <Button size="sm" variant="outline" className="flex-1">
+            <FileText className="h-3 w-3 mr-1" />
+            Details
+          </Button>
+          <Button size="sm" variant="outline" className="flex-1">
+            <MessageCircle className="h-3 w-3 mr-1" />
+            Chat
+          </Button>
+          {request.status === 'PENDING' && (
+            <Button size="sm" className="bg-terracotta hover:bg-terracotta/90">
+              Assign Vendor
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const PredictionCard: React.FC<{ prediction: MaintenancePrediction }> = ({ prediction }) => (
+    <Card className="border-l-4 border-l-orange-500">
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-lg">{prediction.title}</CardTitle>
+          <Badge variant="outline" className="bg-orange-50 text-orange-700">
+            {Math.round(prediction.confidence_score * 100)}% Likely
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-gray-700">{prediction.description}</p>
+        
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="font-medium text-gray-700">Predicted Date:</span>
+            <p>{new Date(prediction.predicted_date).toLocaleDateString()}</p>
+          </div>
+          <div>
+            <span className="font-medium text-gray-700">Est. Cost:</span>
+            <p className="text-green-600 font-medium">
+              ${prediction.estimated_cost.toLocaleString()}
+            </p>
+          </div>
+        </div>
+
+        {prediction.prevention_actions.length > 0 && (
+          <div>
+            <span className="font-medium text-gray-700 text-sm">Prevention Actions:</span>
+            <ul className="mt-1 text-sm text-gray-600">
+              {prediction.prevention_actions.slice(0, 2).map((action, index) => (
+                <li key={index} className="flex items-start gap-1">
+                  <span>•</span>
+                  <span>{action}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="flex gap-2 pt-2">
+          <Button size="sm" variant="outline" className="flex-1">
+            Schedule Preventive
+          </Button>
+          <Button size="sm" className="bg-terracotta hover:bg-terracotta/90">
+            Create Request
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const stats = {
+    total: requests.length,
+    pending: requests.filter(r => r.status === 'PENDING').length,
+    inProgress: requests.filter(r => r.status === 'IN_PROGRESS').length,
+    completed: requests.filter(r => r.status === 'COMPLETED').length,
+    avgCost: requests.reduce((sum, r) => sum + (r.actual_cost || r.estimated_cost || 0), 0) / requests.length || 0
   };
 
-  const maintenancePredictions = predictions.filter(p => p.prediction_type === 'MAINTENANCE');
-
-  if (requestsLoading) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-terracotta"></div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-terracotta mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading maintenance data...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-forest">Maintenance Hub</h2>
-          <p className="text-gray-600">Manage maintenance requests with AI assistance</p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={handleGenerateRequest} className="bg-terracotta hover:bg-terracotta/90">
-            <Sparkles className="h-4 w-4 mr-2" />
-            AI Generate Request
-          </Button>
-        </div>
+      {/* Header Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-terracotta">{stats.total}</div>
+            <div className="text-sm text-gray-600">Total Requests</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+            <div className="text-sm text-gray-600">Pending</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
+            <div className="text-sm text-gray-600">In Progress</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
+            <div className="text-sm text-gray-600">Completed</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-forest">${Math.round(stats.avgCost).toLocaleString()}</div>
+            <div className="text-sm text-gray-600">Avg Cost</div>
+          </CardContent>
+        </Card>
       </div>
 
-      <Tabs defaultValue="requests" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="requests">Active Requests</TabsTrigger>
-          <TabsTrigger value="predictions">AI Predictions</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+      {/* Main Content Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="requests" className="flex items-center gap-2">
+            <Wrench className="h-4 w-4" />
+            Requests
+          </TabsTrigger>
+          <TabsTrigger value="predictions" className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            AI Predictions
+          </TabsTrigger>
+          <TabsTrigger value="vendors" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Vendors
+          </TabsTrigger>
+          <TabsTrigger value="assistant" className="flex items-center gap-2">
+            <Bot className="h-4 w-4" />
+            AI Assistant
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="requests" className="space-y-6">
-          {/* Summary Cards */}
-          <div className="grid md:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
-                <Wrench className="h-4 w-4 text-terracotta" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-terracotta">{requests.length}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending</CardTitle>
-                <Clock className="h-4 w-4 text-gold" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-gold">
-                  {requests.filter(r => r.status === 'PENDING').length}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-                <Wrench className="h-4 w-4 text-terracotta" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-terracotta">
-                  {requests.filter(r => r.status === 'IN_PROGRESS').length}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                <CheckCircle className="h-4 w-4 text-forest" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-forest">
-                  {requests.filter(r => r.status === 'COMPLETED').length}
-                </div>
-              </CardContent>
-            </Card>
+        <TabsContent value="requests" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Maintenance Requests</h3>
+            <Button className="bg-terracotta hover:bg-terracotta/90">
+              <Wrench className="h-4 w-4 mr-2" />
+              New Request
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+            {requests.map((request) => (
+              <RequestCard key={request.id} request={request} />
+            ))}
           </div>
 
-          {/* Requests Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Maintenance Requests</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Property</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Cost</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {requests.map((request) => (
-                    <TableRow key={request.id}>
-                      <TableCell className="font-medium">{request.title}</TableCell>
-                      <TableCell>{request.properties?.name || 'Unknown'}</TableCell>
-                      <TableCell>
-                        <Badge className={getPriorityColor(request.priority)}>
-                          {request.priority}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(request.status)}>
-                          {getStatusIcon(request.status)}
-                          <span className="ml-1">{request.status}</span>
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {request.estimated_cost ? `₦${request.estimated_cost.toLocaleString()}` : '-'}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(request.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="outline" size="sm">
-                          View Details
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          {requests.length === 0 && (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <Wrench className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No maintenance requests</h3>
+                <p className="text-gray-600 mb-4">Create your first maintenance request to get started</p>
+                <Button className="bg-terracotta hover:bg-terracotta/90">
+                  Create Request
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
-        <TabsContent value="predictions" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lightbulb className="h-5 w-5 text-gold" />
-                AI Maintenance Predictions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {maintenancePredictions.map((prediction) => (
-                  <div key={prediction.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-semibold text-lg">{prediction.title}</h3>
-                        <p className="text-gray-600">{prediction.description}</p>
-                      </div>
-                      <Badge className="bg-forest text-white">
-                        {Math.round(prediction.confidence_score * 100)}% Confidence
-                      </Badge>
-                    </div>
-                    
-                    {prediction.prevention_actions && prediction.prevention_actions.length > 0 && (
-                      <div>
-                        <h4 className="font-medium mb-2">Recommended Actions:</h4>
-                        <ul className="list-disc list-inside space-y-1">
-                          {prediction.prevention_actions.map((action, index) => (
-                            <li key={index} className="text-sm text-gray-600">{action}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+        <TabsContent value="predictions" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">AI-Powered Maintenance Predictions</h3>
+            <Button onClick={generateAIPredictions} className="bg-terracotta hover:bg-terracotta/90">
+              <Bot className="h-4 w-4 mr-2" />
+              Generate Predictions
+            </Button>
+          </div>
 
-                    {prediction.estimated_cost && (
-                      <div className="text-sm text-gray-600">
-                        Estimated Cost: <span className="font-medium">₦{prediction.estimated_cost.toLocaleString()}</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {predictions.map((prediction) => (
+              <PredictionCard key={prediction.id} prediction={prediction} />
+            ))}
+          </div>
+
+          {predictions.length === 0 && (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No predictions available</h3>
+                <p className="text-gray-600 mb-4">Generate AI-powered maintenance predictions based on your property data</p>
+                <Button onClick={generateAIPredictions} className="bg-terracotta hover:bg-terracotta/90">
+                  <Bot className="h-4 w-4 mr-2" />
+                  Generate Predictions
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
-        <TabsContent value="history">
-          <Card>
-            <CardHeader>
-              <CardTitle>Maintenance History</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">Historical maintenance data and trends will be displayed here.</p>
-            </CardContent>
-          </Card>
+        <TabsContent value="vendors">
+          <VendorManagement />
+        </TabsContent>
+
+        <TabsContent value="assistant">
+          <ChatAssistant />
         </TabsContent>
       </Tabs>
     </div>

@@ -1,7 +1,13 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
+
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const googleCloudProjectId = Deno.env.get('GOOGLE_CLOUD_PROJECT_ID');
+const googleCloudServiceKey = Deno.env.get('GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,86 +20,88 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
-    // Get authenticated user
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData } = await supabaseClient.auth.getUser(token);
-    const user = userData.user;
+    const { propertyId, userId, imageData, maintenanceHistory } = await req.json();
     
-    if (!user) throw new Error("User not authenticated");
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get user's properties and maintenance history
-    const { data: properties } = await supabaseClient
+    // Get property details
+    const { data: property } = await supabase
       .from('properties')
-      .select('*, units(*), maintenance_requests(*)')
-      .eq('user_id', user.id);
+      .select('*')
+      .eq('id', propertyId)
+      .single();
 
-    // Generate AI predictions based on property data
-    const predictions = [];
+    // Get recent maintenance history
+    const { data: recentMaintenance } = await supabase
+      .from('maintenance_requests')
+      .select('*')
+      .eq('property_id', propertyId)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    let predictions = [];
+
+    // Generate predictions using OpenAI based on property data and history
+    const contextPrompt = `
+    Analyze this property for potential maintenance issues:
+    - Property Type: ${property?.property_type || 'Unknown'}
+    - Property Age: ${property?.created_at ? new Date().getFullYear() - new Date(property.created_at).getFullYear() : 'Unknown'} years
+    - Recent Maintenance: ${JSON.stringify(recentMaintenance)}
     
-    for (const property of properties || []) {
-      // Maintenance prediction
-      const maintenanceHistory = property.maintenance_requests || [];
-      const lastMaintenance = maintenanceHistory[maintenanceHistory.length - 1];
-      
-      predictions.push({
-        user_id: user.id,
-        property_id: property.id,
-        prediction_type: 'MAINTENANCE',
-        title: `${property.name} - Preventive Maintenance Due`,
-        description: `Based on property age and maintenance history, routine maintenance is recommended within the next 30 days to prevent potential issues.`,
-        predicted_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        confidence_score: 0.75,
-        estimated_cost: 2500,
-        prevention_actions: ['Schedule HVAC inspection', 'Check plumbing systems', 'Inspect electrical systems', 'Review safety equipment'],
-        data_sources: ['Property age', 'Maintenance history', 'Seasonal patterns'],
-        status: 'ACTIVE'
-      });
+    Generate 3-5 predictive maintenance insights with:
+    1. Issue type and likelihood
+    2. Estimated timeline
+    3. Cost estimate
+    4. Prevention actions
+    `;
 
-      // Cost prediction
-      predictions.push({
-        user_id: user.id,
-        property_id: property.id,
-        prediction_type: 'EXPENSE',
-        title: `${property.name} - Utility Cost Increase Expected`,
-        description: `Seasonal patterns suggest a 12% increase in utility costs over the next quarter due to weather changes.`,
-        predicted_date: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
-        confidence_score: 0.68,
-        estimated_cost: 1200,
-        prevention_actions: ['Install energy-efficient systems', 'Improve insulation', 'Regular HVAC maintenance'],
-        data_sources: ['Historical utility bills', 'Weather forecasts', 'Building efficiency'],
-        status: 'ACTIVE'
-      });
-    }
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          { 
+            role: 'system', 
+            content: 'You are a property maintenance expert. Provide JSON formatted predictions with fields: title, description, prediction_type, confidence_score (0-1), estimated_cost, predicted_date, prevention_actions (array).'
+          },
+          { role: 'user', content: contextPrompt }
+        ],
+        response_format: { type: "json_object" }
+      }),
+    });
 
-    // Insert predictions into database
-    if (predictions.length > 0) {
-      const { data, error } = await supabaseClient
+    const aiData = await openAIResponse.json();
+    const aiPredictions = JSON.parse(aiData.choices[0].message.content);
+
+    // Store predictions in database
+    for (const prediction of aiPredictions.predictions || []) {
+      const { data: savedPrediction } = await supabase
         .from('ai_predictions')
-        .insert(predictions)
-        .select();
+        .insert({
+          user_id: userId,
+          property_id: propertyId,
+          title: prediction.title,
+          description: prediction.description,
+          prediction_type: prediction.prediction_type,
+          confidence_score: prediction.confidence_score,
+          estimated_cost: prediction.estimated_cost,
+          predicted_date: prediction.predicted_date,
+          prevention_actions: prediction.prevention_actions,
+          data_sources: ['maintenance_history', 'property_data']
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
-
-      return new Response(JSON.stringify({
-        success: true,
-        predictions: data,
-        message: `Generated ${predictions.length} AI predictions`
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      predictions.push(savedPrediction);
     }
 
-    return new Response(JSON.stringify({
-      success: true,
-      predictions: [],
-      message: 'No properties found to generate predictions'
+    return new Response(JSON.stringify({ 
+      predictions,
+      summary: `Generated ${predictions.length} AI-powered maintenance predictions for your property.`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

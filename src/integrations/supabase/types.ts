@@ -173,6 +173,54 @@ export type Database = {
           },
         ]
       }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          maintenance_request_id: string | null
+          message_type: string
+          metadata: Json | null
+          property_id: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          maintenance_request_id?: string | null
+          message_type: string
+          metadata?: Json | null
+          property_id?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          maintenance_request_id?: string | null
+          message_type?: string
+          metadata?: Json | null
+          property_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_maintenance_request_id_fkey"
+            columns: ["maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       escrow_accounts: {
         Row: {
           account_type: string | null
@@ -277,6 +325,7 @@ export type Database = {
           title: string
           unit_id: string | null
           updated_at: string | null
+          vendor_id: string | null
         }
         Insert: {
           actual_cost?: number | null
@@ -295,6 +344,7 @@ export type Database = {
           title: string
           unit_id?: string | null
           updated_at?: string | null
+          vendor_id?: string | null
         }
         Update: {
           actual_cost?: number | null
@@ -313,6 +363,7 @@ export type Database = {
           title?: string
           unit_id?: string | null
           updated_at?: string | null
+          vendor_id?: string | null
         }
         Relationships: [
           {
@@ -327,6 +378,13 @@ export type Database = {
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_requests_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
             referencedColumns: ["id"]
           },
         ]
@@ -640,6 +698,39 @@ export type Database = {
           },
         ]
       }
+      system_diagnostics: {
+        Row: {
+          created_at: string
+          details: Json | null
+          execution_time_ms: number | null
+          id: string
+          status: string
+          test_name: string
+          test_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          execution_time_ms?: number | null
+          id?: string
+          status: string
+          test_name: string
+          test_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          execution_time_ms?: number | null
+          id?: string
+          status?: string
+          test_name?: string
+          test_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       units: {
         Row: {
           created_at: string | null
@@ -689,6 +780,111 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      vendor_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          maintenance_request_id: string | null
+          rating: number
+          review_text: string | null
+          reviewer_id: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          maintenance_request_id?: string | null
+          rating: number
+          review_text?: string | null
+          reviewer_id: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          maintenance_request_id?: string | null
+          rating?: number
+          review_text?: string | null
+          reviewer_id?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_reviews_maintenance_request_id_fkey"
+            columns: ["maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_reviews_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendors: {
+        Row: {
+          address: string | null
+          bio: string | null
+          city: string | null
+          company_name: string | null
+          country: string | null
+          created_at: string
+          email: string
+          experience_years: number | null
+          id: string
+          name: string
+          phone: string | null
+          rating: number | null
+          specialties: string[] | null
+          state: string | null
+          updated_at: string
+          user_id: string
+          verified: boolean | null
+        }
+        Insert: {
+          address?: string | null
+          bio?: string | null
+          city?: string | null
+          company_name?: string | null
+          country?: string | null
+          created_at?: string
+          email: string
+          experience_years?: number | null
+          id?: string
+          name: string
+          phone?: string | null
+          rating?: number | null
+          specialties?: string[] | null
+          state?: string | null
+          updated_at?: string
+          user_id: string
+          verified?: boolean | null
+        }
+        Update: {
+          address?: string | null
+          bio?: string | null
+          city?: string | null
+          company_name?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string
+          experience_years?: number | null
+          id?: string
+          name?: string
+          phone?: string | null
+          rating?: number | null
+          specialties?: string[] | null
+          state?: string | null
+          updated_at?: string
+          user_id?: string
+          verified?: boolean | null
+        }
+        Relationships: []
       }
     }
     Views: {

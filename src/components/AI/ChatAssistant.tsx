@@ -1,178 +1,326 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
-import { Bot, User, Send, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  Send, 
+  Bot, 
+  User, 
+  Loader2, 
+  MessageCircle, 
+  Wrench, 
+  CreditCard, 
+  Phone,
+  Lightbulb
+} from 'lucide-react';
 
-interface Message {
+interface ChatMessage {
   id: string;
+  message_type: 'user' | 'assistant' | 'system';
   content: string;
-  role: 'user' | 'assistant';
-  timestamp: Date;
+  created_at: string;
+  metadata?: any;
 }
 
 interface ChatAssistantProps {
-  userType?: 'tenant' | 'landlord';
-  context?: string;
+  propertyId?: string;
+  maintenanceRequestId?: string;
 }
 
-const ChatAssistant = ({ userType = 'tenant', context = 'general' }: ChatAssistantProps) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      content: `Hi! I'm Ulomu AI, your ${userType} assistant. How can I help you today?`,
-      role: 'assistant',
-      timestamp: new Date()
-    }
-  ]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
+const ChatAssistant: React.FC<ChatAssistantProps> = ({ 
+  propertyId, 
+  maintenanceRequestId 
+}) => {
+  const { user } = useAuth();
   const { toast } = useToast();
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Scroll to bottom when new messages are added
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    if (user) {
+      loadChatHistory();
+      setupRealtimeSubscription();
     }
+  }, [user, propertyId]);
+
+  useEffect(() => {
+    scrollToBottom();
   }, [messages]);
 
-  const sendMessage = async () => {
-    if (!input.trim() || loading) return;
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: input,
-      role: 'user',
-      timestamp: new Date()
+  const loadChatHistory = async () => {
+    try {
+      const query = supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: true });
+
+      if (propertyId) {
+        query.eq('property_id', propertyId);
+      }
+      if (maintenanceRequestId) {
+        query.eq('maintenance_request_id', maintenanceRequestId);
+      }
+
+      const { data, error } = await query.limit(50);
+      if (error) throw error;
+
+      setMessages(data || []);
+
+      // Add welcome message if no chat history
+      if (!data || data.length === 0) {
+        const welcomeMessage: ChatMessage = {
+          id: 'welcome',
+          message_type: 'assistant',
+          content: "👋 Hi! I'm Ulomu's AI assistant. I'm here to help you with property management, maintenance requests, and any questions you might have. How can I assist you today?",
+          created_at: new Date().toISOString()
+        };
+        setMessages([welcomeMessage]);
+        setSuggestions([
+          "I need to report a maintenance issue",
+          "How do I make a payment?",
+          "Contact my landlord",
+          "Check my property details"
+        ]);
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+    }
+  };
+
+  const setupRealtimeSubscription = () => {
+    const channel = supabase
+      .channel('chat-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: `user_id=eq.${user?.id}`
+        },
+        (payload) => {
+          const newMessage = payload.new as ChatMessage;
+          if (newMessage.message_type === 'assistant') {
+            setMessages(prev => [...prev, newMessage]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
+  const sendMessage = async (messageText?: string) => {
+    const message = messageText || inputMessage.trim();
+    if (!message || !user) return;
+
+    setIsLoading(true);
+    const userMessage: ChatMessage = {
+      id: `temp-${Date.now()}`,
+      message_type: 'user',
+      content: message,
+      created_at: new Date().toISOString()
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    setLoading(true);
+    setInputMessage('');
 
     try {
       const { data, error } = await supabase.functions.invoke('ai-chat-assistant', {
         body: {
-          message: input,
-          context,
-          user_type: userType
+          message,
+          userId: user.id,
+          propertyId,
+          maintenanceRequestId
         }
       });
 
       if (error) throw error;
 
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: data.response,
-        role: 'assistant',
-        timestamp: new Date()
+      const assistantMessage: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        message_type: 'assistant',
+        content: data.message,
+        created_at: new Date().toISOString()
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Chat error:', error);
+      
+      if (data.suggestions) {
+        setSuggestions(data.suggestions);
+      }
+
+    } catch (error: any) {
+      console.error('Error sending message:', error);
       toast({
-        title: "Chat Error",
-        description: "Failed to get response from AI assistant.",
+        title: "Message Failed",
+        description: "Unable to send message. Please try again.",
         variant: "destructive"
       });
+
+      // Remove the user message if it failed
+      setMessages(prev => prev.filter(m => m.id !== userMessage.id));
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
+  const handleSuggestionClick = (suggestion: string) => {
+    sendMessage(suggestion);
+    setSuggestions([]);
+  };
+
+  const getActionButton = (content: string) => {
+    if (content.toLowerCase().includes('maintenance')) {
+      return (
+        <Button size="sm" variant="outline" className="mt-2">
+          <Wrench className="h-3 w-3 mr-1" />
+          Create Request
+        </Button>
+      );
     }
+    if (content.toLowerCase().includes('payment')) {
+      return (
+        <Button size="sm" variant="outline" className="mt-2">
+          <CreditCard className="h-3 w-3 mr-1" />
+          Make Payment
+        </Button>
+      );
+    }
+    if (content.toLowerCase().includes('contact')) {
+      return (
+        <Button size="sm" variant="outline" className="mt-2">
+          <Phone className="h-3 w-3 mr-1" />
+          Contact
+        </Button>
+      );
+    }
+    return null;
   };
 
   return (
-    <Card className="h-[500px] flex flex-col">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Bot className="h-5 w-5 text-terracotta" />
-            Ulomu AI Assistant
-          </CardTitle>
-          <Badge variant="outline" className="text-terracotta border-terracotta">
-            {userType.charAt(0).toUpperCase() + userType.slice(1)} Mode
+    <Card className="h-[600px] flex flex-col">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2">
+          <MessageCircle className="h-5 w-5 text-terracotta" />
+          AI Assistant
+          <Badge variant="secondary" className="ml-auto">
+            <Bot className="h-3 w-3 mr-1" />
+            Online
           </Badge>
-        </div>
+        </CardTitle>
       </CardHeader>
-      
+
       <CardContent className="flex-1 flex flex-col p-0">
-        <ScrollArea className="flex-1 px-4" ref={scrollAreaRef}>
-          <div className="space-y-4 py-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.role === 'user'
-                      ? 'bg-terracotta text-white'
-                      : 'bg-gray-100 text-gray-900'
-                  }`}
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 space-y-4">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex gap-3 ${
+                message.message_type === 'user' ? 'flex-row-reverse' : 'flex-row'
+              }`}
+            >
+              <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                message.message_type === 'user' 
+                  ? 'bg-terracotta text-white' 
+                  : 'bg-forest text-white'
+              }`}>
+                {message.message_type === 'user' ? (
+                  <User className="h-4 w-4" />
+                ) : (
+                  <Bot className="h-4 w-4" />
+                )}
+              </div>
+              
+              <div className={`flex-1 max-w-[80%] ${
+                message.message_type === 'user' ? 'text-right' : 'text-left'
+              }`}>
+                <div className={`inline-block p-3 rounded-lg ${
+                  message.message_type === 'user'
+                    ? 'bg-terracotta text-white rounded-br-none'
+                    : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                }`}>
+                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  {message.message_type === 'assistant' && getActionButton(message.content)}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {new Date(message.created_at).toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+          ))}
+
+          {isLoading && (
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-forest text-white flex items-center justify-center">
+                <Bot className="h-4 w-4" />
+              </div>
+              <div className="bg-gray-100 rounded-lg rounded-bl-none p-3">
+                <Loader2 className="h-4 w-4 animate-spin" />
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Suggestions */}
+        {suggestions.length > 0 && (
+          <div className="px-4 py-2 border-t bg-gray-50">
+            <div className="flex items-center gap-2 mb-2">
+              <Lightbulb className="h-4 w-4 text-gold" />
+              <span className="text-sm font-medium text-gray-700">Quick Actions:</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {suggestions.map((suggestion, index) => (
+                <Button
+                  key={index}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className="text-xs"
                 >
-                  <div className="flex items-start gap-2">
-                    {message.role === 'assistant' && (
-                      <Bot className="h-4 w-4 mt-1 text-terracotta" />
-                    )}
-                    {message.role === 'user' && (
-                      <User className="h-4 w-4 mt-1" />
-                    )}
-                    <div className="flex-1">
-                      <p className="text-sm">{message.content}</p>
-                      <p className={`text-xs mt-1 ${
-                        message.role === 'user' ? 'text-white/80' : 'text-gray-500'
-                      }`}>
-                        {message.timestamp.toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-            
-            {loading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-lg p-3 max-w-[80%]">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">AI is thinking...</span>
-                  </div>
-                </div>
-              </div>
-            )}
+                  {suggestion}
+                </Button>
+              ))}
+            </div>
           </div>
-        </ScrollArea>
-        
-        <div className="border-t p-4">
+        )}
+
+        {/* Input */}
+        <div className="p-4 border-t">
           <div className="flex gap-2">
             <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask me anything about property management..."
-              disabled={loading}
-              className="flex-1"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder="Type your message..."
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+              disabled={isLoading}
             />
-            <Button
-              onClick={sendMessage}
-              disabled={!input.trim() || loading}
-              size="icon"
+            <Button 
+              onClick={() => sendMessage()} 
+              disabled={!inputMessage.trim() || isLoading}
               className="bg-terracotta hover:bg-terracotta/90"
             >
               <Send className="h-4 w-4" />
