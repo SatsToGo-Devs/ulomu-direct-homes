@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
+import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import LandlordDashboard from "./pages/LandlordDashboard";
 import Properties from "./pages/Properties";
@@ -13,11 +14,11 @@ import PropertyDetail from "./pages/PropertyDetail";
 import AddProperty from "./pages/AddProperty";
 import ProfileSettings from "./pages/ProfileSettings";
 import NotFound from "./pages/NotFound";
-import SystemTestPage from "./pages/SystemTestPage";
+import SystemTest from "./pages/SystemTest";
 import AIInsightsPage from "@/pages/AIInsightsPage";
 import ChatAssistantPage from "@/pages/ChatAssistantPage";
 import PredictionsPage from "./pages/AIPredictions";
-import PropertyInsightsDashboard from "./pages/PropertyInsightsDashboard";
+import AIInsights from "./pages/AIInsights";
 import MaintenanceHubPage from "./pages/MaintenanceHub";
 import EscrowHub from "./pages/EscrowHub";
 import TenantPortal from "./pages/TenantPortal";
@@ -36,7 +37,7 @@ function App() {
           <Router>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
+              <Route path="/auth" element={<Login />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/landlord-dashboard" element={<LandlordDashboard />} />
               <Route path="/properties" element={<Properties />} />
@@ -49,8 +50,8 @@ function App() {
               <Route path="/ai-insights" element={<AIInsightsPage />} />
               <Route path="/chat-assistant" element={<ChatAssistantPage />} />
               <Route path="/ai-predictions" element={<PredictionsPage />} />
-              <Route path="/property-insights" element={<PropertyInsightsDashboard />} />
-              <Route path="/system-test" element={<SystemTestPage />} />
+              <Route path="/property-insights" element={<AIInsights />} />
+              <Route path="/system-test" element={<SystemTest />} />
               <Route path="/profile" element={<ProfileSettings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
