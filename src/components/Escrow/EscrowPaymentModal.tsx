@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { CreditCard, Shield, DollarSign } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -16,6 +16,7 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 
 
 interface EscrowPaymentModalProps {
   trigger?: React.ReactNode;
+  onPaymentComplete?: () => void;
 }
 
 const PaymentForm = ({ onSuccess }: { onSuccess: () => void }) => {
@@ -171,8 +172,15 @@ const PaymentForm = ({ onSuccess }: { onSuccess: () => void }) => {
   );
 };
 
-const EscrowPaymentModal = ({ trigger }: EscrowPaymentModalProps) => {
+const EscrowPaymentModal = ({ trigger, onPaymentComplete }: EscrowPaymentModalProps) => {
   const [open, setOpen] = useState(false);
+
+  const handleSuccess = () => {
+    setOpen(false);
+    if (onPaymentComplete) {
+      onPaymentComplete();
+    }
+  };
 
   const defaultTrigger = (
     <Button className="bg-terracotta hover:bg-terracotta/90">
@@ -194,7 +202,7 @@ const EscrowPaymentModal = ({ trigger }: EscrowPaymentModalProps) => {
           </DialogTitle>
         </DialogHeader>
         <Elements stripe={stripePromise}>
-          <PaymentForm onSuccess={() => setOpen(false)} />
+          <PaymentForm onSuccess={handleSuccess} />
         </Elements>
       </DialogContent>
     </Dialog>
