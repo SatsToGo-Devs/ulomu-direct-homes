@@ -1,126 +1,157 @@
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Menu, X, Bot } from "lucide-react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import UserProfile from "./UserProfile";
+import { Button } from "@/components/ui/button";
+import { 
+  Menu, 
+  X, 
+  User, 
+  LogOut, 
+  Home, 
+  Building, 
+  Users, 
+  Wrench, 
+  Brain,
+  MessageCircle,
+  TestTube,
+  CreditCard
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
   };
 
+  const navItems = [
+    { name: "Home", path: "/", icon: Home },
+    { name: "Properties", path: "/properties", icon: Building },
+    { name: "Tenants", path: "/tenants", icon: Users },
+    { name: "Maintenance", path: "/maintenance", icon: Wrench },
+    { name: "AI Features", path: "/ai-insights", icon: Brain },
+    { name: "Chat Assistant", path: "/chat-assistant", icon: MessageCircle },
+    { name: "System Test", path: "/system-test", icon: TestTube },
+    { name: "Escrow", path: "/escrow", icon: CreditCard },
+  ];
+
+  const isActive = (path: string) => location.pathname === path;
+
   return (
-    <nav className="bg-white shadow-sm border-b">
+    <nav className="bg-white shadow-lg border-b border-beige/30 sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-terracotta rounded-lg flex items-center justify-center">
-              <Bot className="h-6 w-6 text-white" />
+            <div className="w-8 h-8 bg-gradient-to-br from-terracotta to-forest rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">U</span>
             </div>
-            <span className="text-2xl font-bold text-gray-900">Ulomu</span>
+            <span className="font-bold text-xl text-forest">Ulomu</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-gray-700 hover:text-terracotta font-medium">
-              Home
-            </Link>
-            <Link to="/how-it-works" className="text-gray-700 hover:text-terracotta font-medium">
-              How It Works
-            </Link>
-            {user && (
-              <>
-                <Link to="/dashboard" className="text-gray-700 hover:text-terracotta font-medium">
-                  Dashboard
+          {user && (
+            <div className="hidden md:flex items-center space-x-1">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive(item.path)
+                      ? "bg-terracotta text-white"
+                      : "text-gray-700 hover:bg-beige/50 hover:text-terracotta"
+                  }`}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.name}
                 </Link>
-                <Link to="/maintenance" className="text-gray-700 hover:text-terracotta font-medium">
-                  Maintenance
-                </Link>
-                <Link to="/escrow" className="text-gray-700 hover:text-terracotta font-medium">
-                  Escrow
-                </Link>
-                <Link to="/ai-insights" className="text-gray-700 hover:text-terracotta font-medium">
-                  AI Insights
-                </Link>
-              </>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
 
-          {/* Desktop CTA */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* User Menu / Auth Buttons */}
+          <div className="flex items-center space-x-4">
             {user ? (
-              <UserProfile />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span className="hidden sm:inline">Account</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
+                    <User className="mr-2 h-4 w-4" />
+                    Profile Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                    <Home className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
-              <>
-                <Button variant="ghost" asChild>
-                  <Link to="/login">Sign In</Link>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
+                  Sign In
                 </Button>
-                <Button className="bg-terracotta hover:bg-terracotta/90 text-white" asChild>
-                  <Link to="/signup">Start Free Trial</Link>
+                <Button size="sm" onClick={() => navigate("/auth")} className="bg-terracotta hover:bg-terracotta/90">
+                  Get Started
                 </Button>
-              </>
+              </div>
             )}
-          </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <Button variant="ghost" size="sm" onClick={toggleMenu}>
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
+            {/* Mobile Menu Button */}
+            {user && (
+              <button
+                className="md:hidden p-2"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+            )}
           </div>
         </div>
 
         {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t">
-            <div className="flex flex-col space-y-4">
-              <Link to="/" className="text-gray-700 hover:text-terracotta font-medium">
-                Home
-              </Link>
-              <Link to="/how-it-works" className="text-gray-700 hover:text-terracotta font-medium">
-                How It Works
-              </Link>
-              {user && (
-                <>
-                  <Link to="/dashboard" className="text-gray-700 hover:text-terracotta font-medium">
-                    Dashboard
-                  </Link>
-                  <Link to="/maintenance" className="text-gray-700 hover:text-terracotta font-medium">
-                    Maintenance
-                  </Link>
-                  <Link to="/escrow" className="text-gray-700 hover:text-terracotta font-medium">
-                    Escrow
-                  </Link>
-                  <Link to="/ai-insights" className="text-gray-700 hover:text-terracotta font-medium">
-                    AI Insights
-                  </Link>
-                </>
-              )}
-              <div className="pt-4 space-y-2">
-                {user ? (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                      {user.user_metadata?.first_name || user.email}
-                    </span>
-                    <UserProfile />
-                  </div>
-                ) : (
-                  <>
-                    <Button variant="ghost" className="w-full justify-start" asChild>
-                      <Link to="/login">Sign In</Link>
-                    </Button>
-                    <Button className="w-full bg-terracotta hover:bg-terracotta/90 text-white" asChild>
-                      <Link to="/signup">Start Free Trial</Link>
-                    </Button>
-                  </>
-                )}
-              </div>
+        {user && isMobileMenuOpen && (
+          <div className="md:hidden py-4 border-t border-beige/30">
+            <div className="space-y-1">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors ${
+                    isActive(item.path)
+                      ? "bg-terracotta text-white"
+                      : "text-gray-700 hover:bg-beige/50 hover:text-terracotta"
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.name}
+                </Link>
+              ))}
             </div>
           </div>
         )}
