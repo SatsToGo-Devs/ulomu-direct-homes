@@ -8,9 +8,13 @@ import Properties from "@/components/LandlordDashboard/Properties";
 import Payments from "@/components/LandlordDashboard/Payments";
 import Messages from "@/components/LandlordDashboard/Messages";
 import Invoices from "@/components/LandlordDashboard/Invoices";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
 
 const LandlordDashboard = () => {
   const [activeTab, setActiveTab] = useState("properties");
+  const navigate = useNavigate();
 
   // Mock data for the dashboard
   const properties = [
@@ -78,8 +82,19 @@ const LandlordDashboard = () => {
       <Navbar />
       <div className="bg-forest text-white py-8">
         <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold">Landlord Dashboard</h1>
-          <p className="text-gray-200">Manage your properties, payments, and communications</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold">Landlord Dashboard</h1>
+              <p className="text-gray-200">Manage your properties, payments, and communications</p>
+            </div>
+            <Button 
+              onClick={() => navigate('/tenants')}
+              className="bg-terracotta hover:bg-terracotta/90"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Manage Tenants
+            </Button>
+          </div>
         </div>
       </div>
 

@@ -3,8 +3,11 @@ import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building, MapPin, Users, Eye } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Building, MapPin, Users, Eye, Trash2 } from 'lucide-react';
 import { Property } from '@/hooks/useProperties';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import AddTenantModal from '@/components/TenantManagement/AddTenantModal';
 import EditPropertyModal from '@/components/PropertyManagement/EditPropertyModal';
 
@@ -15,6 +18,7 @@ interface PropertyCardProps {
 }
 
 const PropertyCard = ({ property, onView, onPropertyUpdated }: PropertyCardProps) => {
+  const { toast } = useToast();
   const primaryImage = property.images?.[0];
   
   const formatPropertyType = (type?: string) => {
@@ -25,6 +29,40 @@ const PropertyCard = ({ property, onView, onPropertyUpdated }: PropertyCardProps
   const handleRefresh = () => {
     if (onPropertyUpdated) {
       onPropertyUpdated();
+    }
+  };
+
+  const handleDeleteProperty = async () => {
+    try {
+      // First delete all units associated with the property
+      const { error: unitsError } = await supabase
+        .from('units')
+        .delete()
+        .eq('property_id', property.id);
+
+      if (unitsError) throw unitsError;
+
+      // Then delete the property
+      const { error: propertyError } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', property.id);
+
+      if (propertyError) throw propertyError;
+
+      toast({
+        title: "Success",
+        description: "Property deleted successfully",
+      });
+
+      handleRefresh();
+    } catch (error) {
+      console.error('Error deleting property:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete property",
+        variant: "destructive",
+      });
     }
   };
 
@@ -114,6 +152,28 @@ const PropertyCard = ({ property, onView, onPropertyUpdated }: PropertyCardProps
           property={property}
           onTenantAdded={handleRefresh}
         />
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" size="sm" className="text-red-600 border-red-600 hover:bg-red-50">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Property</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{property.name}"? This action cannot be undone and will also delete all associated units.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteProperty} className="bg-red-600 hover:bg-red-700">
+                Delete Property
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardFooter>
     </Card>
   );

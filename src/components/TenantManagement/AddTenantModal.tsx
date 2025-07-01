@@ -4,12 +4,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Property } from '@/hooks/useProperties';
-import { UserPlus, Calendar } from 'lucide-react';
+import { useTenants } from '@/hooks/useTenants';
+import { UserPlus } from 'lucide-react';
 
 interface AddTenantModalProps {
   property: Property;
@@ -21,6 +21,7 @@ const AddTenantModal = ({ property, onTenantAdded }: AddTenantModalProps) => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { createTenant } = useTenants();
   
   const [tenantData, setTenantData] = useState({
     firstName: '',
@@ -41,7 +42,15 @@ const AddTenantModal = ({ property, onTenantAdded }: AddTenantModalProps) => {
     try {
       setLoading(true);
 
-      // Create unit first
+      // Create the tenant first
+      const tenantResult = await createTenant({
+        firstName: tenantData.firstName,
+        lastName: tenantData.lastName,
+        email: tenantData.email,
+        phone: tenantData.phone,
+      });
+
+      // Create unit for this tenant
       const unitData = {
         property_id: property.id,
         unit_number: tenantData.unitNumber,
@@ -49,7 +58,8 @@ const AddTenantModal = ({ property, onTenantAdded }: AddTenantModalProps) => {
         deposit_amount: tenantData.depositAmount ? parseFloat(tenantData.depositAmount) : null,
         status: 'OCCUPIED',
         lease_start_date: tenantData.leaseStartDate,
-        lease_end_date: tenantData.leaseEndDate
+        lease_end_date: tenantData.leaseEndDate,
+        tenant_id: tenantResult.id
       };
 
       const { data: unitResult, error: unitError } = await supabase
@@ -60,13 +70,11 @@ const AddTenantModal = ({ property, onTenantAdded }: AddTenantModalProps) => {
 
       if (unitError) throw unitError;
 
-      // Note: Creating a complete user profile would require creating an auth user first
-      // For now, we'll just create the unit and notify success
       console.log('Unit created successfully:', unitResult);
 
       toast({
         title: "Success",
-        description: "Unit and tenant information added successfully!",
+        description: "Tenant and unit added successfully!",
       });
 
       setTenantData({
@@ -98,7 +106,7 @@ const AddTenantModal = ({ property, onTenantAdded }: AddTenantModalProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-terracotta hover:bg-terracotta/90">
+        <Button size="sm" className="bg-terracotta hover:bg-terracotta/90">
           <UserPlus className="h-4 w-4 mr-2" />
           Add Tenant
         </Button>
