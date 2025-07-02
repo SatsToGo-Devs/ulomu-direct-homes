@@ -1,5 +1,6 @@
 
 import { Link } from "react-router-dom";
+import UlomuLogo from "@/components/UlomuLogo";
 
 const Footer = () => {
   return (
@@ -7,11 +8,8 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="h-8 w-8 rounded-full bg-terracotta flex items-center justify-center">
-                <span className="text-white font-bold text-lg">U</span>
-              </div>
-              <span className="font-bold text-xl text-white">Ulomu</span>
+            <div className="mb-4">
+              <UlomuLogo size="md" showText={true} className="text-white" />
             </div>
             <p className="text-gray-400 mb-4">
               Find your next home. No agents. No stress.

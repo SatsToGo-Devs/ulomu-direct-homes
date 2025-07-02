@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ThemeToggle from "@/components/ThemeToggle";
+import UlomuLogo from "@/components/UlomuLogo";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -56,11 +56,8 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-terracotta to-forest rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">U</span>
-            </div>
-            <span className="font-bold text-xl text-forest dark:text-white">Ulomu</span>
+          <Link to="/" className="flex items-center">
+            <UlomuLogo size="md" showText={true} />
           </Link>
 
           {/* Desktop Navigation */}
