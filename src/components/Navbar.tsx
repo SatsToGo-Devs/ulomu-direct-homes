@@ -25,6 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -51,7 +52,7 @@ const Navbar = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="bg-white shadow-lg border-b border-beige/30 sticky top-0 z-50">
+    <nav className="bg-white dark:bg-gray-900 shadow-lg border-b border-beige/30 dark:border-gray-700 sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -59,7 +60,7 @@ const Navbar = () => {
             <div className="w-8 h-8 bg-gradient-to-br from-terracotta to-forest rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">U</span>
             </div>
-            <span className="font-bold text-xl text-forest">Ulomu</span>
+            <span className="font-bold text-xl text-forest dark:text-white">Ulomu</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -72,7 +73,7 @@ const Navbar = () => {
                   className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive(item.path)
                       ? "bg-terracotta text-white"
-                      : "text-gray-700 hover:bg-beige/50 hover:text-terracotta"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-beige/50 dark:hover:bg-gray-700 hover:text-terracotta dark:hover:text-terracotta"
                   }`}
                 >
                   <item.icon className="h-4 w-4" />
@@ -84,6 +85,7 @@ const Navbar = () => {
 
           {/* User Menu / Auth Buttons */}
           <div className="flex items-center space-x-4">
+            <ThemeToggle />
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -115,8 +117,8 @@ const Navbar = () => {
                 <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
                   Sign In
                 </Button>
-                <Button size="sm" onClick={() => navigate("/auth")} className="bg-terracotta hover:bg-terracotta/90">
-                  Get Started
+                <Button size="sm" onClick={() => navigate("/signup")} className="bg-terracotta hover:bg-terracotta/90">
+                  Sign Up
                 </Button>
               </div>
             )}
@@ -135,7 +137,7 @@ const Navbar = () => {
 
         {/* Mobile Navigation */}
         {user && isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-beige/30">
+          <div className="md:hidden py-4 border-t border-beige/30 dark:border-gray-700">
             <div className="space-y-1">
               {navItems.map((item) => (
                 <Link
@@ -144,7 +146,7 @@ const Navbar = () => {
                   className={`flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors ${
                     isActive(item.path)
                       ? "bg-terracotta text-white"
-                      : "text-gray-700 hover:bg-beige/50 hover:text-terracotta"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-beige/50 dark:hover:bg-gray-700 hover:text-terracotta dark:hover:text-terracotta"
                   }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >

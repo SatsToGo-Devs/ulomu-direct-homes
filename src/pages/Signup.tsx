@@ -60,7 +60,7 @@ const Signup = () => {
           title: "Account created successfully!",
           description: "Please check your email to verify your account.",
         });
-        navigate("/login");
+        navigate("/auth");
       }
     } catch (error) {
       toast({
@@ -291,7 +291,7 @@ const Signup = () => {
                     
                     <div className="text-center text-sm text-gray-600">
                       Already have an account?{" "}
-                      <Link to="/login" className="text-terracotta hover:text-terracotta/80 font-medium">
+                      <Link to="/auth" className="text-terracotta hover:text-terracotta/80 font-medium">
                         Sign in
                       </Link>
                     </div>

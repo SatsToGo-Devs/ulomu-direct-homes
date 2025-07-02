@@ -11,7 +11,7 @@ const ChatAssistantPage = () => {
     <ProtectedRoute>
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white py-8">
+        <div className="bg-gradient-to-r from-terracotta to-forest text-white py-8">
           <div className="container mx-auto px-4">
             <div className="flex items-center gap-3">
               <MessageCircle className="h-8 w-8" />
@@ -21,7 +21,7 @@ const ChatAssistantPage = () => {
           </div>
         </div>
 
-        <main className="flex-1 bg-beige/20 py-8">
+        <main className="flex-1 bg-beige/20 dark:bg-gray-900 py-8">
           <div className="container mx-auto px-4 max-w-4xl">
             <ChatAssistant />
           </div>

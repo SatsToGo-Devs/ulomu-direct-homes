@@ -5,8 +5,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import LandlordDashboard from "./pages/LandlordDashboard";
 import Properties from "./pages/Properties";
@@ -30,34 +32,37 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <Router>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Login />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/landlord-dashboard" element={<LandlordDashboard />} />
-              <Route path="/properties" element={<Properties />} />
-              <Route path="/property/:id" element={<PropertyDetail />} />
-              <Route path="/add-property" element={<AddProperty />} />
-              <Route path="/tenants" element={<TenantsPage />} />
-              <Route path="/tenant-portal" element={<TenantPortal />} />
-              <Route path="/maintenance" element={<MaintenanceHubPage />} />
-              <Route path="/escrow" element={<EscrowHub />} />
-              <Route path="/ai-insights" element={<AIInsightsPage />} />
-              <Route path="/chat-assistant" element={<ChatAssistantPage />} />
-              <Route path="/ai-predictions" element={<PredictionsPage />} />
-              <Route path="/property-insights" element={<AIInsights />} />
-              <Route path="/system-test" element={<SystemTest />} />
-              <Route path="/profile" element={<ProfileSettings />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Router>
-        </AuthProvider>
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <AuthProvider>
+            <Toaster />
+            <Sonner />
+            <Router>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/landlord-dashboard" element={<LandlordDashboard />} />
+                <Route path="/properties" element={<Properties />} />
+                <Route path="/property/:id" element={<PropertyDetail />} />
+                <Route path="/add-property" element={<AddProperty />} />
+                <Route path="/tenants" element={<TenantsPage />} />
+                <Route path="/tenant-portal" element={<TenantPortal />} />
+                <Route path="/maintenance" element={<MaintenanceHubPage />} />
+                <Route path="/escrow" element={<EscrowHub />} />
+                <Route path="/ai-insights" element={<AIInsightsPage />} />
+                <Route path="/chat-assistant" element={<ChatAssistantPage />} />
+                <Route path="/ai-predictions" element={<PredictionsPage />} />
+                <Route path="/property-insights" element={<AIInsights />} />
+                <Route path="/system-test" element={<SystemTest />} />
+                <Route path="/profile" element={<ProfileSettings />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Router>
+          </AuthProvider>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

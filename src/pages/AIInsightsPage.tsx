@@ -18,7 +18,7 @@ const AIInsightsPage = () => {
       title: "AI Chat Assistant",
       description: "Get instant help with property management, maintenance requests, and tenant inquiries",
       icon: MessageCircle,
-      color: "bg-blue-500",
+      color: "bg-terracotta",
       action: () => navigate("/chat-assistant"),
       status: "Active"
     },
@@ -26,7 +26,7 @@ const AIInsightsPage = () => {
       title: "Predictive Maintenance",
       description: "AI-powered predictions for potential property issues and maintenance needs",
       icon: Wrench,
-      color: "bg-orange-500",
+      color: "bg-forest",
       action: () => navigate("/ai-predictions"),
       status: "Active"
     },
@@ -34,7 +34,7 @@ const AIInsightsPage = () => {
       title: "Smart Property Insights",
       description: "Advanced analytics and recommendations for your property portfolio",
       icon: Eye,
-      color: "bg-purple-500",
+      color: "bg-gold",
       action: () => navigate("/property-insights"),
       status: "Active"
     },
@@ -42,7 +42,7 @@ const AIInsightsPage = () => {
       title: "Cost Optimization",
       description: "AI suggestions to reduce maintenance costs and improve efficiency",
       icon: TrendingUp,
-      color: "bg-green-500",
+      color: "bg-terracotta/80",
       action: () => {},
       status: "Coming Soon"
     }
@@ -52,25 +52,25 @@ const AIInsightsPage = () => {
     <ProtectedRoute>
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-12">
+        <div className="bg-gradient-to-r from-terracotta to-forest text-white py-12">
           <div className="container mx-auto px-4">
             <div className="flex items-center gap-3 mb-4">
               <Brain className="h-10 w-10" />
               <h1 className="text-4xl font-bold">AI-Powered Features</h1>
             </div>
-            <p className="text-blue-100 text-lg max-w-2xl">
+            <p className="text-white/90 text-lg max-w-2xl">
               Harness the power of artificial intelligence to streamline your property management,
               predict maintenance issues, and enhance tenant satisfaction.
             </p>
           </div>
         </div>
 
-        <main className="flex-1 bg-beige/20 py-8">
+        <main className="flex-1 bg-beige/20 dark:bg-gray-900 py-8">
           <div className="container mx-auto px-4">
             {/* AI Features Grid */}
             <div className="grid md:grid-cols-2 gap-6 mb-8">
               {aiFeatures.map((feature, index) => (
-                <Card key={index} className="border-beige/50 hover:shadow-lg transition-shadow">
+                <Card key={index} className="border-beige/50 dark:border-gray-700 hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -81,18 +81,18 @@ const AIInsightsPage = () => {
                       </div>
                       <Badge 
                         variant={feature.status === "Active" ? "default" : "secondary"}
-                        className={feature.status === "Active" ? "bg-green-500" : ""}
+                        className={feature.status === "Active" ? "bg-forest text-white" : ""}
                       >
                         {feature.status}
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-600 mb-4">{feature.description}</p>
+                    <p className="text-gray-600 dark:text-gray-300 mb-4">{feature.description}</p>
                     <Button 
                       onClick={feature.action}
                       disabled={feature.status !== "Active"}
-                      className="w-full"
+                      className="w-full bg-terracotta hover:bg-terracotta/90 text-white"
                     >
                       {feature.status === "Active" ? "Launch Feature" : "Coming Soon"}
                     </Button>
@@ -102,10 +102,10 @@ const AIInsightsPage = () => {
             </div>
 
             {/* Live AI Chat Assistant */}
-            <Card className="border-beige/50">
+            <Card className="border-beige/50 dark:border-gray-700">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <Zap className="h-6 w-6 text-yellow-500" />
+                  <Zap className="h-6 w-6 text-gold" />
                   <CardTitle>Try AI Assistant Now</CardTitle>
                 </div>
               </CardHeader>
