@@ -16,15 +16,16 @@ import {
   Crown,
   Home,
   Wrench,
-  User
+  User,
+  RefreshCw
 } from 'lucide-react';
 
 interface UserProfile {
   id: string;
-  email: string;
+  email?: string;
   first_name?: string;
   last_name?: string;
-  created_at: string;
+  created_at?: string;
   roles: string[];
 }
 
@@ -46,47 +47,75 @@ const UserManagement: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      console.log('Fetching users and roles...');
       
-      // Get all users from auth.users (admin only access)
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (authError) throw authError;
-
-      // Get all user roles
+      // Get all user roles first
       const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
 
-      if (rolesError) throw rolesError;
+      if (rolesError) {
+        console.error('Error fetching user roles:', rolesError);
+        throw rolesError;
+      }
 
-      // Get profiles
+      // Get profiles for users who have roles
+      const userIds = [...new Set(userRoles?.map(ur => ur.user_id) || [])];
+      
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name');
+        .select('id, first_name, last_name')
+        .in('id', userIds);
 
-      if (profilesError) console.warn('Could not fetch profiles:', profilesError);
+      if (profilesError) {
+        console.warn('Could not fetch all profiles:', profilesError);
+      }
 
-      // Combine data
-      const usersWithRoles = authUsers.users.map(authUser => {
-        const userRolesList = userRoles?.filter(ur => ur.user_id === authUser.id) || [];
-        const profile = profiles?.find(p => p.id === authUser.id);
+      // Combine the data
+      const usersWithRoles = userIds.map(userId => {
+        const userRolesList = userRoles?.filter(ur => ur.user_id === userId) || [];
+        const profile = profiles?.find(p => p.id === userId);
         
         return {
-          id: authUser.id,
-          email: authUser.email || '',
+          id: userId,
+          email: `user-${userId.slice(0, 8)}@example.com`, // Placeholder since we can't access auth.users
           first_name: profile?.first_name,
           last_name: profile?.last_name,
-          created_at: authUser.created_at,
+          created_at: new Date().toISOString(), // Placeholder
           roles: userRolesList.map(ur => ur.role)
         };
       });
 
+      // Add current user if not already included
+      if (!userIds.includes(user?.id)) {
+        const { data: currentUserRoles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user?.id);
+
+        const { data: currentUserProfile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', user?.id)
+          .single();
+
+        usersWithRoles.unshift({
+          id: user?.id,
+          email: user?.email || 'current-user@example.com',
+          first_name: currentUserProfile?.first_name,
+          last_name: currentUserProfile?.last_name,
+          created_at: new Date().toISOString(),
+          roles: currentUserRoles?.map(r => r.role) || []
+        });
+      }
+
       setUsers(usersWithRoles);
+      console.log('Successfully fetched users:', usersWithRoles);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
         title: "Error",
-        description: "Failed to load users",
+        description: "Failed to load users. You may need additional permissions.",
         variant: "destructive"
       });
     } finally {
@@ -174,7 +203,7 @@ const UserManagement: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-terracotta mx-auto"></div>
+          <RefreshCw className="h-8 w-8 animate-spin text-terracotta mx-auto" />
           <p className="mt-2 text-gray-600">Loading users...</p>
         </div>
       </div>
@@ -192,6 +221,7 @@ const UserManagement: React.FC = () => {
           <p className="text-gray-600">Manage user roles and permissions</p>
         </div>
         <Button onClick={fetchUsers} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
           Refresh Users
         </Button>
       </div>
@@ -206,7 +236,7 @@ const UserManagement: React.FC = () => {
                     <AvatarFallback>
                       {userProfile.first_name && userProfile.last_name 
                         ? `${userProfile.first_name[0]}${userProfile.last_name[0]}`
-                        : userProfile.email[0].toUpperCase()
+                        : userProfile.email ? userProfile.email[0].toUpperCase() : 'U'
                       }
                     </AvatarFallback>
                   </Avatar>
@@ -216,10 +246,13 @@ const UserManagement: React.FC = () => {
                         ? `${userProfile.first_name} ${userProfile.last_name}`
                         : 'No Name Set'
                       }
+                      {userProfile.id === user?.id && (
+                        <Badge variant="outline" className="ml-2 text-xs">You</Badge>
+                      )}
                     </h3>
                     <p className="text-gray-600">{userProfile.email}</p>
                     <p className="text-xs text-gray-500">
-                      Joined: {new Date(userProfile.created_at).toLocaleDateString()}
+                      User ID: {userProfile.id.slice(0, 8)}...
                     </p>
                   </div>
                 </div>
@@ -274,7 +307,7 @@ const UserManagement: React.FC = () => {
           <CardContent className="p-8 text-center">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
-            <p className="text-gray-600">There are no users in the system yet.</p>
+            <p className="text-gray-600">No users with roles have been found in the system yet.</p>
           </CardContent>
         </Card>
       )}
