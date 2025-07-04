@@ -28,27 +28,27 @@ export const useUserRole = () => {
       setLoading(true);
       setError(null);
 
-      // Use raw query to avoid type issues with new tables
-      const { data, error: fetchError } = await supabase.rpc('get_user_roles', {
-        user_id: user?.id
-      }).catch(async () => {
-        // Fallback to direct query if RPC doesn't exist
-        return await supabase
-          .from('user_roles' as any)
-          .select('role, assigned_at')
-          .eq('user_id', user?.id);
-      });
+      // Direct query to user_roles table
+      const { data, error: fetchError } = await supabase
+        .from('user_roles' as any)
+        .select('role, assigned_at')
+        .eq('user_id', user?.id);
 
-      if (fetchError) throw fetchError;
-
-      const roles = data?.map((item: UserRole) => item.role) || [];
-      
-      // If no roles found, assign default 'tenant' role
-      if (roles.length === 0) {
+      if (fetchError) {
+        console.error('Error fetching user roles:', fetchError);
+        // If no roles found, assign default 'tenant' role
         await assignDefaultRole();
         setUserRoles(['tenant']);
       } else {
-        setUserRoles(roles);
+        const roles = data?.map((item: UserRole) => item.role) || [];
+        
+        // If no roles found, assign default 'tenant' role
+        if (roles.length === 0) {
+          await assignDefaultRole();
+          setUserRoles(['tenant']);
+        } else {
+          setUserRoles(roles);
+        }
       }
     } catch (error) {
       console.error('Error fetching user roles:', error);

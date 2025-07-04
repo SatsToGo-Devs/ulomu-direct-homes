@@ -15,9 +15,7 @@ import {
   ArrowRight, 
   ArrowLeft,
   CheckCircle,
-  Upload,
-  MapPin,
-  DollarSign
+  Upload
 } from 'lucide-react';
 
 interface OnboardingData {
@@ -72,7 +70,7 @@ const VendorOnboarding: React.FC = () => {
         .from('vendor_onboarding' as any)
         .select('*')
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         throw error;

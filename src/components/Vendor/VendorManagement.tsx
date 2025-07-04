@@ -19,7 +19,7 @@ import {
   Phone,
   Mail,
   UserPlus,
-  Settings
+  Plus
 } from 'lucide-react';
 
 interface Vendor {
@@ -69,9 +69,9 @@ const VendorManagement: React.FC = () => {
         .from('user_roles' as any)
         .select('role')
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle();
 
-      if (data) {
+      if (data && !error) {
         setUserRole(data.role);
       }
     } catch (error) {
@@ -86,11 +86,19 @@ const VendorManagement: React.FC = () => {
         .from('vendors')
         .select('*')
         .eq('verified', true)
-        .eq('onboarding_completed', true)
         .order('rating', { ascending: false });
 
       if (error) throw error;
-      setVendors((data || []) as Vendor[]);
+      
+      // Map the data to include onboarding_completed with default value
+      const vendorsWithDefaults = (data || []).map(vendor => ({
+        ...vendor,
+        onboarding_completed: vendor.onboarding_completed ?? true,
+        hourly_rate: vendor.hourly_rate ?? 0,
+        service_areas: vendor.service_areas ?? []
+      }));
+      
+      setVendors(vendorsWithDefaults as Vendor[]);
     } catch (error) {
       console.error('Error fetching vendors:', error);
       toast({
@@ -175,7 +183,6 @@ const VendorManagement: React.FC = () => {
         </TabsList>
 
         <TabsContent value="vendors">
-          
           <div className="space-y-6">
             <Card>
               <CardContent className="p-4">
@@ -239,7 +246,7 @@ const VendorManagement: React.FC = () => {
                         {renderStars(vendor.rating)}
                       </div>
                       <span className="text-sm font-medium">{vendor.rating.toFixed(1)}</span>
-                      {vendor.hourly_rate && (
+                      {vendor.hourly_rate && vendor.hourly_rate > 0 && (
                         <span className="text-sm text-gray-600 ml-auto">
                           ₦{vendor.hourly_rate.toLocaleString()}/hr
                         </span>
@@ -346,7 +353,6 @@ const VendorManagement: React.FC = () => {
         </Button>
       </div>
 
-      
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -409,7 +415,7 @@ const VendorManagement: React.FC = () => {
                   {renderStars(vendor.rating)}
                 </div>
                 <span className="text-sm font-medium">{vendor.rating.toFixed(1)}</span>
-                {vendor.hourly_rate && (
+                {vendor.hourly_rate && vendor.hourly_rate > 0 && (
                   <span className="text-sm text-gray-600 ml-auto">
                     ₦{vendor.hourly_rate.toLocaleString()}/hr
                   </span>

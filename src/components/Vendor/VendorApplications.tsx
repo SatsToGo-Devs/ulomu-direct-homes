@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -103,7 +102,8 @@ const VendorApplications: React.FC = () => {
             address: selectedApplication.business_address,
             experience_years: selectedApplication.years_experience,
             verified: true,
-            bio: selectedApplication.portfolio_description
+            bio: selectedApplication.portfolio_description,
+            onboarding_completed: true
           });
 
         if (vendorError) throw vendorError;
