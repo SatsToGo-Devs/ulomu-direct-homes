@@ -34,6 +34,8 @@ serve(async (req) => {
     const paystackSecretKey = Deno.env.get("PAYSTACK_SECRET_KEY");
     if (!paystackSecretKey) throw new Error("PayStack secret key not configured");
 
+    console.log("Creating PayStack transaction for user:", user.email);
+
     // Create PayStack transaction
     const paystackResponse = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
@@ -59,29 +61,52 @@ serve(async (req) => {
     });
 
     const paystackData = await paystackResponse.json();
+    console.log("PayStack response:", paystackData);
 
     if (!paystackData.status) {
       throw new Error(paystackData.message || "PayStack transaction initialization failed");
     }
 
-    // Create escrow transaction record
-    const { data: escrowAccount } = await supabaseClient
+    // Get or create escrow account
+    let { data: escrowAccount, error: accountError } = await supabaseClient
       .from('escrow_accounts')
       .select('id')
       .eq('user_id', user.id)
       .single();
 
-    if (escrowAccount) {
-      await supabaseClient.from('escrow_transactions').insert({
+    if (accountError && accountError.code === 'PGRST116') {
+      // Create account if it doesn't exist
+      const { data: newAccount, error: createError } = await supabaseClient
+        .from('escrow_accounts')
+        .insert([{ user_id: user.id }])
+        .select()
+        .single();
+
+      if (createError) throw createError;
+      escrowAccount = newAccount;
+    } else if (accountError) {
+      throw accountError;
+    }
+
+    // Create escrow transaction record
+    const { error: transactionError } = await supabaseClient
+      .from('escrow_transactions')
+      .insert({
         escrow_account_id: escrowAccount.id,
         amount,
-        type: 'HOLD',
+        type: 'DEPOSIT',
         status: 'PENDING',
         purpose,
         description,
         from_user_id: user.id
       });
+
+    if (transactionError) {
+      console.error('Error creating escrow transaction:', transactionError);
+      throw transactionError;
     }
+
+    console.log("Escrow transaction created successfully");
 
     return new Response(JSON.stringify({
       authorization_url: paystackData.data.authorization_url,

@@ -33,6 +33,8 @@ serve(async (req) => {
     const paystackSecretKey = Deno.env.get("PAYSTACK_SECRET_KEY");
     if (!paystackSecretKey) throw new Error("PayStack secret key not configured");
 
+    console.log("Verifying PayStack transaction:", transaction_reference);
+
     const verifyResponse = await fetch(`https://api.paystack.co/transaction/verify/${transaction_reference}`, {
       method: "GET",
       headers: {
@@ -41,13 +43,23 @@ serve(async (req) => {
     });
 
     const verifyData = await verifyResponse.json();
+    console.log("PayStack verification response:", verifyData);
 
     if (!verifyData.status || verifyData.data.status !== 'success') {
       throw new Error("Transaction verification failed");
     }
 
-    // Update escrow transaction
-    await supabaseClient
+    // Get transaction details
+    const { data: transaction, error: fetchError } = await supabaseClient
+      .from('escrow_transactions')
+      .select('*, escrow_accounts!inner(*)')
+      .eq('id', transaction_id)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    // Update escrow transaction to completed
+    const { error: updateError } = await supabaseClient
       .from('escrow_transactions')
       .update({
         status: 'COMPLETED',
@@ -55,23 +67,22 @@ serve(async (req) => {
       })
       .eq('id', transaction_id);
 
-    // Update escrow account balances
-    const { data: transaction } = await supabaseClient
-      .from('escrow_transactions')
-      .select('*, escrow_accounts!inner(*)')
-      .eq('id', transaction_id)
-      .single();
+    if (updateError) throw updateError;
 
+    // Update escrow account balances
     if (transaction) {
-      // Decrease frozen balance, increase available balance
-      await supabaseClient
+      const { error: balanceError } = await supabaseClient
         .from('escrow_accounts')
         .update({
           frozen_balance: Math.max(0, (transaction.escrow_accounts.frozen_balance || 0) - transaction.amount),
           balance: (transaction.escrow_accounts.balance || 0) + transaction.amount
         })
         .eq('id', transaction.escrow_account_id);
+
+      if (balanceError) throw balanceError;
     }
+
+    console.log("Escrow funds released successfully");
 
     return new Response(JSON.stringify({
       success: true,
