@@ -225,43 +225,181 @@ export type Database = {
         Row: {
           account_type: string | null
           balance: number | null
+          bank_details: Json | null
           created_at: string | null
+          escrow_tier: string | null
           frozen_balance: number | null
           id: string
+          role: string | null
+          trust_score: number | null
           updated_at: string | null
           user_id: string
+          wallet_id: string | null
         }
         Insert: {
           account_type?: string | null
           balance?: number | null
+          bank_details?: Json | null
           created_at?: string | null
+          escrow_tier?: string | null
           frozen_balance?: number | null
           id?: string
+          role?: string | null
+          trust_score?: number | null
           updated_at?: string | null
           user_id: string
+          wallet_id?: string | null
         }
         Update: {
           account_type?: string | null
           balance?: number | null
+          bank_details?: Json | null
           created_at?: string | null
+          escrow_tier?: string | null
           frozen_balance?: number | null
           id?: string
+          role?: string | null
+          trust_score?: number | null
           updated_at?: string | null
           user_id?: string
+          wallet_id?: string | null
+        }
+        Relationships: []
+      }
+      escrow_disputes: {
+        Row: {
+          created_at: string | null
+          id: string
+          raised_by: string
+          reason: string
+          resolution_note: string | null
+          resolved_by: string | null
+          status: string | null
+          transaction_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          raised_by: string
+          reason: string
+          resolution_note?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          transaction_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          raised_by?: string
+          reason?: string
+          resolution_note?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          transaction_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escrow_disputes_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "escrow_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      escrow_receipts: {
+        Row: {
+          amount: number
+          generated_at: string | null
+          id: string
+          receipt_data: Json | null
+          receipt_type: string
+          recipient_id: string
+          transaction_id: string
+        }
+        Insert: {
+          amount: number
+          generated_at?: string | null
+          id?: string
+          receipt_data?: Json | null
+          receipt_type: string
+          recipient_id: string
+          transaction_id: string
+        }
+        Update: {
+          amount?: number
+          generated_at?: string | null
+          id?: string
+          receipt_data?: Json | null
+          receipt_type?: string
+          recipient_id?: string
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escrow_receipts_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "escrow_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      escrow_rules: {
+        Row: {
+          auto_release: boolean | null
+          created_at: string | null
+          dispute_allowed: boolean | null
+          id: string
+          release_condition: string
+          release_days: number | null
+          transaction_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          auto_release?: boolean | null
+          created_at?: string | null
+          dispute_allowed?: boolean | null
+          id?: string
+          release_condition: string
+          release_days?: number | null
+          transaction_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          auto_release?: boolean | null
+          created_at?: string | null
+          dispute_allowed?: boolean | null
+          id?: string
+          release_condition?: string
+          release_days?: number | null
+          transaction_type?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
       escrow_transactions: {
         Row: {
           amount: number
+          auto_release_date: string | null
+          completion_confirmed: boolean | null
           created_at: string | null
           description: string | null
           escrow_account_id: string
+          evidence_urls: string[] | null
           from_user_id: string | null
           id: string
+          payee_id: string | null
+          payer_id: string | null
+          property_id: string | null
           purpose: string | null
+          release_condition: string | null
           release_conditions: string | null
           scheduled_release: string | null
+          service_fee: number | null
           status: string | null
           to_user_id: string | null
           type: string
@@ -269,14 +407,22 @@ export type Database = {
         }
         Insert: {
           amount: number
+          auto_release_date?: string | null
+          completion_confirmed?: boolean | null
           created_at?: string | null
           description?: string | null
           escrow_account_id: string
+          evidence_urls?: string[] | null
           from_user_id?: string | null
           id?: string
+          payee_id?: string | null
+          payer_id?: string | null
+          property_id?: string | null
           purpose?: string | null
+          release_condition?: string | null
           release_conditions?: string | null
           scheduled_release?: string | null
+          service_fee?: number | null
           status?: string | null
           to_user_id?: string | null
           type: string
@@ -284,14 +430,22 @@ export type Database = {
         }
         Update: {
           amount?: number
+          auto_release_date?: string | null
+          completion_confirmed?: boolean | null
           created_at?: string | null
           description?: string | null
           escrow_account_id?: string
+          evidence_urls?: string[] | null
           from_user_id?: string | null
           id?: string
+          payee_id?: string | null
+          payer_id?: string | null
+          property_id?: string | null
           purpose?: string | null
+          release_condition?: string | null
           release_conditions?: string | null
           scheduled_release?: string | null
+          service_fee?: number | null
           status?: string | null
           to_user_id?: string | null
           type?: string
@@ -303,6 +457,13 @@ export type Database = {
             columns: ["escrow_account_id"]
             isOneToOne: false
             referencedRelation: "escrow_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escrow_transactions_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]
@@ -780,6 +941,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      vendor_profiles: {
+        Row: {
+          completion_rate: number | null
+          created_at: string | null
+          id: string
+          specialties: string[] | null
+          total_jobs: number | null
+          trust_score: number | null
+          updated_at: string | null
+          user_id: string
+          verification_status: string | null
+          wallet_address: string | null
+        }
+        Insert: {
+          completion_rate?: number | null
+          created_at?: string | null
+          id?: string
+          specialties?: string[] | null
+          total_jobs?: number | null
+          trust_score?: number | null
+          updated_at?: string | null
+          user_id: string
+          verification_status?: string | null
+          wallet_address?: string | null
+        }
+        Update: {
+          completion_rate?: number | null
+          created_at?: string | null
+          id?: string
+          specialties?: string[] | null
+          total_jobs?: number | null
+          trust_score?: number | null
+          updated_at?: string | null
+          user_id?: string
+          verification_status?: string | null
+          wallet_address?: string | null
+        }
+        Relationships: []
       }
       vendor_reviews: {
         Row: {
