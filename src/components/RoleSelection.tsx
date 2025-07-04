@@ -11,11 +11,12 @@ import {
   Wrench, 
   User,
   Plus,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
 
 const RoleSelection: React.FC = () => {
-  const { userRoles, assignRole, removeRole, refetch } = useUserRole();
+  const { userRoles, assignRole, removeRole, refetch, loading: rolesLoading } = useUserRole();
   const { toast } = useToast();
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -53,21 +54,23 @@ const RoleSelection: React.FC = () => {
   const handleAddRole = async (roleId: string) => {
     setLoading(roleId);
     try {
+      console.log('Adding role:', roleId);
       const result = await assignRole('self', roleId);
       if (result.success) {
         toast({
           title: "Role Added",
           description: `Successfully added ${roleId} role.`
         });
-        await refetch();
+        // Force refetch to update the UI
+        setTimeout(() => refetch(), 500);
       } else {
-        throw new Error(result.error);
+        throw new Error(result.error || 'Failed to add role');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding role:', error);
       toast({
         title: "Error",
-        description: "Failed to add role. Please try again.",
+        description: error.message || "Failed to add role. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -76,29 +79,52 @@ const RoleSelection: React.FC = () => {
   };
 
   const handleRemoveRole = async (roleId: string) => {
+    // Prevent removing the last role
+    if (userRoles.length === 1) {
+      toast({
+        title: "Cannot Remove Role",
+        description: "You must have at least one role assigned.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(roleId);
     try {
+      console.log('Removing role:', roleId);
       const result = await removeRole('self', roleId);
       if (result.success) {
         toast({
           title: "Role Removed",
           description: `Successfully removed ${roleId} role.`
         });
-        await refetch();
+        // Force refetch to update the UI
+        setTimeout(() => refetch(), 500);
       } else {
-        throw new Error(result.error);
+        throw new Error(result.error || 'Failed to remove role');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error removing role:', error);
       toast({
         title: "Error",
-        description: "Failed to remove role. Please try again.",
+        description: error.message || "Failed to remove role. Please try again.",
         variant: "destructive"
       });
     } finally {
       setLoading(null);
     }
   };
+
+  if (rolesLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">Loading roles...</span>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -115,6 +141,8 @@ const RoleSelection: React.FC = () => {
         <div className="grid gap-4">
           {availableRoles.map((role) => {
             const hasRole = userRoles.includes(role.id);
+            const isLoadingThis = loading === role.id;
+            
             return (
               <div
                 key={role.id}
@@ -143,20 +171,28 @@ const RoleSelection: React.FC = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => handleRemoveRole(role.id)}
-                      disabled={loading === role.id}
+                      disabled={isLoadingThis || userRoles.length === 1}
                       className="text-red-600 hover:text-red-700"
                     >
-                      <X className="h-4 w-4 mr-1" />
+                      {isLoadingThis ? (
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <X className="h-4 w-4 mr-1" />
+                      )}
                       Remove
                     </Button>
                   ) : (
                     <Button
                       size="sm"
                       onClick={() => handleAddRole(role.id)}
-                      disabled={loading === role.id}
+                      disabled={isLoadingThis}
                       className="bg-terracotta hover:bg-terracotta/90"
                     >
-                      <Plus className="h-4 w-4 mr-1" />
+                      {isLoadingThis ? (
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <Plus className="h-4 w-4 mr-1" />
+                      )}
                       Add Role
                     </Button>
                   )}
@@ -169,7 +205,24 @@ const RoleSelection: React.FC = () => {
         {userRoles.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             <User className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-            <p>No roles selected yet. Choose at least one role to get started!</p>
+            <p>Loading your roles...</p>
+          </div>
+        )}
+
+        {userRoles.length > 0 && (
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+            <h4 className="font-medium mb-2">Current Roles:</h4>
+            <div className="flex flex-wrap gap-2">
+              {userRoles.map((role) => {
+                const roleInfo = availableRoles.find(r => r.id === role);
+                return (
+                  <Badge key={role} className={roleInfo?.color || 'bg-gray-100 text-gray-800'}>
+                    {roleInfo?.icon}
+                    <span className="ml-1">{roleInfo?.name || role}</span>
+                  </Badge>
+                );
+              })}
+            </div>
           </div>
         )}
       </CardContent>

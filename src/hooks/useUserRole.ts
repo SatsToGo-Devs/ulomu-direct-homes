@@ -22,6 +22,7 @@ export const useUserRole = () => {
     try {
       setLoading(true);
       setError(null);
+      console.log('Fetching roles for user:', user?.id);
 
       // Query user_roles table directly
       const { data, error: fetchError } = await supabase
@@ -36,6 +37,7 @@ export const useUserRole = () => {
         setUserRoles(['tenant']);
       } else {
         const roles = data?.map(item => item.role) || [];
+        console.log('Fetched roles:', roles);
         
         // If no roles found, assign default 'tenant' role
         if (roles.length === 0) {
@@ -56,6 +58,7 @@ export const useUserRole = () => {
 
   const assignDefaultRole = async () => {
     try {
+      console.log('Assigning default tenant role to user:', user?.id);
       const { error } = await supabase
         .from('user_roles')
         .insert({
@@ -64,8 +67,10 @@ export const useUserRole = () => {
         });
 
       if (error && error.code !== '23505') { // Ignore duplicate key errors
+        console.error('Error assigning default role:', error);
         throw error;
       }
+      console.log('Default role assigned successfully');
     } catch (error) {
       console.error('Error assigning default role:', error);
     }
@@ -101,20 +106,30 @@ export const useUserRole = () => {
 
   const assignRole = async (userId: string, role: string) => {
     try {
+      console.log('Assigning role:', role, 'to user:', userId);
       // If userId is 'self', use current user's ID
       const targetUserId = userId === 'self' ? user?.id : userId;
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('user_roles')
         .insert({
           user_id: targetUserId,
           role: role,
           assigned_by: user?.id
-        });
+        })
+        .select();
 
-      if (error && error.code !== '23505') { // Ignore duplicate key errors
+      if (error) {
+        console.error('Error assigning role:', error);
+        if (error.code === '23505') {
+          // Role already exists, this is fine
+          console.log('Role already exists for user');
+          return { success: true };
+        }
         throw error;
       }
+
+      console.log('Role assigned successfully:', data);
 
       // Refresh roles if assigning to current user
       if (targetUserId === user?.id) {
@@ -130,6 +145,7 @@ export const useUserRole = () => {
 
   const removeRole = async (userId: string, role: string) => {
     try {
+      console.log('Removing role:', role, 'from user:', userId);
       // If userId is 'self', use current user's ID
       const targetUserId = userId === 'self' ? user?.id : userId;
       
@@ -139,7 +155,12 @@ export const useUserRole = () => {
         .eq('user_id', targetUserId)
         .eq('role', role);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error removing role:', error);
+        throw error;
+      }
+
+      console.log('Role removed successfully');
 
       // Refresh roles if removing from current user
       if (targetUserId === user?.id) {
