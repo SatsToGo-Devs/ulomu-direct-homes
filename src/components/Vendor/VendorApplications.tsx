@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -53,7 +54,7 @@ const VendorApplications: React.FC = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('vendor_applications' as any)
+        .from('vendor_applications')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -76,7 +77,7 @@ const VendorApplications: React.FC = () => {
       setProcessing(true);
       
       const { error: updateError } = await supabase
-        .from('vendor_applications' as any)
+        .from('vendor_applications')
         .update({
           application_status: status,
           admin_notes: notes || adminNotes,
@@ -102,15 +103,14 @@ const VendorApplications: React.FC = () => {
             address: selectedApplication.business_address,
             experience_years: selectedApplication.years_experience,
             verified: true,
-            bio: selectedApplication.portfolio_description,
-            onboarding_completed: true
+            bio: selectedApplication.portfolio_description
           });
 
         if (vendorError) throw vendorError;
 
         // Assign vendor role
         const { error: roleError } = await supabase
-          .from('user_roles' as any)
+          .from('user_roles')
           .insert({
             user_id: selectedApplication.user_id,
             role: 'vendor',

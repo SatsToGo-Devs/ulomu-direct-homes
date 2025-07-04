@@ -35,10 +35,10 @@ interface Vendor {
   state?: string;
   experience_years: number;
   bio?: string;
+  created_at: string;
   hourly_rate?: number;
   service_areas?: string[];
   onboarding_completed: boolean;
-  created_at: string;
 }
 
 const VendorManagement: React.FC = () => {
@@ -66,13 +66,14 @@ const VendorManagement: React.FC = () => {
   const fetchUserRole = async () => {
     try {
       const { data, error } = await supabase
-        .from('user_roles' as any)
+        .from('user_roles')
         .select('role')
         .eq('user_id', user?.id)
         .maybeSingle();
 
       if (data && !error) {
-        setUserRole(data.role);
+        const typedData = data as any;
+        setUserRole(typedData.role);
       }
     } catch (error) {
       console.error('Error fetching user role:', error);
@@ -90,9 +91,11 @@ const VendorManagement: React.FC = () => {
 
       if (error) throw error;
       
-      // Map the data to include onboarding_completed with default value
+      // Map the data to include default values for missing properties
       const vendorsWithDefaults = (data || []).map(vendor => ({
         ...vendor,
+        rating: vendor.rating ?? 0,
+        specialties: vendor.specialties ?? [],
         onboarding_completed: vendor.onboarding_completed ?? true,
         hourly_rate: vendor.hourly_rate ?? 0,
         service_areas: vendor.service_areas ?? []

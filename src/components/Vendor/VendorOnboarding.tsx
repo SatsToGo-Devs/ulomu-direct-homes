@@ -67,7 +67,7 @@ const VendorOnboarding: React.FC = () => {
   const fetchOnboardingData = async () => {
     try {
       const { data, error } = await supabase
-        .from('vendor_onboarding' as any)
+        .from('vendor_onboarding')
         .select('*')
         .eq('user_id', user?.id)
         .maybeSingle();
@@ -77,11 +77,16 @@ const VendorOnboarding: React.FC = () => {
       }
 
       if (data) {
-        setOnboardingData(data as OnboardingData);
-        setProfileData({ ...profileData, ...data.profile_data });
+        const typedData = data as any;
+        setOnboardingData({
+          step: typedData.step,
+          profile_data: typedData.profile_data,
+          documents_uploaded: typedData.documents_uploaded || []
+        });
+        setProfileData({ ...profileData, ...typedData.profile_data });
         
         // Set current step based on onboarding progress
-        switch (data.step) {
+        switch (typedData.step) {
           case 'PROFILE_INFO': setCurrentStep(1); break;
           case 'SPECIALTIES': setCurrentStep(2); break;
           case 'VERIFICATION': setCurrentStep(3); break;
@@ -101,7 +106,7 @@ const VendorOnboarding: React.FC = () => {
       if (onboardingData) {
         // Update existing record
         const { error } = await supabase
-          .from('vendor_onboarding' as any)
+          .from('vendor_onboarding')
           .update({
             step,
             profile_data: data,
@@ -113,7 +118,7 @@ const VendorOnboarding: React.FC = () => {
       } else {
         // Create new record
         const { error } = await supabase
-          .from('vendor_onboarding' as any)
+          .from('vendor_onboarding')
           .insert({
             user_id: user?.id,
             step,
@@ -166,7 +171,7 @@ const VendorOnboarding: React.FC = () => {
   const submitApplication = async () => {
     try {
       const { error } = await supabase
-        .from('vendor_applications' as any)
+        .from('vendor_applications')
         .insert({
           user_id: user?.id,
           business_name: profileData.business_name,

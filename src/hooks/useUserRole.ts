@@ -28,9 +28,9 @@ export const useUserRole = () => {
       setLoading(true);
       setError(null);
 
-      // Direct query to user_roles table
+      // Query user_roles table with proper type handling
       const { data, error: fetchError } = await supabase
-        .from('user_roles' as any)
+        .from('user_roles')
         .select('role, assigned_at')
         .eq('user_id', user?.id);
 
@@ -40,7 +40,7 @@ export const useUserRole = () => {
         await assignDefaultRole();
         setUserRoles(['tenant']);
       } else {
-        const roles = data?.map((item: UserRole) => item.role) || [];
+        const roles = (data as any[])?.map((item: any) => item.role) || [];
         
         // If no roles found, assign default 'tenant' role
         if (roles.length === 0) {
@@ -62,7 +62,7 @@ export const useUserRole = () => {
   const assignDefaultRole = async () => {
     try {
       const { error } = await supabase
-        .from('user_roles' as any)
+        .from('user_roles')
         .insert({
           user_id: user?.id,
           role: 'tenant'
@@ -107,7 +107,7 @@ export const useUserRole = () => {
   const assignRole = async (userId: string, role: string) => {
     try {
       const { error } = await supabase
-        .from('user_roles' as any)
+        .from('user_roles')
         .insert({
           user_id: userId,
           role: role,
@@ -133,7 +133,7 @@ export const useUserRole = () => {
   const removeRole = async (userId: string, role: string) => {
     try {
       const { error } = await supabase
-        .from('user_roles' as any)
+        .from('user_roles')
         .delete()
         .eq('user_id', userId)
         .eq('role', role);
