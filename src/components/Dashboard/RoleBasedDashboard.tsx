@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -40,6 +40,17 @@ const RoleBasedDashboard = () => {
   const { userRoles, loading, isAdmin, isLandlord, isVendor, isTenant } = useUserRole();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('');
+
+  // Debug logging
+  useEffect(() => {
+    console.log('RoleBasedDashboard - User:', user);
+    console.log('RoleBasedDashboard - User Roles:', userRoles);
+    console.log('RoleBasedDashboard - Loading:', loading);
+    console.log('RoleBasedDashboard - isTenant():', isTenant());
+    console.log('RoleBasedDashboard - isLandlord():', isLandlord());
+    console.log('RoleBasedDashboard - isVendor():', isVendor());
+    console.log('RoleBasedDashboard - isAdmin():', isAdmin());
+  }, [user, userRoles, loading, isTenant, isLandlord, isVendor, isAdmin]);
 
   const adminFeatures: FeatureItem[] = [
     {
@@ -184,6 +195,18 @@ const RoleBasedDashboard = () => {
       route: '/tenant-portal'
     },
     {
+      title: 'Service Requests',
+      description: 'Track all service-related communications',
+      icon: <Settings className="h-5 w-5" />,
+      route: '/tenant-portal'
+    },
+    {
+      title: 'Escrow Payments',
+      description: 'Secure rent and deposit payments',
+      icon: <Wallet className="h-5 w-5" />,
+      route: '/escrow'
+    },
+    {
       title: 'AI Assistant',
       description: 'Get help with tenant-related questions',
       icon: <Brain className="h-5 w-5" />,
@@ -296,31 +319,58 @@ const RoleBasedDashboard = () => {
     );
   }
 
-  // Determine which tabs to show based on user roles
+  // Determine which tabs to show based on user roles - prioritize tenant role
   const availableTabs = [];
   
-  if (isAdmin()) {
-    availableTabs.push({ key: 'admin', label: 'Admin Features', icon: <Shield className="h-4 w-4" /> });
+  // Always show tenant tab first if user is a tenant
+  if (isTenant()) {
+    availableTabs.push({ key: 'tenant', label: 'Tenant Features', icon: <Home className="h-4 w-4" /> });
   }
+  
   if (isLandlord()) {
     availableTabs.push({ key: 'landlord', label: 'Landlord Features', icon: <Home className="h-4 w-4" /> });
   }
+  
   if (isVendor()) {
     availableTabs.push({ key: 'vendor', label: 'Vendor Features', icon: <Wrench className="h-4 w-4" /> });
   }
-  if (isTenant()) {
-    availableTabs.push({ key: 'tenant', label: 'Tenant Features', icon: <User className="h-4 w-4" /> });
+  
+  if (isAdmin()) {
+    availableTabs.push({ key: 'admin', label: 'Admin Features', icon: <Shield className="h-4 w-4" /> });
   }
   
   // Always show core features
   availableTabs.push({ key: 'core', label: 'Core Features', icon: <Settings className="h-4 w-4" /> });
 
-  // Set default active tab if not set
-  React.useEffect(() => {
+  // Set default active tab - prioritize tenant if available
+  useEffect(() => {
     if (!activeTab && availableTabs.length > 0) {
-      setActiveTab(availableTabs[0].key);
+      // If user is tenant, default to tenant tab, otherwise use first available
+      if (isTenant()) {
+        setActiveTab('tenant');
+      } else {
+        setActiveTab(availableTabs[0].key);
+      }
     }
-  }, [availableTabs, activeTab]);
+  }, [availableTabs, activeTab, isTenant]);
+
+  // Show message if no roles found
+  if (userRoles.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Setting up your account...</h3>
+          <p className="text-gray-600">We're assigning your default role. Please refresh the page in a moment.</p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 bg-terracotta hover:bg-terracotta/90"
+          >
+            Refresh Page
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -346,23 +396,23 @@ const RoleBasedDashboard = () => {
           ))}
         </TabsList>
 
-        {isAdmin() && (
-          <TabsContent value="admin" className="space-y-6">
+        {isTenant() && (
+          <TabsContent value="tenant" className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
-              <Shield className="h-6 w-6 text-red-600" />
-              <h2 className="text-2xl font-bold">Admin Features</h2>
-              <Badge className="bg-red-100 text-red-800">Full Access</Badge>
+              <Home className="h-6 w-6 text-blue-600" />
+              <h2 className="text-2xl font-bold">Tenant Features</h2>
+              <Badge className="bg-blue-100 text-blue-800">Resident</Badge>
             </div>
-            {renderFeatureGrid(adminFeatures)}
+            {renderFeatureGrid(tenantFeatures)}
           </TabsContent>
         )}
 
         {isLandlord() && (
           <TabsContent value="landlord" className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
-              <Home className="h-6 w-6 text-blue-600" />
+              <Home className="h-6 w-6 text-green-600" />
               <h2 className="text-2xl font-bold">Landlord Features</h2>
-              <Badge className="bg-blue-100 text-blue-800">Property Management</Badge>
+              <Badge className="bg-green-100 text-green-800">Property Management</Badge>
             </div>
             {renderFeatureGrid(landlordFeatures)}
           </TabsContent>
@@ -371,22 +421,22 @@ const RoleBasedDashboard = () => {
         {isVendor() && (
           <TabsContent value="vendor" className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
-              <Wrench className="h-6 w-6 text-green-600" />
+              <Wrench className="h-6 w-6 text-orange-600" />
               <h2 className="text-2xl font-bold">Vendor Features</h2>
-              <Badge className="bg-green-100 text-green-800">Service Provider</Badge>
+              <Badge className="bg-orange-100 text-orange-800">Service Provider</Badge>
             </div>
             {renderFeatureGrid(vendorFeatures)}
           </TabsContent>
         )}
 
-        {isTenant() && (
-          <TabsContent value="tenant" className="space-y-6">
+        {isAdmin() && (
+          <TabsContent value="admin" className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
-              <User className="h-6 w-6 text-purple-600" />
-              <h2 className="text-2xl font-bold">Tenant Features</h2>
-              <Badge className="bg-purple-100 text-purple-800">Resident</Badge>
+              <Shield className="h-6 w-6 text-red-600" />
+              <h2 className="text-2xl font-bold">Admin Features</h2>
+              <Badge className="bg-red-100 text-red-800">Full Access</Badge>
             </div>
-            {renderFeatureGrid(tenantFeatures)}
+            {renderFeatureGrid(adminFeatures)}
           </TabsContent>
         )}
 
