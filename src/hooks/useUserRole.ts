@@ -1,0 +1,163 @@
+
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+
+interface UserRole {
+  role: string;
+  assigned_at: string;
+}
+
+export const useUserRole = () => {
+  const { user } = useAuth();
+  const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserRoles();
+    } else {
+      setUserRoles([]);
+      setLoading(false);
+    }
+  }, [user]);
+
+  const fetchUserRoles = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { data, error: fetchError } = await supabase
+        .from('user_roles')
+        .select('role, assigned_at')
+        .eq('user_id', user?.id);
+
+      if (fetchError) throw fetchError;
+
+      const roles = data?.map((item: UserRole) => item.role) || [];
+      
+      // If no roles found, assign default 'tenant' role
+      if (roles.length === 0) {
+        await assignDefaultRole();
+        setUserRoles(['tenant']);
+      } else {
+        setUserRoles(roles);
+      }
+    } catch (error) {
+      console.error('Error fetching user roles:', error);
+      setError('Failed to fetch user roles');
+      setUserRoles(['tenant']); // Default fallback
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const assignDefaultRole = async () => {
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: user?.id,
+          role: 'tenant'
+        });
+
+      if (error && error.code !== '23505') { // Ignore duplicate key errors
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error assigning default role:', error);
+    }
+  };
+
+  const hasRole = (role: string): boolean => {
+    return userRoles.includes(role);
+  };
+
+  const isAdmin = (): boolean => {
+    return hasRole('admin');
+  };
+
+  const isLandlord = (): boolean => {
+    return hasRole('landlord');
+  };
+
+  const isVendor = (): boolean => {
+    return hasRole('vendor');
+  };
+
+  const isTenant = (): boolean => {
+    return hasRole('tenant');
+  };
+
+  const getPrimaryRole = (): string => {
+    // Priority order: admin > landlord > vendor > tenant
+    if (hasRole('admin')) return 'admin';
+    if (hasRole('landlord')) return 'landlord';
+    if (hasRole('vendor')) return 'vendor';
+    return 'tenant';
+  };
+
+  const assignRole = async (userId: string, role: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          role: role,
+          assigned_by: user?.id
+        });
+
+      if (error && error.code !== '23505') { // Ignore duplicate key errors
+        throw error;
+      }
+
+      // Refresh roles if assigning to current user
+      if (userId === user?.id) {
+        await fetchUserRoles();
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error assigning role:', error);
+      return { success: false, error: 'Failed to assign role' };
+    }
+  };
+
+  const removeRole = async (userId: string, role: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId)
+        .eq('role', role);
+
+      if (error) throw error;
+
+      // Refresh roles if removing from current user
+      if (userId === user?.id) {
+        await fetchUserRoles();
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error removing role:', error);
+      return { success: false, error: 'Failed to remove role' };
+    }
+  };
+
+  return {
+    userRoles,
+    loading,
+    error,
+    hasRole,
+    isAdmin,
+    isLandlord,
+    isVendor,
+    isTenant,
+    getPrimaryRole,
+    assignRole,
+    removeRole,
+    refetch: fetchUserRoles
+  };
+};

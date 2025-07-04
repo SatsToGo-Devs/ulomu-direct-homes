@@ -1,13 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import VendorOnboarding from './VendorOnboarding';
+import VendorApplications from './VendorApplications';
 import { 
   Users, 
   Plus, 
@@ -15,9 +17,10 @@ import {
   MapPin, 
   Verified, 
   Search,
-  Filter,
   Phone,
-  Mail
+  Mail,
+  UserPlus,
+  Settings
 } from 'lucide-react';
 
 interface Vendor {
@@ -33,6 +36,9 @@ interface Vendor {
   state?: string;
   experience_years: number;
   bio?: string;
+  hourly_rate?: number;
+  service_areas?: string[];
+  onboarding_completed: boolean;
   created_at: string;
 }
 
@@ -43,6 +49,8 @@ const VendorManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('');
+  const [userRole, setUserRole] = useState<string>('');
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const specialties = [
     'Plumbing', 'Electrical', 'HVAC', 'Carpentry', 'Painting', 
@@ -51,9 +59,26 @@ const VendorManagement: React.FC = () => {
 
   useEffect(() => {
     if (user) {
+      fetchUserRole();
       fetchVendors();
     }
   }, [user]);
+
+  const fetchUserRole = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (data) {
+        setUserRole(data.role);
+      }
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+    }
+  };
 
   const fetchVendors = async () => {
     try {
@@ -62,6 +87,7 @@ const VendorManagement: React.FC = () => {
         .from('vendors')
         .select('*')
         .eq('verified', true)
+        .eq('onboarding_completed', true)
         .order('rating', { ascending: false });
 
       if (error) throw error;
@@ -125,34 +151,203 @@ const VendorManagement: React.FC = () => {
     ));
   };
 
-  if (loading) {
+  // Show onboarding if user wants to become a vendor
+  if (showOnboarding) {
+    return <VendorOnboarding />;
+  }
+
+  // Admin view with vendor applications
+  if (userRole === 'admin') {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-terracotta mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading vendors...</p>
+      <Tabs defaultValue="vendors" className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Users className="h-6 w-6 text-terracotta" />
+              Vendor Management
+            </h2>
+            <p className="text-gray-600">Manage vendors and review applications</p>
+          </div>
         </div>
-      </div>
+
+        <TabsList>
+          <TabsTrigger value="vendors">Active Vendors</TabsTrigger>
+          <TabsTrigger value="applications">Applications</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="vendors">
+          
+          <div className="space-y-6">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Search vendors by name, company, or specialty..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="sm:w-64">
+                    <select
+                      value={selectedSpecialty}
+                      onChange={(e) => setSelectedSpecialty(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-terracotta focus:border-transparent"
+                    >
+                      <option value="">All Specialties</option>
+                      {specialties.map(specialty => (
+                        <option key={specialty} value={specialty}>{specialty}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredVendors.map((vendor) => (
+                <Card key={vendor.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-12 w-12 bg-forest text-white">
+                          <AvatarFallback>
+                            {vendor.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            {vendor.name}
+                            {vendor.verified && (
+                              <Verified className="h-4 w-4 text-blue-600" />
+                            )}
+                          </CardTitle>
+                          {vendor.company_name && (
+                            <p className="text-sm text-gray-600">{vendor.company_name}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <div className="flex">
+                        {renderStars(vendor.rating)}
+                      </div>
+                      <span className="text-sm font-medium">{vendor.rating.toFixed(1)}</span>
+                      {vendor.hourly_rate && (
+                        <span className="text-sm text-gray-600 ml-auto">
+                          ₦{vendor.hourly_rate.toLocaleString()}/hr
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-2">Specialties:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {vendor.specialties.slice(0, 3).map((specialty) => (
+                          <Badge key={specialty} variant="secondary" className="text-xs">
+                            {specialty}
+                          </Badge>
+                        ))}
+                        {vendor.specialties.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{vendor.specialties.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {(vendor.city || vendor.state) && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <MapPin className="h-4 w-4" />
+                        <span>{[vendor.city, vendor.state].filter(Boolean).join(', ')}</span>
+                      </div>
+                    )}
+
+                    <div className="text-sm text-gray-600">
+                      <strong>{vendor.experience_years}</strong> years of experience
+                    </div>
+
+                    <div className="space-y-2">
+                      {vendor.phone && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <Phone className="h-4 w-4" />
+                          <span>{vendor.phone}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Mail className="h-4 w-4" />
+                        <span>{vendor.email}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-4 border-t">
+                      <Button 
+                        size="sm" 
+                        className="flex-1 bg-terracotta hover:bg-terracotta/90"
+                      >
+                        Assign to Job
+                      </Button>
+                      <Button size="sm" variant="outline" className="flex-1">
+                        View Profile
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {filteredVendors.length === 0 && (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No vendors found</h3>
+                  <p className="text-gray-600">
+                    {searchTerm || selectedSpecialty 
+                      ? "Try adjusting your search criteria" 
+                      : "No verified vendors available at the moment"
+                    }
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="applications">
+          <VendorApplications />
+        </TabsContent>
+      </Tabs>
     );
   }
 
+  // Regular user view
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <Users className="h-6 w-6 text-terracotta" />
-            Vendor Management
+            Find Vendors
           </h2>
-          <p className="text-gray-600">Manage and assign verified vendors to maintenance requests</p>
+          <p className="text-gray-600">Browse and connect with verified service providers</p>
         </div>
-        <Button className="bg-terracotta hover:bg-terracotta/90">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Vendor
+        <Button 
+          onClick={() => setShowOnboarding(true)}
+          className="bg-terracotta hover:bg-terracotta/90"
+        >
+          <UserPlus className="h-4 w-4 mr-2" />
+          Become a Vendor
         </Button>
       </div>
 
-      {/* Search and Filters */}
+      
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -183,7 +378,6 @@ const VendorManagement: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Vendors Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredVendors.map((vendor) => (
           <Card key={vendor.id} className="hover:shadow-lg transition-shadow">
@@ -211,15 +405,18 @@ const VendorManagement: React.FC = () => {
             </CardHeader>
 
             <CardContent className="space-y-4">
-              {/* Rating */}
               <div className="flex items-center gap-2">
                 <div className="flex">
                   {renderStars(vendor.rating)}
                 </div>
                 <span className="text-sm font-medium">{vendor.rating.toFixed(1)}</span>
+                {vendor.hourly_rate && (
+                  <span className="text-sm text-gray-600 ml-auto">
+                    ₦{vendor.hourly_rate.toLocaleString()}/hr
+                  </span>
+                )}
               </div>
 
-              {/* Specialties */}
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-2">Specialties:</p>
                 <div className="flex flex-wrap gap-1">
@@ -236,7 +433,6 @@ const VendorManagement: React.FC = () => {
                 </div>
               </div>
 
-              {/* Location */}
               {(vendor.city || vendor.state) && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <MapPin className="h-4 w-4" />
@@ -244,12 +440,10 @@ const VendorManagement: React.FC = () => {
                 </div>
               )}
 
-              {/* Experience */}
               <div className="text-sm text-gray-600">
                 <strong>{vendor.experience_years}</strong> years of experience
               </div>
 
-              {/* Contact Info */}
               <div className="space-y-2">
                 {vendor.phone && (
                   <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -263,13 +457,12 @@ const VendorManagement: React.FC = () => {
                 </div>
               </div>
 
-              {/* Actions */}
               <div className="flex gap-2 pt-4 border-t">
                 <Button 
                   size="sm" 
                   className="flex-1 bg-terracotta hover:bg-terracotta/90"
                 >
-                  Assign to Job
+                  Contact Vendor
                 </Button>
                 <Button size="sm" variant="outline" className="flex-1">
                   View Profile
@@ -291,9 +484,12 @@ const VendorManagement: React.FC = () => {
                 : "No verified vendors available at the moment"
               }
             </p>
-            <Button className="bg-terracotta hover:bg-terracotta/90">
+            <Button 
+              onClick={() => setShowOnboarding(true)}
+              className="bg-terracotta hover:bg-terracotta/90"
+            >
               <Plus className="h-4 w-4 mr-2" />
-              Add New Vendor
+              Become a Vendor
             </Button>
           </CardContent>
         </Card>
