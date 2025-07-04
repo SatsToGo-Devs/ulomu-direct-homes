@@ -1,23 +1,33 @@
 
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import UlomuDashboard from "@/components/Ulomu/Dashboard";
+import React from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import RoleBasedDashboard from '@/components/Dashboard/RoleBasedDashboard';
+import Navbar from '@/components/Navbar';
 
 const Dashboard = () => {
-  return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <div className="bg-gradient-to-r from-terracotta to-terracotta/90 text-white py-8">
-        <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold">Ulomu Dashboard</h1>
-          <p className="text-white/90">AI-powered property maintenance at your fingertips</p>
+  const { loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-terracotta mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
         </div>
       </div>
-      <main className="flex-1 bg-beige/20">
-        <UlomuDashboard />
-      </main>
-      <Footer />
-    </div>
+    );
+  }
+
+  return (
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <main>
+          <RoleBasedDashboard />
+        </main>
+      </div>
+    </ProtectedRoute>
   );
 };
 
