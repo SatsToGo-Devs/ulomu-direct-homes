@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -14,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { payment_intent_id, transaction_id, recipient_email } = await req.json();
+    const { transaction_reference, transaction_id, recipient_email } = await req.json();
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -30,12 +29,22 @@ serve(async (req) => {
     
     if (!user) throw new Error("User not authenticated");
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2023-10-16",
+    // Verify transaction with PayStack
+    const paystackSecretKey = Deno.env.get("PAYSTACK_SECRET_KEY");
+    if (!paystackSecretKey) throw new Error("PayStack secret key not configured");
+
+    const verifyResponse = await fetch(`https://api.paystack.co/transaction/verify/${transaction_reference}`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${paystackSecretKey}`,
+      },
     });
 
-    // Capture the payment intent (release funds)
-    const paymentIntent = await stripe.paymentIntents.capture(payment_intent_id);
+    const verifyData = await verifyResponse.json();
+
+    if (!verifyData.status || verifyData.data.status !== 'success') {
+      throw new Error("Transaction verification failed");
+    }
 
     // Update escrow transaction
     await supabaseClient
@@ -66,7 +75,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
-      payment_intent: paymentIntent
+      transaction: verifyData.data
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -14,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { amount, currency = "usd", purpose, recipient_email, description, payment_type = "escrow" } = await req.json();
+    const { amount, currency = "NGN", purpose, recipient_email, description, payment_type = "escrow" } = await req.json();
 
     // Initialize Supabase with service role for secure operations
     const supabaseClient = createClient(
@@ -31,39 +30,39 @@ serve(async (req) => {
     
     if (!user?.email) throw new Error("User not authenticated");
 
-    // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2023-10-16",
-    });
+    // Initialize PayStack
+    const paystackSecretKey = Deno.env.get("PAYSTACK_SECRET_KEY");
+    if (!paystackSecretKey) throw new Error("PayStack secret key not configured");
 
-    // Check for existing customer
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId;
-    
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-    } else {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: { user_id: user.id }
-      });
-      customerId = customer.id;
-    }
-
-    // Create payment intent for escrow
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert to cents
-      currency,
-      customer: customerId,
-      description: `Escrow Payment: ${description}`,
-      metadata: {
-        purpose,
-        user_id: user.id,
-        payment_type,
-        recipient_email: recipient_email || "pending"
+    // Create PayStack transaction
+    const paystackResponse = await fetch("https://api.paystack.co/transaction/initialize", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${paystackSecretKey}`,
+        "Content-Type": "application/json",
       },
-      capture_method: "manual", // Hold funds for escrow
+      body: JSON.stringify({
+        email: user.email,
+        amount: Math.round(amount * 100), // Convert to kobo
+        currency,
+        reference: `escrow_${Date.now()}_${user.id.substring(0, 8)}`,
+        metadata: {
+          purpose,
+          user_id: user.id,
+          payment_type,
+          recipient_email: recipient_email || "pending",
+          description,
+        },
+        callback_url: `${req.headers.get("origin")}/escrow?payment=success`,
+        cancel_url: `${req.headers.get("origin")}/escrow?payment=cancelled`,
+      }),
     });
+
+    const paystackData = await paystackResponse.json();
+
+    if (!paystackData.status) {
+      throw new Error(paystackData.message || "PayStack transaction initialization failed");
+    }
 
     // Create escrow transaction record
     const { data: escrowAccount } = await supabaseClient
@@ -85,8 +84,9 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
-      client_secret: paymentIntent.client_secret,
-      payment_intent_id: paymentIntent.id
+      authorization_url: paystackData.data.authorization_url,
+      access_code: paystackData.data.access_code,
+      reference: paystackData.data.reference
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

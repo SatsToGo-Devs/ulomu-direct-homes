@@ -9,10 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CreditCard, Shield, DollarSign } from 'lucide-react';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_key_here');
 
 interface EscrowPaymentModalProps {
   trigger?: React.ReactNode;
@@ -20,8 +16,6 @@ interface EscrowPaymentModalProps {
 }
 
 const PaymentForm = ({ onSuccess }: { onSuccess: () => void }) => {
-  const stripe = useStripe();
-  const elements = useElements();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -33,8 +27,6 @@ const PaymentForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stripe || !elements) return;
-
     setLoading(true);
     
     try {
@@ -50,20 +42,12 @@ const PaymentForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
       if (error) throw error;
 
-      // Confirm payment with Stripe
-      const { error: confirmError } = await stripe.confirmCardPayment(paymentData.client_secret, {
-        payment_method: {
-          card: elements.getElement(CardElement)!,
-        }
-      });
-
-      if (confirmError) {
-        throw new Error(confirmError.message);
-      }
+      // Redirect to PayStack checkout
+      window.open(paymentData.authorization_url, '_blank');
 
       toast({
-        title: "Payment Successful",
-        description: "Funds have been held in escrow and will be released upon completion.",
+        title: "Payment Initiated",
+        description: "You will be redirected to PayStack to complete your payment.",
       });
 
       onSuccess();
@@ -83,7 +67,7 @@ const PaymentForm = ({ onSuccess }: { onSuccess: () => void }) => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="amount">Amount ($)</Label>
+          <Label htmlFor="amount">Amount (₦)</Label>
           <Input
             id="amount"
             type="number"
@@ -91,6 +75,7 @@ const PaymentForm = ({ onSuccess }: { onSuccess: () => void }) => {
             value={formData.amount}
             onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
             required
+            placeholder="0.00"
           />
         </div>
         <div>
@@ -133,23 +118,6 @@ const PaymentForm = ({ onSuccess }: { onSuccess: () => void }) => {
         />
       </div>
 
-      <div className="border rounded-lg p-3">
-        <Label className="text-sm font-medium mb-2 block">Card Details</Label>
-        <CardElement 
-          options={{
-            style: {
-              base: {
-                fontSize: '16px',
-                color: '#424770',
-                '::placeholder': {
-                  color: '#aab7c4',
-                },
-              },
-            },
-          }}
-        />
-      </div>
-
       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
         <div className="flex items-center gap-2 text-blue-700 mb-2">
           <Shield className="h-4 w-4" />
@@ -163,10 +131,10 @@ const PaymentForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
       <Button 
         type="submit" 
-        disabled={!stripe || loading} 
+        disabled={loading} 
         className="w-full bg-terracotta hover:bg-terracotta/90"
       >
-        {loading ? 'Processing...' : `Pay $${formData.amount || '0.00'} via Escrow`}
+        {loading ? 'Processing...' : `Pay ₦${formData.amount || '0.00'} via Escrow`}
       </Button>
     </form>
   );
@@ -201,9 +169,7 @@ const EscrowPaymentModal = ({ trigger, onPaymentComplete }: EscrowPaymentModalPr
             Secure Escrow Payment
           </DialogTitle>
         </DialogHeader>
-        <Elements stripe={stripePromise}>
-          <PaymentForm onSuccess={handleSuccess} />
-        </Elements>
+        <PaymentForm onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   );
