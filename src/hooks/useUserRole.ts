@@ -101,10 +101,13 @@ export const useUserRole = () => {
 
   const assignRole = async (userId: string, role: string) => {
     try {
+      // If userId is 'self', use current user's ID
+      const targetUserId = userId === 'self' ? user?.id : userId;
+      
       const { error } = await supabase
         .from('user_roles')
         .insert({
-          user_id: userId,
+          user_id: targetUserId,
           role: role,
           assigned_by: user?.id
         });
@@ -114,7 +117,7 @@ export const useUserRole = () => {
       }
 
       // Refresh roles if assigning to current user
-      if (userId === user?.id) {
+      if (targetUserId === user?.id) {
         await fetchUserRoles();
       }
 
@@ -127,16 +130,19 @@ export const useUserRole = () => {
 
   const removeRole = async (userId: string, role: string) => {
     try {
+      // If userId is 'self', use current user's ID
+      const targetUserId = userId === 'self' ? user?.id : userId;
+      
       const { error } = await supabase
         .from('user_roles')
         .delete()
-        .eq('user_id', userId)
+        .eq('user_id', targetUserId)
         .eq('role', role);
 
       if (error) throw error;
 
       // Refresh roles if removing from current user
-      if (userId === user?.id) {
+      if (targetUserId === user?.id) {
         await fetchUserRoles();
       }
 

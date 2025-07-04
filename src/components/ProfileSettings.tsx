@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Save, Upload } from 'lucide-react';
+import RoleSelection from './RoleSelection';
 
 interface Profile {
   id: string;
@@ -124,11 +125,15 @@ const ProfileSettings = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
+      {/* Role Selection Section */}
+      <RoleSelection />
+
+      {/* Profile Information Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            Profile Settings
+            Profile Information
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
