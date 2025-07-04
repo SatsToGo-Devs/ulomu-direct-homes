@@ -41,3 +41,6 @@ verify_jwt = true
 
 [functions.generate-ai-predictions]
 verify_jwt = true
+
+[functions.ai-vendor-matching]
+verify_jwt = true

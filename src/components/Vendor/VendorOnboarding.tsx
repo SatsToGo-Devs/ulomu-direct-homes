@@ -82,10 +82,10 @@ const VendorOnboarding: React.FC = () => {
       if (data) {
         setOnboardingData({
           step: data.step,
-          profile_data: data.profile_data,
+          profile_data: data.profile_data || {},
           documents_uploaded: data.documents_uploaded || []
         });
-        setProfileData({ ...profileData, ...data.profile_data });
+        setProfileData({ ...profileData, ...(data.profile_data || {}) });
         
         // Set current step based on onboarding progress
         switch (data.step) {
