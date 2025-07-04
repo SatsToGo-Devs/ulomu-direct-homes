@@ -600,6 +600,45 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string
+          id: string
+          message: string
+          metadata: Json | null
+          priority: string
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          priority?: string
+          read?: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          priority?: string
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -1143,6 +1182,7 @@ export type Database = {
           bio: string | null
           city: string | null
           company_name: string | null
+          completion_rate: number | null
           country: string | null
           created_at: string
           email: string
@@ -1156,6 +1196,7 @@ export type Database = {
           service_areas: string[] | null
           specialties: string[] | null
           state: string | null
+          total_jobs: number | null
           updated_at: string
           user_id: string
           verified: boolean | null
@@ -1165,6 +1206,7 @@ export type Database = {
           bio?: string | null
           city?: string | null
           company_name?: string | null
+          completion_rate?: number | null
           country?: string | null
           created_at?: string
           email: string
@@ -1178,6 +1220,7 @@ export type Database = {
           service_areas?: string[] | null
           specialties?: string[] | null
           state?: string | null
+          total_jobs?: number | null
           updated_at?: string
           user_id: string
           verified?: boolean | null
@@ -1187,6 +1230,7 @@ export type Database = {
           bio?: string | null
           city?: string | null
           company_name?: string | null
+          completion_rate?: number | null
           country?: string | null
           created_at?: string
           email?: string
@@ -1200,6 +1244,7 @@ export type Database = {
           service_areas?: string[] | null
           specialties?: string[] | null
           state?: string | null
+          total_jobs?: number | null
           updated_at?: string
           user_id?: string
           verified?: boolean | null

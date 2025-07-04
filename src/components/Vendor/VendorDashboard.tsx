@@ -3,162 +3,130 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  Wrench, 
+  Briefcase, 
+  Star, 
   Clock, 
-  CheckCircle, 
-  AlertTriangle, 
-  DollarSign,
-  Star,
-  MapPin,
-  Calendar,
-  Phone,
-  MessageCircle
+  DollarSign, 
+  TrendingUp,
+  CheckCircle,
+  AlertCircle,
+  Calendar
 } from 'lucide-react';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface VendorJob {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  priority: string;
-  category: string;
-  estimated_cost: number;
-  actual_cost?: number;
-  scheduled_date?: string;
-  created_at: string;
-  properties: { name: string; address: string };
-  units?: { unit_number: string };
-  progress?: number;
-}
+type MaintenanceRequest = Tables<'maintenance_requests'>;
+type Vendor = Tables<'vendors'>;
 
 interface VendorStats {
   totalJobs: number;
   completedJobs: number;
-  pendingJobs: number;
-  totalEarnings: number;
-  avgRating: number;
+  averageRating: number;
   completionRate: number;
+  totalEarnings: number;
 }
 
 const VendorDashboard: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [jobs, setJobs] = useState<VendorJob[]>([]);
+  const [vendor, setVendor] = useState<Vendor | null>(null);
+  const [activeJobs, setActiveJobs] = useState<MaintenanceRequest[]>([]);
   const [stats, setStats] = useState<VendorStats>({
     totalJobs: 0,
     completedJobs: 0,
-    pendingJobs: 0,
-    totalEarnings: 0,
-    avgRating: 0,
-    completionRate: 0
+    averageRating: 0,
+    completionRate: 0,
+    totalEarnings: 0
   });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('pending');
 
   useEffect(() => {
     if (user) {
-      fetchVendorJobs();
-      fetchVendorStats();
-      setupRealtimeSubscription();
+      fetchVendorData();
+      fetchActiveJobs();
+      fetchStats();
     }
   }, [user]);
 
-  const fetchVendorJobs = async () => {
+  const fetchVendorData = async () => {
     try {
-      setLoading(true);
+      const { data, error } = await supabase
+        .from('vendors')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error) throw error;
+      setVendor(data);
+    } catch (error) {
+      console.error('Error fetching vendor data:', error);
+    }
+  };
+
+  const fetchActiveJobs = async () => {
+    try {
       const { data, error } = await supabase
         .from('maintenance_requests')
         .select(`
           *,
-          properties(name, address),
-          units(unit_number),
-          maintenance_work_progress(progress_percentage)
+          properties (
+            name,
+            address
+          )
         `)
-        .eq('vendor_id', user?.id)
+        .eq('vendor_id', vendor?.id)
+        .in('status', ['ASSIGNED', 'IN_PROGRESS'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      const jobsWithProgress = data?.map(job => ({
-        ...job,
-        progress: job.maintenance_work_progress?.[0]?.progress_percentage || 0
-      })) || [];
-      
-      setJobs(jobsWithProgress);
+      setActiveJobs(data || []);
     } catch (error) {
-      console.error('Error fetching vendor jobs:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load your jobs",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+      console.error('Error fetching active jobs:', error);
     }
   };
 
-  const fetchVendorStats = async () => {
+  const fetchStats = async () => {
     try {
-      const { data: vendor, error: vendorError } = await supabase
-        .from('vendors')
-        .select('rating, total_jobs, completion_rate')
-        .eq('user_id', user?.id)
-        .single();
+      if (!vendor) return;
 
-      if (vendorError) throw vendorError;
-
-      const { data: jobsData, error: jobsError } = await supabase
+      const { data: completedJobs, error: jobsError } = await supabase
         .from('maintenance_requests')
-        .select('status, actual_cost, estimated_cost')
-        .eq('vendor_id', user?.id);
+        .select('*')
+        .eq('vendor_id', vendor.id)
+        .eq('status', 'COMPLETED');
 
       if (jobsError) throw jobsError;
 
-      const totalJobs = jobsData?.length || 0;
-      const completedJobs = jobsData?.filter(j => j.status === 'COMPLETED').length || 0;
-      const pendingJobs = jobsData?.filter(j => ['PENDING', 'IN_PROGRESS', 'ASSIGNED'].includes(j.status)).length || 0;
-      const totalEarnings = jobsData?.reduce((sum, job) => sum + (job.actual_cost || job.estimated_cost || 0), 0) || 0;
+      const { data: reviews, error: reviewsError } = await supabase
+        .from('vendor_reviews')
+        .select('rating')
+        .eq('vendor_id', vendor.id);
+
+      if (reviewsError) throw reviewsError;
+
+      const totalJobs = vendor.total_jobs || 0;
+      const completedCount = completedJobs?.length || 0;
+      const averageRating = reviews?.length ? 
+        reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0;
+      const completionRate = vendor.completion_rate || 0;
+      const totalEarnings = completedJobs?.reduce((sum, job) => sum + (job.actual_cost || 0), 0) || 0;
 
       setStats({
         totalJobs,
-        completedJobs,
-        pendingJobs,
-        totalEarnings,
-        avgRating: vendor?.rating || 0,
-        completionRate: vendor?.completion_rate || 0
+        completedJobs: completedCount,
+        averageRating,
+        completionRate,
+        totalEarnings
       });
     } catch (error) {
-      console.error('Error fetching vendor stats:', error);
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const setupRealtimeSubscription = () => {
-    const channel = supabase
-      .channel('vendor-jobs')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'maintenance_requests',
-          filter: `vendor_id=eq.${user?.id}`
-        },
-        () => {
-          fetchVendorJobs();
-          fetchVendorStats();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   };
 
   const updateJobStatus = async (jobId: string, status: string) => {
@@ -167,274 +135,221 @@ const VendorDashboard: React.FC = () => {
         .from('maintenance_requests')
         .update({ 
           status,
-          updated_at: new Date().toISOString(),
           ...(status === 'COMPLETED' && { completed_date: new Date().toISOString() })
         })
         .eq('id', jobId);
 
       if (error) throw error;
 
+      await fetchActiveJobs();
+      await fetchStats();
+
       toast({
         title: "Job Updated",
-        description: `Job status updated to ${status.toLowerCase().replace('_', ' ')}`
+        description: `Job status updated to ${status.toLowerCase()}.`
       });
-
-      fetchVendorJobs();
-      fetchVendorStats();
     } catch (error) {
       console.error('Error updating job status:', error);
       toast({
         title: "Update Failed",
-        description: "Failed to update job status",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const updateJobProgress = async (jobId: string, progress: number, statusUpdate: string) => {
-    try {
-      const { error } = await supabase
-        .from('maintenance_work_progress')
-        .upsert({
-          maintenance_request_id: jobId,
-          progress_percentage: progress,
-          status_update: statusUpdate,
-          updated_by: user?.id,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Progress Updated",
-        description: "Job progress has been updated successfully"
-      });
-
-      fetchVendorJobs();
-    } catch (error) {
-      console.error('Error updating progress:', error);
-      toast({
-        title: "Update Failed",
-        description: "Failed to update job progress",
+        description: "Failed to update job status.",
         variant: "destructive"
       });
     }
   };
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'assigned': return 'bg-blue-100 text-blue-800';
-      case 'in_progress': return 'bg-purple-100 text-purple-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
+    switch (status) {
+      case 'ASSIGNED': return 'bg-blue-100 text-blue-800';
+      case 'IN_PROGRESS': return 'bg-yellow-100 text-yellow-800';
+      case 'COMPLETED': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getPriorityColor = (priority: string) => {
-    switch (priority.toLowerCase()) {
-      case 'emergency': return 'bg-red-100 text-red-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+    switch (priority) {
+      case 'URGENT': return 'bg-red-100 text-red-800';
+      case 'HIGH': return 'bg-orange-100 text-orange-800';
+      case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-green-100 text-green-800';
     }
   };
 
-  const filteredJobs = jobs.filter(job => {
-    switch (activeTab) {
-      case 'pending':
-        return ['PENDING', 'ASSIGNED'].includes(job.status);
-      case 'active':
-        return job.status === 'IN_PROGRESS';
-      case 'completed':
-        return job.status === 'COMPLETED';
-      default:
-        return true;
-    }
-  });
-
-  const JobCard: React.FC<{ job: VendorJob }> = ({ job }) => (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg">{job.title}</CardTitle>
-          <div className="flex gap-2">
-            <Badge className={getStatusColor(job.status)}>
-              {job.status.replace('_', ' ')}
-            </Badge>
-            <Badge className={getPriorityColor(job.priority)}>
-              {job.priority}
-            </Badge>
-          </div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-terracotta mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading dashboard...</p>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="text-sm text-gray-600">
-          <div className="flex items-center gap-2 mb-2">
-            <MapPin className="h-4 w-4" />
-            <span>{job.properties?.name} - {job.properties?.address}</span>
-          </div>
-          {job.units && (
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-medium">Unit:</span>
-              <span>{job.units.unit_number}</span>
-            </div>
-          )}
-          <div className="flex items-center gap-2 mb-2">
-            <span className="font-medium">Category:</span>
-            <span>{job.category}</span>
-          </div>
-        </div>
+      </div>
+    );
+  }
 
-        {job.description && (
-          <p className="text-sm text-gray-700">{job.description}</p>
-        )}
-
-        {job.status === 'IN_PROGRESS' && (
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Progress</span>
-              <span className="text-sm text-gray-600">{job.progress}%</span>
-            </div>
-            <Progress value={job.progress} className="h-2" />
-          </div>
-        )}
-
-        <div className="flex justify-between items-center pt-2 border-t text-sm">
-          <span className="text-gray-500">
-            {new Date(job.created_at).toLocaleDateString()}
-          </span>
-          <span className="font-medium text-green-600">
-            ₦{(job.actual_cost || job.estimated_cost || 0).toLocaleString()}
-          </span>
-        </div>
-
-        <div className="flex gap-2 pt-2">
-          {job.status === 'ASSIGNED' && (
-            <Button 
-              size="sm" 
-              onClick={() => updateJobStatus(job.id, 'IN_PROGRESS')}
-              className="bg-terracotta hover:bg-terracotta/90"
-            >
-              Start Job
-            </Button>
-          )}
-          {job.status === 'IN_PROGRESS' && (
-            <>
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => updateJobProgress(job.id, Math.min(job.progress + 25, 100), 'Progress update')}
-              >
-                Update Progress
-              </Button>
-              <Button 
-                size="sm" 
-                onClick={() => updateJobStatus(job.id, 'COMPLETED')}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                Complete
-              </Button>
-            </>
-          )}
-          <Button size="sm" variant="outline">
-            <MessageCircle className="h-3 w-3 mr-1" />
-            Chat
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  if (!vendor) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Vendor Profile</h3>
+          <p className="text-gray-600">You need to complete your vendor profile to access the dashboard.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-terracotta">{stats.totalJobs}</div>
-            <div className="text-sm text-gray-600">Total Jobs</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.completedJobs}</div>
-            <div className="text-sm text-gray-600">Completed</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.pendingJobs}</div>
-            <div className="text-sm text-gray-600">Active</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-forest">₦{stats.totalEarnings.toLocaleString()}</div>
-            <div className="text-sm text-gray-600">Earnings</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-600 flex items-center justify-center gap-1">
-              {stats.avgRating.toFixed(1)} <Star className="h-4 w-4" />
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Avatar className="h-16 w-16 bg-forest text-white">
+            <AvatarFallback>
+              {vendor.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{vendor.name}</h1>
+            <p className="text-gray-600">{vendor.company_name}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <Star className="h-4 w-4 text-yellow-500 fill-current" />
+              <span className="text-sm font-medium">{stats.averageRating.toFixed(1)}</span>
+              <span className="text-sm text-gray-500">({stats.completionRate}% completion rate)</span>
             </div>
-            <div className="text-sm text-gray-600">Rating</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Briefcase className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Jobs</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalJobs}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
+
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">{stats.completionRate}%</div>
-            <div className="text-sm text-gray-600">Completion</div>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.completedJobs}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <Star className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Rating</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.averageRating.toFixed(1)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <DollarSign className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Earnings</p>
+                <p className="text-2xl font-bold text-gray-900">₦{stats.totalEarnings.toLocaleString()}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Jobs Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="pending" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Pending ({jobs.filter(j => ['PENDING', 'ASSIGNED'].includes(j.status)).length})
-          </TabsTrigger>
-          <TabsTrigger value="active" className="flex items-center gap-2">
-            <Wrench className="h-4 w-4" />
-            Active ({jobs.filter(j => j.status === 'IN_PROGRESS').length})
-          </TabsTrigger>
-          <TabsTrigger value="completed" className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4" />
-            Completed ({jobs.filter(j => j.status === 'COMPLETED').length})
-          </TabsTrigger>
-          <TabsTrigger value="all" className="flex items-center gap-2">
-            All ({jobs.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value={activeTab} className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filteredJobs.map((job) => (
-              <JobCard key={job.id} job={job} />
-            ))}
-          </div>
-
-          {filteredJobs.length === 0 && (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <Wrench className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No jobs found</h3>
-                <p className="text-gray-600">
-                  {activeTab === 'pending' 
-                    ? "You don't have any pending jobs at the moment" 
-                    : `No ${activeTab} jobs to display`
-                  }
-                </p>
-              </CardContent>
-            </Card>
+      {/* Active Jobs */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-terracotta" />
+            Active Jobs ({activeJobs.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {activeJobs.length === 0 ? (
+            <div className="text-center py-8">
+              <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Active Jobs</h3>
+              <p className="text-gray-600">You don't have any active jobs at the moment.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {activeJobs.map((job) => (
+                <div key={job.id} className="border rounded-lg p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-medium text-gray-900">{job.title}</h3>
+                        <Badge className={getStatusColor(job.status || '')}>
+                          {job.status?.replace('_', ' ')}
+                        </Badge>
+                        <Badge className={getPriorityColor(job.priority || '')}>
+                          {job.priority}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">{job.description}</p>
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {new Date(job.created_at || '').toLocaleDateString()}
+                        </span>
+                        {job.estimated_cost && (
+                          <span className="flex items-center gap-1">
+                            <DollarSign className="h-4 w-4" />
+                            ₦{job.estimated_cost.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {job.status === 'ASSIGNED' && (
+                        <Button
+                          size="sm"
+                          onClick={() => updateJobStatus(job.id, 'IN_PROGRESS')}
+                        >
+                          Start Job
+                        </Button>
+                      )}
+                      {job.status === 'IN_PROGRESS' && (
+                        <Button
+                          size="sm"
+                          onClick={() => updateJobStatus(job.id, 'COMPLETED')}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          Complete Job
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };

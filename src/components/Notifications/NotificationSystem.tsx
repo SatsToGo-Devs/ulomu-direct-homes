@@ -7,18 +7,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Bell, BellRing, Check, X, Eye, Clock } from 'lucide-react';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'maintenance' | 'escrow' | 'vendor' | 'system';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  read: boolean;
-  created_at: string;
-  action_url?: string;
-  metadata?: any;
-}
+type Notification = Tables<'notifications'>;
 
 const NotificationSystem: React.FC = () => {
   const { user } = useAuth();
@@ -166,6 +157,17 @@ const NotificationSystem: React.FC = () => {
 
   const filteredNotifications = getFilteredNotifications();
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-terracotta mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading notifications...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
