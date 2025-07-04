@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import LandlordDashboard from "./pages/LandlordDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import Properties from "./pages/Properties";
 import PropertyDetail from "./pages/PropertyDetail";
 import AddProperty from "./pages/AddProperty";
@@ -44,6 +45,7 @@ function App() {
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/landlord-dashboard" element={<LandlordDashboard />} />
+                <Route path="/admin-dashboard" element={<AdminDashboard />} />
                 <Route path="/properties" element={<Properties />} />
                 <Route path="/property/:id" element={<PropertyDetail />} />
                 <Route path="/add-property" element={<AddProperty />} />

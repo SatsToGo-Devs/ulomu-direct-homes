@@ -1,156 +1,201 @@
-import React, { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { 
-  Menu, 
-  X, 
-  User, 
-  LogOut, 
-  Home, 
-  Building, 
-  Users, 
-  Wrench, 
-  Brain,
-  MessageCircle,
-  TestTube,
-  CreditCard
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import ThemeToggle from "@/components/ThemeToggle";
-import UlomuLogo from "@/components/UlomuLogo";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import UlomuLogo from "./UlomuLogo";
+import { Menu, X, Shield } from "lucide-react";
 
 const Navbar = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
+  const { isAdmin, isLandlord, getPrimaryRole } = useUserRole();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { toast } = useToast();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Signed out successfully",
+        description: "You have been logged out of your account."
+      });
+      navigate("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast({
+        title: "Sign out failed",
+        description: "There was an error signing you out. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const navItems = [
-    { name: "Home", path: "/", icon: Home },
-    { name: "Properties", path: "/properties", icon: Building },
-    { name: "Tenants", path: "/tenants", icon: Users },
-    { name: "Maintenance", path: "/maintenance", icon: Wrench },
-    { name: "AI Features", path: "/ai-insights", icon: Brain },
-    { name: "Chat Assistant", path: "/chat-assistant", icon: MessageCircle },
-    { name: "System Test", path: "/system-test", icon: TestTube },
-    { name: "Escrow", path: "/escrow", icon: CreditCard },
-  ];
-
-  const isActive = (path: string) => location.pathname === path;
+  const getDashboardLink = () => {
+    const primaryRole = getPrimaryRole();
+    switch (primaryRole) {
+      case 'admin':
+        return '/admin-dashboard';
+      case 'landlord':
+        return '/landlord-dashboard';
+      default:
+        return '/dashboard';
+    }
+  };
 
   return (
-    <nav className="bg-white dark:bg-gray-900 shadow-lg border-b border-beige/30 dark:border-gray-700 sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <UlomuLogo size="md" showText={true} />
-          </Link>
+    <nav className="bg-white shadow-sm border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link to="/" className="flex items-center">
+              <UlomuLogo />
+            </Link>
+          </div>
 
           {/* Desktop Navigation */}
-          {user && (
-            <div className="hidden md:flex items-center space-x-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive(item.path)
-                      ? "bg-terracotta text-white"
-                      : "text-gray-700 dark:text-gray-200 hover:bg-beige/50 dark:hover:bg-gray-700 hover:text-terracotta dark:hover:text-terracotta"
-                  }`}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-          )}
-
-          {/* User Menu / Auth Buttons */}
-          <div className="flex items-center space-x-4">
-            <ThemeToggle />
+          <div className="hidden md:flex items-center space-x-8">
             {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    <span className="hidden sm:inline">Account</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate("/profile")}>
-                    <User className="mr-2 h-4 w-4" />
-                    Profile Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                    <Home className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <>
+                <Link
+                  to={getDashboardLink()}
+                  className="text-gray-700 hover:text-terracotta px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Dashboard
+                </Link>
+                {isLandlord() && (
+                  <Link
+                    to="/properties"
+                    className="text-gray-700 hover:text-terracotta px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    Properties
+                  </Link>
+                )}
+                {isAdmin() && (
+                  <Link
+                    to="/admin-dashboard"
+                    className="text-gray-700 hover:text-terracotta px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1"
+                  >
+                    <Shield className="h-4 w-4" />
+                    Admin
+                  </Link>
+                )}
+                <Link
+                  to="/profile"
+                  className="text-gray-700 hover:text-terracotta px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Profile
+                </Link>
+                <Button onClick={handleSignOut} variant="outline">
+                  Sign Out
+                </Button>
+              </>
             ) : (
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
-                  Sign In
-                </Button>
-                <Button size="sm" onClick={() => navigate("/signup")} className="bg-terracotta hover:bg-terracotta/90">
-                  Sign Up
-                </Button>
-              </div>
+              <>
+                <Link
+                  to="/how-it-works"
+                  className="text-gray-700 hover:text-terracotta px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  How It Works
+                </Link>
+                <Link to="/auth">
+                  <Button variant="outline">Sign In</Button>
+                </Link>
+                <Link to="/signup">
+                  <Button className="bg-terracotta hover:bg-terracotta/90">
+                    Get Started
+                  </Button>
+                </Link>
+              </>
             )}
+          </div>
 
-            {/* Mobile Menu Button */}
-            {user && (
-              <button
-                className="md:hidden p-2"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              >
-                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
-            )}
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-terracotta hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-terracotta"
+            >
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
           </div>
         </div>
 
         {/* Mobile Navigation */}
-        {user && isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-beige/30 dark:border-gray-700">
-            <div className="space-y-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors ${
-                    isActive(item.path)
-                      ? "bg-terracotta text-white"
-                      : "text-gray-700 dark:text-gray-200 hover:bg-beige/50 dark:hover:bg-gray-700 hover:text-terracotta dark:hover:text-terracotta"
-                  }`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.name}
-                </Link>
-              ))}
+        {isMenuOpen && (
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200">
+              {user ? (
+                <>
+                  <Link
+                    to={getDashboardLink()}
+                    className="text-gray-700 hover:text-terracotta block px-3 py-2 rounded-md text-base font-medium transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  {isLandlord() && (
+                    <Link
+                      to="/properties"
+                      className="text-gray-700 hover:text-terracotta block px-3 py-2 rounded-md text-base font-medium transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Properties
+                    </Link>
+                  )}
+                  {isAdmin() && (
+                    <Link
+                      to="/admin-dashboard"
+                      className="text-gray-700 hover:text-terracotta block px-3 py-2 rounded-md text-base font-medium transition-colors flex items-center gap-1"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Shield className="h-4 w-4" />
+                      Admin
+                    </Link>
+                  )}
+                  <Link
+                    to="/profile"
+                    className="text-gray-700 hover:text-terracotta block px-3 py-2 rounded-md text-base font-medium transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                  <div className="px-3 py-2">
+                    <Button onClick={handleSignOut} variant="outline" className="w-full">
+                      Sign Out
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/how-it-works"
+                    className="text-gray-700 hover:text-terracotta block px-3 py-2 rounded-md text-base font-medium transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    How It Works
+                  </Link>
+                  <div className="px-3 py-2 space-y-2">
+                    <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                      <Button variant="outline" className="w-full">
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
+                      <Button className="bg-terracotta hover:bg-terracotta/90 w-full">
+                        Get Started
+                      </Button>
+                    </Link>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
