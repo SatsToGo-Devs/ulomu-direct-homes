@@ -17,6 +17,9 @@ import {
   CheckCircle,
   Upload
 } from 'lucide-react';
+import type { Tables } from '@/integrations/supabase/types';
+
+type VendorOnboarding = Tables<'vendor_onboarding'>;
 
 interface OnboardingData {
   step: string;
@@ -77,16 +80,15 @@ const VendorOnboarding: React.FC = () => {
       }
 
       if (data) {
-        const typedData = data as any;
         setOnboardingData({
-          step: typedData.step,
-          profile_data: typedData.profile_data,
-          documents_uploaded: typedData.documents_uploaded || []
+          step: data.step,
+          profile_data: data.profile_data,
+          documents_uploaded: data.documents_uploaded || []
         });
-        setProfileData({ ...profileData, ...typedData.profile_data });
+        setProfileData({ ...profileData, ...data.profile_data });
         
         // Set current step based on onboarding progress
-        switch (typedData.step) {
+        switch (data.step) {
           case 'PROFILE_INFO': setCurrentStep(1); break;
           case 'SPECIALTIES': setCurrentStep(2); break;
           case 'VERIFICATION': setCurrentStep(3); break;

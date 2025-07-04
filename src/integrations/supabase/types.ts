@@ -942,6 +942,117 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vendor_applications: {
+        Row: {
+          admin_notes: string | null
+          application_status: string | null
+          business_address: string | null
+          business_name: string
+          contact_person: string
+          created_at: string
+          email: string
+          id: string
+          phone: string
+          portfolio_description: string | null
+          reviewed_by: string | null
+          specialties: string[] | null
+          updated_at: string
+          user_id: string
+          years_experience: number | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          application_status?: string | null
+          business_address?: string | null
+          business_name: string
+          contact_person: string
+          created_at?: string
+          email: string
+          id?: string
+          phone: string
+          portfolio_description?: string | null
+          reviewed_by?: string | null
+          specialties?: string[] | null
+          updated_at?: string
+          user_id: string
+          years_experience?: number | null
+        }
+        Update: {
+          admin_notes?: string | null
+          application_status?: string | null
+          business_address?: string | null
+          business_name?: string
+          contact_person?: string
+          created_at?: string
+          email?: string
+          id?: string
+          phone?: string
+          portfolio_description?: string | null
+          reviewed_by?: string | null
+          specialties?: string[] | null
+          updated_at?: string
+          user_id?: string
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
+      vendor_onboarding: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          documents_uploaded: string[] | null
+          id: string
+          profile_data: Json | null
+          step: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          documents_uploaded?: string[] | null
+          id?: string
+          profile_data?: Json | null
+          step?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          documents_uploaded?: string[] | null
+          id?: string
+          profile_data?: Json | null
+          step?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       vendor_profiles: {
         Row: {
           completion_rate: number | null
@@ -1036,10 +1147,13 @@ export type Database = {
           created_at: string
           email: string
           experience_years: number | null
+          hourly_rate: number | null
           id: string
           name: string
+          onboarding_completed: boolean | null
           phone: string | null
           rating: number | null
+          service_areas: string[] | null
           specialties: string[] | null
           state: string | null
           updated_at: string
@@ -1055,10 +1169,13 @@ export type Database = {
           created_at?: string
           email: string
           experience_years?: number | null
+          hourly_rate?: number | null
           id?: string
           name: string
+          onboarding_completed?: boolean | null
           phone?: string | null
           rating?: number | null
+          service_areas?: string[] | null
           specialties?: string[] | null
           state?: string | null
           updated_at?: string
@@ -1074,10 +1191,13 @@ export type Database = {
           created_at?: string
           email?: string
           experience_years?: number | null
+          hourly_rate?: number | null
           id?: string
           name?: string
+          onboarding_completed?: boolean | null
           phone?: string | null
           rating?: number | null
+          service_areas?: string[] | null
           specialties?: string[] | null
           state?: string | null
           updated_at?: string

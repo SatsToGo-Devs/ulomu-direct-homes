@@ -3,11 +3,6 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
-interface UserRole {
-  role: string;
-  assigned_at: string;
-}
-
 export const useUserRole = () => {
   const { user } = useAuth();
   const [userRoles, setUserRoles] = useState<string[]>([]);
@@ -28,7 +23,7 @@ export const useUserRole = () => {
       setLoading(true);
       setError(null);
 
-      // Query user_roles table with proper type handling
+      // Query user_roles table directly
       const { data, error: fetchError } = await supabase
         .from('user_roles')
         .select('role, assigned_at')
@@ -40,7 +35,7 @@ export const useUserRole = () => {
         await assignDefaultRole();
         setUserRoles(['tenant']);
       } else {
-        const roles = (data as any[])?.map((item: any) => item.role) || [];
+        const roles = data?.map(item => item.role) || [];
         
         // If no roles found, assign default 'tenant' role
         if (roles.length === 0) {

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,25 +22,9 @@ import {
   UserPlus,
   Plus
 } from 'lucide-react';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface Vendor {
-  id: string;
-  name: string;
-  company_name?: string;
-  email: string;
-  phone?: string;
-  specialties: string[];
-  rating: number;
-  verified: boolean;
-  city?: string;
-  state?: string;
-  experience_years: number;
-  bio?: string;
-  created_at: string;
-  hourly_rate?: number;
-  service_areas?: string[];
-  onboarding_completed: boolean;
-}
+type Vendor = Tables<'vendors'>;
 
 const VendorManagement: React.FC = () => {
   const { user } = useAuth();
@@ -72,8 +57,7 @@ const VendorManagement: React.FC = () => {
         .maybeSingle();
 
       if (data && !error) {
-        const typedData = data as any;
-        setUserRole(typedData.role);
+        setUserRole(data.role);
       }
     } catch (error) {
       console.error('Error fetching user role:', error);
@@ -90,18 +74,7 @@ const VendorManagement: React.FC = () => {
         .order('rating', { ascending: false });
 
       if (error) throw error;
-      
-      // Map the data to include default values for missing properties
-      const vendorsWithDefaults = (data || []).map(vendor => ({
-        ...vendor,
-        rating: vendor.rating ?? 0,
-        specialties: vendor.specialties ?? [],
-        onboarding_completed: vendor.onboarding_completed ?? true,
-        hourly_rate: vendor.hourly_rate ?? 0,
-        service_areas: vendor.service_areas ?? []
-      }));
-      
-      setVendors(vendorsWithDefaults as Vendor[]);
+      setVendors(data || []);
     } catch (error) {
       console.error('Error fetching vendors:', error);
       toast({

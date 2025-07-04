@@ -19,23 +19,9 @@ import {
   Building,
   Award
 } from 'lucide-react';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface VendorApplication {
-  id: string;
-  user_id: string;
-  business_name: string;
-  contact_person: string;
-  phone: string;
-  email: string;
-  business_address?: string;
-  years_experience: number;
-  specialties: string[];
-  portfolio_description?: string;
-  application_status: string;
-  admin_notes?: string;
-  created_at: string;
-  updated_at: string;
-}
+type VendorApplication = Tables<'vendor_applications'>;
 
 const VendorApplications: React.FC = () => {
   const { user } = useAuth();
@@ -59,7 +45,7 @@ const VendorApplications: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setApplications((data || []) as VendorApplication[]);
+      setApplications(data || []);
     } catch (error) {
       console.error('Error fetching applications:', error);
       toast({
@@ -108,7 +94,7 @@ const VendorApplications: React.FC = () => {
 
         if (vendorError) throw vendorError;
 
-        // Assign vendor role
+        // Assign vendor role using user_roles table
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert({
