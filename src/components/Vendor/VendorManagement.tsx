@@ -12,7 +12,6 @@ import VendorOnboarding from './VendorOnboarding';
 import VendorApplications from './VendorApplications';
 import { 
   Users, 
-  Plus, 
   Star, 
   MapPin, 
   Verified, 
@@ -67,7 +66,7 @@ const VendorManagement: React.FC = () => {
   const fetchUserRole = async () => {
     try {
       const { data, error } = await supabase
-        .from('user_roles')
+        .from('user_roles' as any)
         .select('role')
         .eq('user_id', user?.id)
         .single();
@@ -91,7 +90,7 @@ const VendorManagement: React.FC = () => {
         .order('rating', { ascending: false });
 
       if (error) throw error;
-      setVendors(data || []);
+      setVendors((data || []) as Vendor[]);
     } catch (error) {
       console.error('Error fetching vendors:', error);
       toast({

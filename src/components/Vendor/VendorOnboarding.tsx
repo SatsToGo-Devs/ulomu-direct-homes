@@ -1,18 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
   User, 
-  Building, 
   Award, 
   FileCheck, 
   ArrowRight, 
@@ -72,7 +69,7 @@ const VendorOnboarding: React.FC = () => {
   const fetchOnboardingData = async () => {
     try {
       const { data, error } = await supabase
-        .from('vendor_onboarding')
+        .from('vendor_onboarding' as any)
         .select('*')
         .eq('user_id', user?.id)
         .single();
@@ -82,7 +79,7 @@ const VendorOnboarding: React.FC = () => {
       }
 
       if (data) {
-        setOnboardingData(data);
+        setOnboardingData(data as OnboardingData);
         setProfileData({ ...profileData, ...data.profile_data });
         
         // Set current step based on onboarding progress
@@ -106,7 +103,7 @@ const VendorOnboarding: React.FC = () => {
       if (onboardingData) {
         // Update existing record
         const { error } = await supabase
-          .from('vendor_onboarding')
+          .from('vendor_onboarding' as any)
           .update({
             step,
             profile_data: data,
@@ -118,7 +115,7 @@ const VendorOnboarding: React.FC = () => {
       } else {
         // Create new record
         const { error } = await supabase
-          .from('vendor_onboarding')
+          .from('vendor_onboarding' as any)
           .insert({
             user_id: user?.id,
             step,
@@ -171,7 +168,7 @@ const VendorOnboarding: React.FC = () => {
   const submitApplication = async () => {
     try {
       const { error } = await supabase
-        .from('vendor_applications')
+        .from('vendor_applications' as any)
         .insert({
           user_id: user?.id,
           business_name: profileData.business_name,

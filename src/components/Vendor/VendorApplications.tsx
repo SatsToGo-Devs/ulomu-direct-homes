@@ -13,7 +13,6 @@ import {
   Eye, 
   Check, 
   X, 
-  Clock, 
   MapPin, 
   Phone, 
   Mail,
@@ -23,6 +22,7 @@ import {
 
 interface VendorApplication {
   id: string;
+  user_id: string;
   business_name: string;
   contact_person: string;
   phone: string;
@@ -54,12 +54,12 @@ const VendorApplications: React.FC = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('vendor_applications')
+        .from('vendor_applications' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setApplications(data || []);
+      setApplications((data || []) as VendorApplication[]);
     } catch (error) {
       console.error('Error fetching applications:', error);
       toast({
@@ -77,7 +77,7 @@ const VendorApplications: React.FC = () => {
       setProcessing(true);
       
       const { error: updateError } = await supabase
-        .from('vendor_applications')
+        .from('vendor_applications' as any)
         .update({
           application_status: status,
           admin_notes: notes || adminNotes,
@@ -88,12 +88,13 @@ const VendorApplications: React.FC = () => {
 
       if (updateError) throw updateError;
 
-      // If approved, create vendor profile
+      // If approved, create vendor profile and assign role
       if (status === 'APPROVED' && selectedApplication) {
+        // Create vendor profile
         const { error: vendorError } = await supabase
           .from('vendors')
           .insert({
-            user_id: selectedApplication.id, // This should be the user_id from the application
+            user_id: selectedApplication.user_id,
             name: selectedApplication.contact_person,
             company_name: selectedApplication.business_name,
             email: selectedApplication.email,
@@ -102,17 +103,16 @@ const VendorApplications: React.FC = () => {
             address: selectedApplication.business_address,
             experience_years: selectedApplication.years_experience,
             verified: true,
-            onboarding_completed: true,
             bio: selectedApplication.portfolio_description
           });
 
         if (vendorError) throw vendorError;
 
-        // Update user role to vendor
+        // Assign vendor role
         const { error: roleError } = await supabase
-          .from('user_roles')
+          .from('user_roles' as any)
           .insert({
-            user_id: selectedApplication.id,
+            user_id: selectedApplication.user_id,
             role: 'vendor',
             assigned_by: user?.id
           });

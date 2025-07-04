@@ -28,10 +28,16 @@ export const useUserRole = () => {
       setLoading(true);
       setError(null);
 
-      const { data, error: fetchError } = await supabase
-        .from('user_roles')
-        .select('role, assigned_at')
-        .eq('user_id', user?.id);
+      // Use raw query to avoid type issues with new tables
+      const { data, error: fetchError } = await supabase.rpc('get_user_roles', {
+        user_id: user?.id
+      }).catch(async () => {
+        // Fallback to direct query if RPC doesn't exist
+        return await supabase
+          .from('user_roles' as any)
+          .select('role, assigned_at')
+          .eq('user_id', user?.id);
+      });
 
       if (fetchError) throw fetchError;
 
@@ -56,7 +62,7 @@ export const useUserRole = () => {
   const assignDefaultRole = async () => {
     try {
       const { error } = await supabase
-        .from('user_roles')
+        .from('user_roles' as any)
         .insert({
           user_id: user?.id,
           role: 'tenant'
@@ -101,7 +107,7 @@ export const useUserRole = () => {
   const assignRole = async (userId: string, role: string) => {
     try {
       const { error } = await supabase
-        .from('user_roles')
+        .from('user_roles' as any)
         .insert({
           user_id: userId,
           role: role,
@@ -127,7 +133,7 @@ export const useUserRole = () => {
   const removeRole = async (userId: string, role: string) => {
     try {
       const { error } = await supabase
-        .from('user_roles')
+        .from('user_roles' as any)
         .delete()
         .eq('user_id', userId)
         .eq('role', role);
