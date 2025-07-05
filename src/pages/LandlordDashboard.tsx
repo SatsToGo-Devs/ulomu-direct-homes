@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -11,33 +10,14 @@ import Invoices from "@/components/LandlordDashboard/Invoices";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
+import { useProperties } from "@/hooks/useProperties";
 
 const LandlordDashboard = () => {
   const [activeTab, setActiveTab] = useState("properties");
   const navigate = useNavigate();
+  const { properties, loading } = useProperties();
 
-  // Mock data for the dashboard
-  const properties = [
-    {
-      id: "1",
-      title: "Modern 2-Bedroom Apartment",
-      location: "Lekki Phase 1, Lagos",
-      status: "Rented",
-      tenant: "John Doe",
-      rentDue: "2023-12-01",
-      rentAmount: "₦1,500,000",
-    },
-    {
-      id: "2",
-      title: "Spacious 3-Bedroom Duplex",
-      location: "Ikoyi, Lagos",
-      status: "Available",
-      tenant: "-",
-      rentDue: "-",
-      rentAmount: "₦6,000,000",
-    },
-  ];
-
+  // Mock data for payments and messages - keeping existing functionality
   const payments = [
     {
       id: "pay1",
