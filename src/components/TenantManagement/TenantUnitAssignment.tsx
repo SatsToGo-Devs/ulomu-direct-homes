@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -65,28 +64,49 @@ const TenantUnitAssignment: React.FC<TenantUnitAssignmentProps> = ({
     try {
       console.log('Fetching available units for property:', propertyId);
       
-      // Fetch all units for the selected property that are vacant or have no tenant assigned
-      const { data: units, error } = await supabase
+      // Fetch all units for the selected property
+      const { data: units, error: unitsError } = await supabase
         .from('units')
         .select('id, unit_number, property_id, status, rent_amount, tenant_id')
         .eq('property_id', propertyId)
-        .or('status.eq.VACANT,tenant_id.is.null')
         .order('unit_number');
 
-      if (error) {
-        console.error('Error fetching units:', error);
-        throw error;
+      if (unitsError) {
+        console.error('Error fetching units:', unitsError);
+        throw unitsError;
       }
 
-      console.log('Fetched units:', units);
-      
-      // Filter out units that already have tenants assigned
-      const vacantUnits = (units || []).filter(unit => 
-        !unit.tenant_id && (unit.status === 'VACANT' || !unit.status)
-      );
+      console.log('Fetched all units:', units);
 
-      console.log('Available vacant units:', vacantUnits);
-      setAvailableUnits(vacantUnits);
+      // Get all tenants for this landlord to cross-reference
+      const { data: allTenants, error: tenantsError } = await supabase
+        .from('tenants')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (tenantsError) {
+        console.error('Error fetching tenants:', tenantsError);
+        // Continue without tenant data for now
+      }
+
+      const tenantIds = allTenants?.map(t => t.id) || [];
+      console.log('All tenant IDs for this landlord:', tenantIds);
+
+      // Filter units that are truly available:
+      // 1. No tenant_id assigned, OR
+      // 2. tenant_id is assigned but that tenant doesn't exist in our tenants table
+      const availableUnits = (units || []).filter(unit => {
+        const hasNoTenant = !unit.tenant_id;
+        const hasInvalidTenant = unit.tenant_id && !tenantIds.includes(unit.tenant_id);
+        const isVacantStatus = unit.status === 'VACANT' || !unit.status;
+        
+        // Unit is available if it has no tenant OR has an invalid tenant reference
+        // AND either has vacant status or no status set
+        return (hasNoTenant || hasInvalidTenant) && isVacantStatus;
+      });
+
+      console.log('Filtered available units:', availableUnits);
+      setAvailableUnits(availableUnits);
     } catch (error) {
       console.error('Error fetching units:', error);
       toast({
@@ -236,7 +256,7 @@ const TenantUnitAssignment: React.FC<TenantUnitAssignmentProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   {availableUnits.length === 0 ? (
-                    <SelectItem value="none" disabled>No vacant units available</SelectItem>
+                    <SelectItem value="none" disabled>No units available for assignment</SelectItem>
                   ) : (
                     availableUnits.map((unit) => (
                       <SelectItem key={unit.id} value={unit.id}>
@@ -248,7 +268,7 @@ const TenantUnitAssignment: React.FC<TenantUnitAssignmentProps> = ({
               </Select>
               {selectedPropertyId && availableUnits.length === 0 && (
                 <p className="text-sm text-gray-500 mt-1">
-                  No vacant units found for this property. All units may already be occupied.
+                  No units available for assignment. All units in this property have tenants assigned based on your tenant list.
                 </p>
               )}
             </div>
