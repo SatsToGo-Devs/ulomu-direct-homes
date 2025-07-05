@@ -40,12 +40,12 @@ const AdminDashboard = () => {
   };
 
   const quickActions = [
-    { icon: Users, label: 'User Management', route: '/admin-dashboard', color: 'bg-blue-500', description: 'Manage users, roles, and permissions' },
-    { icon: Shield, label: 'Security Center', route: '/admin-dashboard', color: 'bg-red-500', description: 'Monitor security and access logs' },
-    { icon: BarChart3, label: 'Analytics', route: '/admin-dashboard', color: 'bg-green-500', description: 'View system-wide analytics' },
-    { icon: Settings, label: 'System Settings', route: '/admin-dashboard', color: 'bg-purple-500', description: 'Configure system parameters' },
-    { icon: Database, label: 'Data Management', route: '/admin-dashboard', color: 'bg-indigo-500', description: 'Backup and data operations' },
-    { icon: Bell, label: 'Notifications', route: '/admin-dashboard', color: 'bg-orange-500', description: 'System-wide notifications' }
+    { icon: Users, label: 'User Management', route: '/admin-dashboard', color: 'bg-terracotta', description: 'Manage users, roles, and permissions' },
+    { icon: Shield, label: 'Security Center', route: '/admin-dashboard', color: 'bg-forest', description: 'Monitor security and access logs' },
+    { icon: BarChart3, label: 'Analytics', route: '/admin-dashboard', color: 'bg-ulomu-gold', description: 'View system-wide analytics' },
+    { icon: Settings, label: 'System Settings', route: '/admin-dashboard', color: 'bg-terracotta', description: 'Configure system parameters' },
+    { icon: Database, label: 'Data Management', route: '/admin-dashboard', color: 'bg-forest', description: 'Backup and data operations' },
+    { icon: Bell, label: 'Notifications', route: '/admin-dashboard', color: 'bg-ulomu-gold', description: 'System-wide notifications' }
   ];
 
   const recentActivities = [
@@ -64,81 +64,81 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-8 bg-ulomu-beige min-h-screen">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-red-600 to-red-800 text-white rounded-lg p-6">
+      <div className="bg-gradient-to-r from-terracotta to-terracotta/90 text-white rounded-lg p-6">
         <h1 className="text-3xl font-bold mb-2">System Administration Center</h1>
-        <p className="text-red-100">Monitor, manage, and maintain the entire platform ecosystem</p>
+        <p className="text-white/90">Monitor, manage, and maintain the entire platform ecosystem</p>
       </div>
 
       {/* System Overview Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-gradient-to-br from-terracotta/10 to-terracotta/20 border-terracotta/30">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-blue-500 rounded-lg">
+              <div className="p-2 bg-terracotta rounded-lg">
                 <Users className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-blue-700">Total Users</p>
-                <p className="text-2xl font-bold text-blue-800">{systemMetrics.totalUsers.toLocaleString()}</p>
+                <p className="text-sm font-medium text-terracotta">Total Users</p>
+                <p className="text-2xl font-bold text-terracotta">{systemMetrics.totalUsers.toLocaleString()}</p>
               </div>
             </div>
-            <p className="text-xs text-blue-600">{systemMetrics.activeUsers} active this month</p>
+            <p className="text-xs text-terracotta/80">{systemMetrics.activeUsers} active this month</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+        <Card className="bg-gradient-to-br from-forest/10 to-forest/20 border-forest/30">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-green-500 rounded-lg">
+              <div className="p-2 bg-forest rounded-lg">
                 <DollarSign className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-green-700">Revenue</p>
-                <p className="text-2xl font-bold text-green-800">₦{systemMetrics.revenue.toLocaleString()}</p>
+                <p className="text-sm font-medium text-forest">Revenue</p>
+                <p className="text-2xl font-bold text-forest">₦{systemMetrics.revenue.toLocaleString()}</p>
               </div>
             </div>
-            <p className="text-xs text-green-600">{systemMetrics.totalTransactions} transactions</p>
+            <p className="text-xs text-forest/80">{systemMetrics.totalTransactions} transactions</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+        <Card className="bg-gradient-to-br from-ulomu-gold/10 to-ulomu-gold/20 border-ulomu-gold/30">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-purple-500 rounded-lg">
-                <Activity className="h-5 w-5 text-white" />
+              <div className="p-2 bg-ulomu-gold rounded-lg">
+                <Activity className="h-5 w-5 text-black" />
               </div>
               <div>
-                <p className="text-sm font-medium text-purple-700">System Uptime</p>
-                <p className="text-2xl font-bold text-purple-800">{systemMetrics.systemUptime}%</p>
+                <p className="text-sm font-medium text-ulomu-gold">System Uptime</p>
+                <p className="text-2xl font-bold text-ulomu-gold">{systemMetrics.systemUptime}%</p>
               </div>
             </div>
-            <p className="text-xs text-purple-600">Last 30 days</p>
+            <p className="text-xs text-ulomu-gold/80">Last 30 days</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+        <Card className="bg-gradient-to-br from-terracotta/10 to-terracotta/20 border-terracotta/30">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-orange-500 rounded-lg">
+              <div className="p-2 bg-terracotta rounded-lg">
                 <AlertTriangle className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-orange-700">Pending Actions</p>
-                <p className="text-2xl font-bold text-orange-800">{systemMetrics.pendingApprovals}</p>
+                <p className="text-sm font-medium text-terracotta">Pending Actions</p>
+                <p className="text-2xl font-bold text-terracotta">{systemMetrics.pendingApprovals}</p>
               </div>
             </div>
-            <p className="text-xs text-orange-600">{systemMetrics.securityAlerts} security alerts</p>
+            <p className="text-xs text-terracotta/80">{systemMetrics.securityAlerts} security alerts</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Admin Tools */}
-      <Card>
+      <Card className="bg-white border-ulomu-beige-dark">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-red-500" />
+            <Shield className="h-5 w-5 text-terracotta" />
             Administrative Tools
           </CardTitle>
         </CardHeader>
@@ -147,7 +147,7 @@ const AdminDashboard = () => {
             {quickActions.map((action, index) => (
               <Card 
                 key={index}
-                className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-l-4 border-l-transparent hover:border-l-red-500"
+                className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-l-4 border-l-transparent hover:border-l-terracotta bg-ulomu-beige"
                 onClick={() => navigate(action.route)}
               >
                 <CardContent className="p-4">
@@ -168,21 +168,21 @@ const AdminDashboard = () => {
       </Card>
 
       {/* System Health Monitor */}
-      <Card>
+      <Card className="bg-white border-ulomu-beige-dark">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-green-500" />
+            <Zap className="h-5 w-5 text-forest" />
             System Health Monitor
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {systemHealth.map((component, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-4 bg-ulomu-beige rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-lg ${
-                    component.status === 'healthy' ? 'bg-green-500' :
-                    component.status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
+                    component.status === 'healthy' ? 'bg-forest' :
+                    component.status === 'warning' ? 'bg-ulomu-gold' : 'bg-terracotta'
                   }`}>
                     {component.status === 'healthy' ? 
                       <CheckCircle2 className="h-4 w-4 text-white" /> :
@@ -196,9 +196,9 @@ const AdminDashboard = () => {
                 </div>
                 <Badge 
                   className={
-                    component.status === 'healthy' ? 'bg-green-100 text-green-800' :
-                    component.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
+                    component.status === 'healthy' ? 'bg-forest text-white' :
+                    component.status === 'warning' ? 'bg-ulomu-gold text-black' :
+                    'bg-terracotta text-white'
                   }
                 >
                   {component.status}
@@ -211,10 +211,10 @@ const AdminDashboard = () => {
 
       {/* Recent Activity & Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="bg-white border-ulomu-beige-dark">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-blue-500" />
+              <Activity className="h-5 w-5 text-forest" />
               Recent System Activity
             </CardTitle>
           </CardHeader>
@@ -222,19 +222,19 @@ const AdminDashboard = () => {
             <div className="space-y-3">
               {recentActivities.map((activity, index) => (
                 <div key={index} className={`p-3 rounded-lg border-l-4 ${
-                  activity.severity === 'success' ? 'bg-green-50 border-green-500' :
-                  activity.severity === 'warning' ? 'bg-yellow-50 border-yellow-500' :
-                  activity.severity === 'error' ? 'bg-red-50 border-red-500' :
-                  'bg-blue-50 border-blue-500'
+                  activity.severity === 'success' ? 'bg-forest/10 border-forest' :
+                  activity.severity === 'warning' ? 'bg-ulomu-gold/10 border-ulomu-gold' :
+                  activity.severity === 'error' ? 'bg-terracotta/10 border-terracotta' :
+                  'bg-terracotta/10 border-terracotta'
                 }`}>
                   <div className="flex items-center justify-between mb-1">
                     <p className="font-medium text-sm">{activity.message}</p>
                     <Badge 
                       className={`text-xs ${
-                        activity.severity === 'success' ? 'bg-green-100 text-green-800' :
-                        activity.severity === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                        activity.severity === 'error' ? 'bg-red-100 text-red-800' :
-                        'bg-blue-100 text-blue-800'
+                        activity.severity === 'success' ? 'bg-forest text-white' :
+                        activity.severity === 'warning' ? 'bg-ulomu-gold text-black' :
+                        activity.severity === 'error' ? 'bg-terracotta text-white' :
+                        'bg-terracotta text-white'
                       }`}
                     >
                       {activity.severity}
@@ -247,10 +247,10 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white border-ulomu-beige-dark">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-purple-500" />
+              <BarChart3 className="h-5 w-5 text-ulomu-gold" />
               Key Performance Indicators
             </CardTitle>
           </CardHeader>
@@ -291,24 +291,24 @@ const AdminDashboard = () => {
       </div>
 
       {/* Critical Actions Panel */}
-      <Card className="border-red-200 bg-red-50">
+      <Card className="border-terracotta/30 bg-terracotta/10">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-red-800">
+          <CardTitle className="flex items-center gap-2 text-terracotta">
             <Lock className="h-5 w-5" />
             Critical System Actions
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="destructive" className="w-full">
+            <Button className="w-full bg-terracotta hover:bg-terracotta/90">
               <AlertTriangle className="h-4 w-4 mr-2" />
               Emergency Lockdown
             </Button>
-            <Button variant="outline" className="w-full border-orange-300 text-orange-700 hover:bg-orange-50">
+            <Button variant="outline" className="w-full border-ulomu-gold text-ulomu-gold hover:bg-ulomu-gold hover:text-black">
               <Database className="h-4 w-4 mr-2" />
               Backup System
             </Button>
-            <Button variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50">
+            <Button variant="outline" className="w-full border-forest text-forest hover:bg-forest hover:text-white">
               <Globe className="h-4 w-4 mr-2" />
               Maintenance Mode
             </Button>

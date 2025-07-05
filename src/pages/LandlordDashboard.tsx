@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -58,14 +59,14 @@ const LandlordDashboard = () => {
   const unreadMessageCount = messages.filter(msg => !msg.read).length;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-ulomu-beige">
       <Navbar />
-      <div className="bg-forest text-white py-8">
+      <div className="bg-gradient-to-r from-forest to-forest/90 text-white py-8">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold">Landlord Dashboard</h1>
-              <p className="text-gray-200">Manage your properties, payments, and communications</p>
+              <p className="text-white/90">Manage your properties, payments, and communications</p>
             </div>
             <Button 
               onClick={() => navigate('/tenants')}
@@ -113,7 +114,7 @@ const LandlordDashboard = () => {
 
             {/* Placeholder for other tabs */}
             {(activeTab === "tenants" || activeTab === "settings") && (
-              <div className="bg-white p-6 rounded-lg shadow">
+              <div className="bg-white p-6 rounded-lg shadow border border-ulomu-beige-dark">
                 <h2 className="text-xl font-semibold mb-4">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h2>
                 <p className="text-gray-500">This feature is coming soon.</p>
               </div>

@@ -35,12 +35,12 @@ const LandlordDashboard = () => {
   const pendingReleases = transactions.filter(t => t.status === 'HELD');
 
   const quickActions = [
-    { icon: Home, label: 'Manage Properties', route: '/properties', color: 'bg-blue-500', description: 'Add, edit, and view properties' },
-    { icon: Users, label: 'Tenant Management', route: '/tenants', color: 'bg-green-500', description: 'Manage tenant relationships' },
-    { icon: DollarSign, label: 'Rent Collection', route: '/escrow', color: 'bg-purple-500', description: 'Track and collect rent payments' },
-    { icon: Wrench, label: 'Maintenance Hub', route: '/maintenance', color: 'bg-orange-500', description: 'Handle maintenance requests' },
-    { icon: BarChart3, label: 'Analytics', route: '/ai-insights', color: 'bg-indigo-500', description: 'Property performance insights' },
-    { icon: FileText, label: 'Generate Invoices', route: '/landlord-dashboard', color: 'bg-teal-500', description: 'Create and send invoices' }
+    { icon: Home, label: 'Manage Properties', route: '/properties', color: 'bg-terracotta', description: 'Add, edit, and view properties' },
+    { icon: Users, label: 'Tenant Management', route: '/tenants', color: 'bg-forest', description: 'Manage tenant relationships' },
+    { icon: DollarSign, label: 'Rent Collection', route: '/escrow', color: 'bg-ulomu-gold', description: 'Track and collect rent payments' },
+    { icon: Wrench, label: 'Maintenance Hub', route: '/maintenance', color: 'bg-forest', description: 'Handle maintenance requests' },
+    { icon: BarChart3, label: 'Analytics', route: '/ai-insights', color: 'bg-terracotta', description: 'Property performance insights' },
+    { icon: FileText, label: 'Generate Invoices', route: '/landlord-dashboard', color: 'bg-ulomu-gold', description: 'Create and send invoices' }
   ];
 
   const propertyPerformance = [
@@ -56,8 +56,8 @@ const LandlordDashboard = () => {
           {[1, 2, 3, 4].map((i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-ulomu-beige-dark rounded w-3/4 mb-2"></div>
+                <div className="h-8 bg-ulomu-beige-dark rounded w-1/2"></div>
               </CardContent>
             </Card>
           ))}
@@ -67,81 +67,81 @@ const LandlordDashboard = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-8 bg-ulomu-beige min-h-screen">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-green-600 to-green-800 text-white rounded-lg p-6">
+      <div className="bg-gradient-to-r from-forest to-forest/90 text-white rounded-lg p-6">
         <h1 className="text-3xl font-bold mb-2">Landlord Command Center</h1>
-        <p className="text-green-100">Manage your properties, tenants, and revenue streams efficiently</p>
+        <p className="text-white/90">Manage your properties, tenants, and revenue streams efficiently</p>
       </div>
 
       {/* Key Performance Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+        <Card className="bg-gradient-to-br from-forest/10 to-forest/20 border-forest/30">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-green-500 rounded-lg">
+              <div className="p-2 bg-forest rounded-lg">
                 <DollarSign className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-green-700">Rent Collected</p>
-                <p className="text-2xl font-bold text-green-800">₦{totalRentCollected.toLocaleString()}</p>
+                <p className="text-sm font-medium text-forest">Rent Collected</p>
+                <p className="text-2xl font-bold text-forest">₦{totalRentCollected.toLocaleString()}</p>
               </div>
             </div>
-            <p className="text-xs text-green-600">{rentTransactions.filter(t => t.status === 'COMPLETED').length} payments received</p>
+            <p className="text-xs text-forest/80">{rentTransactions.filter(t => t.status === 'COMPLETED').length} payments received</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-gradient-to-br from-ulomu-gold/10 to-ulomu-gold/20 border-ulomu-gold/30">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-blue-500 rounded-lg">
-                <PiggyBank className="h-5 w-5 text-white" />
+              <div className="p-2 bg-ulomu-gold rounded-lg">
+                <PiggyBank className="h-5 w-5 text-black" />
               </div>
               <div>
-                <p className="text-sm font-medium text-blue-700">Service Charges</p>
-                <p className="text-2xl font-bold text-blue-800">₦{totalServiceCharges.toLocaleString()}</p>
+                <p className="text-sm font-medium text-ulomu-gold">Service Charges</p>
+                <p className="text-2xl font-bold text-ulomu-gold">₦{totalServiceCharges.toLocaleString()}</p>
               </div>
             </div>
-            <p className="text-xs text-blue-600">{serviceCharges.length} active charges</p>
+            <p className="text-xs text-ulomu-gold/80">{serviceCharges.length} active charges</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+        <Card className="bg-gradient-to-br from-terracotta/10 to-terracotta/20 border-terracotta/30">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-purple-500 rounded-lg">
+              <div className="p-2 bg-terracotta rounded-lg">
                 <Home className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-purple-700">Properties</p>
-                <p className="text-2xl font-bold text-purple-800">5</p>
+                <p className="text-sm font-medium text-terracotta">Properties</p>
+                <p className="text-2xl font-bold text-terracotta">5</p>
               </div>
             </div>
-            <p className="text-xs text-purple-600">92% occupancy rate</p>
+            <p className="text-xs text-terracotta/80">92% occupancy rate</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+        <Card className="bg-gradient-to-br from-terracotta/10 to-terracotta/20 border-terracotta/30">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-orange-500 rounded-lg">
+              <div className="p-2 bg-terracotta rounded-lg">
                 <Clock className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-orange-700">Pending Releases</p>
-                <p className="text-2xl font-bold text-orange-800">{pendingReleases.length}</p>
+                <p className="text-sm font-medium text-terracotta">Pending Releases</p>
+                <p className="text-2xl font-bold text-terracotta">{pendingReleases.length}</p>
               </div>
             </div>
-            <p className="text-xs text-orange-600">₦{pendingReleases.reduce((sum, t) => sum + t.amount, 0).toLocaleString()} held</p>
+            <p className="text-xs text-terracotta/80">₦{pendingReleases.reduce((sum, t) => sum + t.amount, 0).toLocaleString()} held</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Quick Actions */}
-      <Card>
+      <Card className="bg-white border-ulomu-beige-dark">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-green-500" />
+            <TrendingUp className="h-5 w-5 text-forest" />
             Management Tools
           </CardTitle>
         </CardHeader>
@@ -150,7 +150,7 @@ const LandlordDashboard = () => {
             {quickActions.map((action, index) => (
               <Card 
                 key={index}
-                className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-l-4 border-l-transparent hover:border-l-green-500"
+                className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-l-4 border-l-transparent hover:border-l-forest bg-ulomu-beige"
                 onClick={() => navigate(action.route)}
               >
                 <CardContent className="p-4">
@@ -171,17 +171,17 @@ const LandlordDashboard = () => {
       </Card>
 
       {/* Property Performance Overview */}
-      <Card>
+      <Card className="bg-white border-ulomu-beige-dark">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-blue-500" />
+            <BarChart3 className="h-5 w-5 text-terracotta" />
             Property Performance
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {propertyPerformance.map((property, index) => (
-              <div key={index} className="p-4 bg-gray-50 rounded-lg">
+              <div key={index} className="p-4 bg-ulomu-beige rounded-lg">
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h3 className="font-semibold">{property.name}</h3>
@@ -189,9 +189,9 @@ const LandlordDashboard = () => {
                   </div>
                   <Badge 
                     className={
-                      property.status === 'excellent' ? 'bg-green-100 text-green-800' :
-                      property.status === 'good' ? 'bg-blue-100 text-blue-800' :
-                      'bg-orange-100 text-orange-800'
+                      property.status === 'excellent' ? 'bg-forest text-white' :
+                      property.status === 'good' ? 'bg-terracotta text-white' :
+                      'bg-ulomu-gold text-black'
                     }
                   >
                     {property.status.replace('-', ' ')}
@@ -212,17 +212,17 @@ const LandlordDashboard = () => {
 
       {/* Recent Activity & Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="bg-white border-ulomu-beige-dark">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-gray-500" />
+              <Clock className="h-5 w-5 text-forest" />
               Recent Transactions
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {transactions.slice(0, 5).map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={transaction.id} className="flex items-center justify-between p-3 bg-ulomu-beige rounded-lg">
                   <div>
                     <p className="font-medium">{transaction.purpose || transaction.type}</p>
                     <p className="text-sm text-gray-500">
@@ -232,8 +232,7 @@ const LandlordDashboard = () => {
                   <div className="text-right">
                     <p className="font-bold">₦{transaction.amount.toLocaleString()}</p>
                     <Badge 
-                      variant={transaction.status === 'COMPLETED' ? 'default' : 'secondary'} 
-                      className="text-xs"
+                      className={transaction.status === 'COMPLETED' ? 'bg-forest text-white' : 'bg-ulomu-beige-dark text-gray-700'}
                     >
                       {transaction.status}
                     </Badge>
@@ -244,36 +243,36 @@ const LandlordDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white border-ulomu-beige-dark">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-orange-500" />
+              <AlertCircle className="h-5 w-5 text-terracotta" />
               Alerts & Notifications
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+            <div className="p-3 bg-terracotta/10 border border-terracotta/30 rounded-lg">
               <div className="flex items-center gap-2 mb-1">
-                <AlertCircle className="h-4 w-4 text-orange-600" />
-                <span className="font-medium text-orange-800">Maintenance Request</span>
+                <AlertCircle className="h-4 w-4 text-terracotta" />
+                <span className="font-medium text-terracotta">Maintenance Request</span>
               </div>
-              <p className="text-sm text-orange-700">Unit 2A - Plumbing issue reported</p>
+              <p className="text-sm text-terracotta/80">Unit 2A - Plumbing issue reported</p>
             </div>
             
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="p-3 bg-ulomu-gold/10 border border-ulomu-gold/30 rounded-lg">
               <div className="flex items-center gap-2 mb-1">
-                <Calendar className="h-4 w-4 text-blue-600" />
-                <span className="font-medium text-blue-800">Rent Due</span>
+                <Calendar className="h-4 w-4 text-ulomu-gold" />
+                <span className="font-medium text-ulomu-gold">Rent Due</span>
               </div>
-              <p className="text-sm text-blue-700">3 tenants have rent due in 3 days</p>
+              <p className="text-sm text-ulomu-gold/80">3 tenants have rent due in 3 days</p>
             </div>
             
-            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="p-3 bg-forest/10 border border-forest/30 rounded-lg">
               <div className="flex items-center gap-2 mb-1">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                <span className="font-medium text-green-800">Payment Received</span>
+                <CheckCircle2 className="h-4 w-4 text-forest" />
+                <span className="font-medium text-forest">Payment Received</span>
               </div>
-              <p className="text-sm text-green-700">Unit 1B - Rent payment completed</p>
+              <p className="text-sm text-forest/80">Unit 1B - Rent payment completed</p>
             </div>
           </CardContent>
         </Card>
