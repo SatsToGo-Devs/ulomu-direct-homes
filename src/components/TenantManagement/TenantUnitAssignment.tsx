@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -43,16 +43,50 @@ const TenantUnitAssignment: React.FC<TenantUnitAssignmentProps> = ({
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setSelectedPropertyId('');
+      setSelectedUnitId('');
+      setAvailableUnits([]);
+      setRentAmount('');
+      setDepositAmount('');
+      setLeaseStartDate('');
+      setLeaseEndDate('');
+    }
+  }, [open]);
+
   const fetchAvailableUnits = async (propertyId: string) => {
+    if (!user || !propertyId) {
+      setAvailableUnits([]);
+      return;
+    }
+
     try {
+      console.log('Fetching available units for property:', propertyId);
+      
+      // Fetch all units for the selected property that are vacant or have no tenant assigned
       const { data: units, error } = await supabase
         .from('units')
-        .select('*')
+        .select('id, unit_number, property_id, status, rent_amount, tenant_id')
         .eq('property_id', propertyId)
-        .eq('status', 'VACANT');
+        .or('status.eq.VACANT,tenant_id.is.null')
+        .order('unit_number');
 
-      if (error) throw error;
-      setAvailableUnits(units || []);
+      if (error) {
+        console.error('Error fetching units:', error);
+        throw error;
+      }
+
+      console.log('Fetched units:', units);
+      
+      // Filter out units that already have tenants assigned
+      const vacantUnits = (units || []).filter(unit => 
+        !unit.tenant_id && (unit.status === 'VACANT' || !unit.status)
+      );
+
+      console.log('Available vacant units:', vacantUnits);
+      setAvailableUnits(vacantUnits);
     } catch (error) {
       console.error('Error fetching units:', error);
       toast({
@@ -60,16 +94,20 @@ const TenantUnitAssignment: React.FC<TenantUnitAssignmentProps> = ({
         description: "Failed to fetch available units",
         variant: "destructive",
       });
+      setAvailableUnits([]);
     }
   };
 
   const handlePropertySelect = (propertyId: string) => {
+    console.log('Property selected:', propertyId);
     setSelectedPropertyId(propertyId);
     setSelectedUnitId('');
+    setRentAmount('');
     fetchAvailableUnits(propertyId);
   };
 
   const handleUnitSelect = (unitId: string) => {
+    console.log('Unit selected:', unitId);
     setSelectedUnitId(unitId);
     const unit = availableUnits.find(u => u.id === unitId);
     if (unit) {
@@ -87,44 +125,69 @@ const TenantUnitAssignment: React.FC<TenantUnitAssignmentProps> = ({
       return;
     }
 
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to assign tenants",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
+      console.log('Assigning tenant to unit:', {
+        tenantId: tenant.id,
+        unitId: selectedUnitId,
+        rentAmount,
+        depositAmount
+      });
 
       // Update the unit with tenant assignment
+      const updateData: any = {
+        tenant_id: tenant.id,
+        status: 'OCCUPIED',
+        rent_amount: parseFloat(rentAmount),
+        updated_at: new Date().toISOString()
+      };
+
+      if (depositAmount) {
+        updateData.deposit_amount = parseFloat(depositAmount);
+      }
+
+      if (leaseStartDate) {
+        updateData.lease_start_date = leaseStartDate;
+      }
+
+      if (leaseEndDate) {
+        updateData.lease_end_date = leaseEndDate;
+      }
+
       const { error: unitError } = await supabase
         .from('units')
-        .update({
-          tenant_id: tenant.id,
-          status: 'OCCUPIED',
-          rent_amount: parseFloat(rentAmount),
-          deposit_amount: depositAmount ? parseFloat(depositAmount) : null,
-          lease_start_date: leaseStartDate || null,
-          lease_end_date: leaseEndDate || null,
-        })
+        .update(updateData)
         .eq('id', selectedUnitId);
 
-      if (unitError) throw unitError;
+      if (unitError) {
+        console.error('Error updating unit:', unitError);
+        throw unitError;
+      }
+
+      console.log('Successfully assigned tenant to unit');
 
       toast({
         title: "Success",
-        description: "Tenant assigned to unit successfully!",
+        description: `${tenant.first_name} ${tenant.last_name} has been assigned to the unit successfully!`,
       });
 
       setOpen(false);
       onAssignmentUpdated();
       
-      // Reset form
-      setSelectedPropertyId('');
-      setSelectedUnitId('');
-      setRentAmount('');
-      setDepositAmount('');
-      setLeaseStartDate('');
-      setLeaseEndDate('');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error assigning tenant:', error);
       toast({
         title: "Error",
-        description: "Failed to assign tenant to unit",
+        description: error.message || "Failed to assign tenant to unit",
         variant: "destructive",
       });
     } finally {
@@ -183,6 +246,11 @@ const TenantUnitAssignment: React.FC<TenantUnitAssignmentProps> = ({
                   )}
                 </SelectContent>
               </Select>
+              {selectedPropertyId && availableUnits.length === 0 && (
+                <p className="text-sm text-gray-500 mt-1">
+                  No vacant units found for this property. All units may already be occupied.
+                </p>
+              )}
             </div>
           )}
 
@@ -192,9 +260,12 @@ const TenantUnitAssignment: React.FC<TenantUnitAssignmentProps> = ({
               <Input
                 id="rentAmount"
                 type="number"
+                min="0"
+                step="0.01"
                 value={rentAmount}
                 onChange={(e) => setRentAmount(e.target.value)}
                 placeholder="0"
+                required
               />
             </div>
             <div>
@@ -202,6 +273,8 @@ const TenantUnitAssignment: React.FC<TenantUnitAssignmentProps> = ({
               <Input
                 id="depositAmount"
                 type="number"
+                min="0"
+                step="0.01"
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(e.target.value)}
                 placeholder="Optional"
