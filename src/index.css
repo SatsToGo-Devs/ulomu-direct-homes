@@ -5,42 +5,50 @@
 
 @layer base {
   :root {
-    --background: 39 38% 95%;
-    --foreground: 39 10% 15%;
-    --card: 39 38% 98%;
+    /* Ulomu Brand Colors */
+    --background: 39 38% 95%; /* Light beige background */
+    --foreground: 39 10% 15%; /* Dark text */
+    --card: 39 38% 98%; /* Very light beige for cards */
     --card-foreground: 39 10% 15%;
     --popover: 39 38% 98%;
     --popover-foreground: 39 10% 15%;
-    --primary: 15 56% 50%;
+    --primary: 15 56% 50%; /* Terracotta primary */
     --primary-foreground: 39 38% 95%;
-    --secondary: 142 30% 25%;
+    --secondary: 142 30% 25%; /* Forest Green secondary */
     --secondary-foreground: 39 38% 95%;
-    --muted: 39 20% 90%;
+    --muted: 39 20% 90%; /* Light beige muted */
     --muted-foreground: 39 10% 45%;
-    --accent: 40 60% 55%;
+    --accent: 40 60% 55%; /* Gold accent */
     --accent-foreground: 39 10% 15%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 39 38% 95%;
-    --border: 39 15% 85%;
+    --border: 39 15% 85%; /* Beige borders */
     --input: 39 15% 85%;
-    --ring: 15 56% 50%;
+    --ring: 15 56% 50%; /* Terracotta focus ring */
     --radius: 0.5rem;
+    
+    /* Custom Ulomu brand colors */
+    --ulomu-terracotta: 15 56% 50%;
+    --ulomu-forest: 142 30% 25%;
+    --ulomu-gold: 40 60% 55%;
+    --ulomu-beige: 39 38% 95%;
+    --ulomu-beige-dark: 39 20% 90%;
   }
 
   .dark {
-    --background: 39 10% 8%;
+    --background: 39 10% 8%; /* Dark beige background */
     --foreground: 39 38% 90%;
     --card: 39 10% 12%;
     --card-foreground: 39 38% 90%;
     --popover: 39 10% 12%;
     --popover-foreground: 39 38% 90%;
-    --primary: 15 56% 50%;
+    --primary: 15 56% 50%; /* Terracotta stays same */
     --primary-foreground: 39 38% 95%;
-    --secondary: 142 30% 20%;
+    --secondary: 142 30% 20%; /* Darker forest green */
     --secondary-foreground: 39 38% 95%;
     --muted: 39 10% 20%;
     --muted-foreground: 39 20% 65%;
-    --accent: 40 60% 45%;
+    --accent: 40 60% 45%; /* Slightly darker gold */
     --accent-foreground: 39 38% 95%;
     --destructive: 0 62% 45%;
     --destructive-foreground: 39 38% 90%;
@@ -49,40 +57,37 @@
     --ring: 15 56% 50%;
   }
 
-  /* Admin Theme - Deep Purple/Blue */
+  /* Role-based themes with Ulomu brand colors */
   .admin-theme {
-    --primary: 258 100% 70%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 100% 25%;
-    --accent: 258 100% 85%;
-    --accent-foreground: 258 100% 20%;
+    --primary: 15 56% 50%; /* Terracotta for admin */
+    --primary-foreground: 39 38% 95%;
+    --secondary: 142 30% 25%; /* Forest green secondary */
+    --accent: 40 60% 55%; /* Gold accent */
+    --accent-foreground: 15 56% 20%;
   }
 
-  /* Landlord Theme - Forest Green */
   .landlord-theme {
-    --primary: 142 76% 36%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 142 30% 25%;
-    --accent: 142 50% 70%;
+    --primary: 142 30% 25%; /* Forest Green primary for landlords */
+    --primary-foreground: 39 38% 95%;
+    --secondary: 15 56% 50%; /* Terracotta secondary */
+    --accent: 40 60% 55%; /* Gold accent */
     --accent-foreground: 142 30% 15%;
   }
 
-  /* Vendor Theme - Warm Orange */
   .vendor-theme {
-    --primary: 24 100% 58%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 24 100% 35%;
-    --accent: 24 100% 80%;
-    --accent-foreground: 24 100% 25%;
+    --primary: 40 60% 55%; /* Gold primary for vendors */
+    --primary-foreground: 39 10% 15%;
+    --secondary: 142 30% 25%; /* Forest green secondary */
+    --accent: 15 56% 50%; /* Terracotta accent */
+    --accent-foreground: 40 60% 25%;
   }
 
-  /* Tenant Theme - Soft Blue */
   .tenant-theme {
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 217 91% 35%;
-    --accent: 217 91% 85%;
-    --accent-foreground: 217 91% 25%;
+    --primary: 15 56% 50%; /* Terracotta primary for tenants */
+    --primary-foreground: 39 38% 95%;
+    --secondary: 142 30% 25%; /* Forest green secondary */
+    --accent: 40 60% 55%; /* Gold accent */
+    --accent-foreground: 15 56% 20%;
   }
 }
 
@@ -115,14 +120,71 @@
 }
 
 @layer components {
+  /* Ulomu brand color utilities */
+  .bg-terracotta {
+    @apply bg-[hsl(var(--ulomu-terracotta))];
+  }
+  
+  .text-terracotta {
+    @apply text-[hsl(var(--ulomu-terracotta))];
+  }
+  
+  .border-terracotta {
+    @apply border-[hsl(var(--ulomu-terracotta))];
+  }
+  
+  .bg-forest {
+    @apply bg-[hsl(var(--ulomu-forest))];
+  }
+  
+  .text-forest {
+    @apply text-[hsl(var(--ulomu-forest))];
+  }
+  
+  .border-forest {
+    @apply border-[hsl(var(--ulomu-forest))];
+  }
+  
+  .bg-ulomu-gold {
+    @apply bg-[hsl(var(--ulomu-gold))];
+  }
+  
+  .text-ulomu-gold {
+    @apply text-[hsl(var(--ulomu-gold))];
+  }
+  
+  .border-ulomu-gold {
+    @apply border-[hsl(var(--ulomu-gold))];
+  }
+  
+  .bg-ulomu-beige {
+    @apply bg-[hsl(var(--ulomu-beige))];
+  }
+  
+  .text-ulomu-beige {
+    @apply text-[hsl(var(--ulomu-beige))];
+  }
+
   /* Mobile-responsive containers */
   .container-responsive {
     @apply w-full px-4 sm:px-6 lg:px-8 mx-auto;
   }
 
-  /* Mobile-friendly buttons */
+  /* Mobile-friendly buttons with brand colors */
   .btn-mobile {
     @apply min-h-[44px] px-4 py-2 text-sm sm:text-base;
+  }
+  
+  .btn-primary {
+    @apply bg-terracotta hover:bg-terracotta/90 text-white;
+  }
+  
+  .btn-secondary {
+    @apply bg-forest hover:bg-forest/90 text-white;
+  }
+  
+  .btn-accent {
+    @apply bg-ulomu-gold hover:bg-ulomu-gold/90 text-black;
   }
 
   /* Responsive grid layouts */
@@ -135,25 +197,29 @@
     @apply flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4;
   }
 
-  /* Card responsive sizing */
+  /* Card responsive sizing with brand colors */
   .card-responsive {
-    @apply p-4 sm:p-6 rounded-lg shadow-sm border;
+    @apply p-4 sm:p-6 rounded-lg shadow-sm border border-[hsl(var(--ulomu-beige-dark))];
+  }
+  
+  .card-premium {
+    @apply card-responsive border-ulomu-gold bg-gradient-to-br from-ulomu-beige to-white;
   }
 
-  /* Dashboard layout */
+  /* Dashboard layout with brand colors */
   .dashboard-layout {
-    @apply flex flex-col lg:flex-row min-h-screen;
+    @apply flex flex-col lg:flex-row min-h-screen bg-ulomu-beige;
   }
 
   .dashboard-sidebar {
-    @apply w-full lg:w-64 xl:w-80 bg-card border-r;
+    @apply w-full lg:w-64 xl:w-80 bg-white border-r border-[hsl(var(--ulomu-beige-dark))];
   }
 
   .dashboard-main {
-    @apply flex-1 p-4 sm:p-6 lg:p-8 overflow-auto;
+    @apply flex-1 p-4 sm:p-6 lg:p-8 overflow-auto bg-ulomu-beige;
   }
 
-  /* Form responsiveness */
+  /* Form responsiveness with brand styling */
   .form-responsive {
     @apply space-y-4 sm:space-y-6;
   }
@@ -169,6 +235,23 @@
 
   .table-responsive table {
     @apply min-w-full;
+  }
+  
+  /* Gradient backgrounds with brand colors */
+  .gradient-terracotta {
+    @apply bg-gradient-to-r from-terracotta to-terracotta/80;
+  }
+  
+  .gradient-forest {
+    @apply bg-gradient-to-r from-forest to-forest/80;
+  }
+  
+  .gradient-gold {
+    @apply bg-gradient-to-r from-ulomu-gold to-ulomu-gold/80;
+  }
+  
+  .gradient-brand {
+    @apply bg-gradient-to-br from-terracotta via-forest to-ulomu-gold;
   }
 }
 
@@ -199,30 +282,67 @@
   .text-responsive-lg {
     @apply text-base sm:text-lg lg:text-xl;
   }
+  
+  /* Status color utilities with brand colors */
+  .status-success {
+    @apply bg-forest/10 text-forest border-forest/20;
+  }
+  
+  .status-warning {
+    @apply bg-ulomu-gold/10 text-ulomu-gold border-ulomu-gold/20;
+  }
+  
+  .status-error {
+    @apply bg-red-50 text-red-700 border-red-200;
+  }
+  
+  .status-info {
+    @apply bg-terracotta/10 text-terracotta border-terracotta/20;
+  }
 }
 
-/* Custom scrollbar for mobile */
+/* Custom scrollbar with brand colors */
 @media (max-width: 640px) {
   ::-webkit-scrollbar {
     width: 4px;
   }
   
   ::-webkit-scrollbar-track {
-    background: hsl(var(--muted));
+    background: hsl(var(--ulomu-beige));
   }
   
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--primary));
+    background: hsl(var(--ulomu-terracotta));
     border-radius: 2px;
   }
 }
 
-/* Improved focus states for mobile accessibility */
+/* Improved focus states for mobile accessibility with brand colors */
 @media (max-width: 768px) {
   button:focus-visible,
   input:focus-visible,
   select:focus-visible,
   textarea:focus-visible {
-    @apply ring-2 ring-primary ring-offset-2 outline-none;
+    @apply ring-2 ring-terracotta ring-offset-2 outline-none;
   }
+}
+
+/* Animation utilities with brand colors */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, 
+    hsl(var(--ulomu-beige)) 0%, 
+    hsl(var(--ulomu-beige-dark)) 20%, 
+    hsl(var(--ulomu-beige)) 60%, 
+    hsl(var(--ulomu-beige)) 100%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
 }
