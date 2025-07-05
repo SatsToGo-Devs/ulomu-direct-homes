@@ -1,26 +1,19 @@
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Table, TableHeader, TableHead, TableRow, TableBody, TableCell } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTenants } from '@/hooks/useTenants';
 import { useProperties } from '@/hooks/useProperties';
-import { useToast } from '@/hooks/use-toast';
-import { Users, Search, Mail, Phone, Trash2, Building, UserPlus, Home, MapPin, Calendar } from 'lucide-react';
+import { Users } from 'lucide-react';
 import CreateTenantModal from '@/components/TenantManagement/CreateTenantModal';
-import TenantUnitManager from '@/components/TenantManagement/TenantUnitManager';
-import TenantUnitAssignment from '@/components/TenantManagement/TenantUnitAssignment';
-import RemoveTenantFromUnit from '@/components/TenantManagement/RemoveTenantFromUnit';
-import PropertyOccupancy from '@/components/TenantManagement/PropertyOccupancy';
+import TenantSearch from '@/components/TenantManagement/TenantSearch';
+import TenantsByProperty from '@/components/TenantManagement/TenantsByProperty';
+import UnassignedTenants from '@/components/TenantManagement/UnassignedTenants';
+import AllTenantsList from '@/components/TenantManagement/AllTenantsList';
 
 const Tenants = () => {
   const { tenants, loading: tenantsLoading, deleteTenant, fetchTenants } = useTenants();
   const { properties, loading: propertiesLoading } = useProperties();
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterProperty, setFilterProperty] = useState('all');
 
@@ -89,31 +82,13 @@ const Tenants = () => {
           <CreateTenantModal />
         </div>
 
-        {/* Search and Filter Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 mt-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search tenants by name or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-ulomu-beige-dark"
-            />
-          </div>
-          <Select value={filterProperty} onValueChange={setFilterProperty}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filter by property" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Properties</SelectItem>
-              {properties.map((property) => (
-                <SelectItem key={property.id} value={property.id}>
-                  {property.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <TenantSearch
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          filterProperty={filterProperty}
+          setFilterProperty={setFilterProperty}
+          properties={properties}
+        />
       </CardHeader>
 
       <CardContent>
@@ -131,369 +106,32 @@ const Tenants = () => {
           </TabsList>
 
           <TabsContent value="by-property" className="space-y-6">
-            {properties.length === 0 ? (
-              <div className="text-center py-12 bg-ulomu-beige rounded-lg">
-                <Building className="h-16 w-16 text-forest mx-auto mb-4 opacity-50" />
-                <h3 className="text-lg font-semibold text-forest mb-2">No properties found</h3>
-                <p className="text-gray-600 mb-4">Add properties first to manage tenants</p>
-                <Button 
-                  onClick={() => window.location.href = '/add-property'}
-                  className="bg-terracotta hover:bg-terracotta/90 text-white"
-                >
-                  Add Property
-                </Button>
-              </div>
-            ) : (
-              tenantsByProperty.map((property) => (
-                <Card key={property.id} className="border-ulomu-beige-dark">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-forest rounded-lg">
-                          <Building className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-forest">{property.name}</CardTitle>
-                          <div className="flex items-center gap-1 text-sm text-gray-600">
-                            <MapPin className="h-3 w-3" />
-                            {property.address}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="bg-ulomu-gold/20 text-ulomu-gold border-ulomu-gold/30">
-                          {property.tenants.length} tenant{property.tenants.length !== 1 ? 's' : ''}
-                        </Badge>
-                        <TenantUnitManager
-                          propertyId={property.id}
-                          propertyName={property.name}
-                          onTenantAdded={fetchTenants}
-                        />
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <PropertyOccupancy
-                      totalUnits={property.totalUnits}
-                      occupiedUnits={property.occupiedUnits}
-                      propertyName={property.name}
-                    />
-                    
-                    {property.tenants.length === 0 ? (
-                      <div className="text-center py-8">
-                        <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500 mb-4">No tenants in this property</p>
-                        <TenantUnitManager
-                          propertyId={property.id}
-                          propertyName={property.name}
-                          onTenantAdded={fetchTenants}
-                        />
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {property.tenants.map((tenant) => (
-                          <div key={tenant.id} className="border rounded-lg p-4 bg-ulomu-beige">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h4 className="font-semibold text-forest">
-                                    {tenant.first_name} {tenant.last_name}
-                                  </h4>
-                                  <Badge className="bg-forest text-white">Active</Badge>
-                                </div>
-                                
-                                <div className="grid md:grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
-                                  <div className="flex items-center gap-2">
-                                    <Mail className="h-4 w-4 text-terracotta" />
-                                    {tenant.email}
-                                  </div>
-                                  {tenant.phone && (
-                                    <div className="flex items-center gap-2">
-                                      <Phone className="h-4 w-4 text-forest" />
-                                      {tenant.phone}
-                                    </div>
-                                  )}
-                                </div>
-
-                                {tenant.units && tenant.units.map((unit) => (
-                                  <div key={unit.id} className="bg-white p-3 rounded-lg mb-2 border border-ulomu-beige-dark">
-                                    <div className="flex justify-between items-center">
-                                      <div className="flex items-center gap-2">
-                                        <Home className="h-4 w-4 text-forest" />
-                                        <span className="font-medium">Unit {unit.unit_number}</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-terracotta font-semibold">
-                                          ₦{unit.rent_amount.toLocaleString()}/month
-                                        </span>
-                                        <RemoveTenantFromUnit
-                                          tenantId={tenant.id}
-                                          unitId={unit.id}
-                                          tenantName={`${tenant.first_name} ${tenant.last_name}`}
-                                          unitNumber={unit.unit_number}
-                                          onRemovalComplete={fetchTenants}
-                                        />
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="outline" size="sm" className="text-red-600 border-red-600 hover:bg-red-50">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Tenant</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to delete {tenant.first_name} {tenant.last_name}? This will also remove them from any units.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction 
-                                      onClick={() => deleteTenant(tenant.id)}
-                                      className="bg-red-600 hover:bg-red-700"
-                                    >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-            )}
+            <TenantsByProperty
+              tenantsByProperty={tenantsByProperty}
+              properties={properties}
+              deleteTenant={deleteTenant}
+              fetchTenants={fetchTenants}
+            />
           </TabsContent>
 
           <TabsContent value="unassigned" className="space-y-6">
-            {unassignedTenants.length === 0 ? (
-              <div className="text-center py-12 bg-ulomu-beige rounded-lg">
-                <Users className="h-16 w-16 text-forest mx-auto mb-4 opacity-50" />
-                <h3 className="text-lg font-semibold text-forest mb-2">No unassigned tenants</h3>
-                <p className="text-gray-600">All tenants are currently assigned to units</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="bg-ulomu-gold/10 border border-ulomu-gold/30 rounded-lg p-4">
-                  <h3 className="font-semibold text-ulomu-gold mb-2">Unassigned Tenants</h3>
-                  <p className="text-sm text-gray-600">These tenants are not currently assigned to any units. Use the "Assign Unit" button to assign them to available units.</p>
-                </div>
-                
-                {unassignedTenants.map((tenant) => (
-                  <Card key={tenant.id} className="border-ulomu-beige-dark">
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h4 className="font-semibold text-forest">
-                              {tenant.first_name} {tenant.last_name}
-                            </h4>
-                            <Badge variant="outline" className="bg-ulomu-gold/20 text-ulomu-gold border-ulomu-gold/30">
-                              Unassigned
-                            </Badge>
-                          </div>
-                          
-                          <div className="grid md:grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
-                            <div className="flex items-center gap-2">
-                              <Mail className="h-4 w-4 text-terracotta" />
-                              {tenant.email}
-                            </div>
-                            {tenant.phone && (
-                              <div className="flex items-center gap-2">
-                                <Phone className="h-4 w-4 text-forest" />
-                                {tenant.phone}
-                              </div>
-                            )}
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4 text-gray-400" />
-                              Added {new Date(tenant.created_at).toLocaleDateString()}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <TenantUnitAssignment
-                            tenant={tenant}
-                            properties={properties}
-                            onAssignmentUpdated={fetchTenants}
-                          />
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="outline" size="sm" className="text-red-600 border-red-600 hover:bg-red-50">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Tenant</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete {tenant.first_name} {tenant.last_name}? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction 
-                                  onClick={() => deleteTenant(tenant.id)}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Delete Tenant
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+            <UnassignedTenants
+              unassignedTenants={unassignedTenants}
+              properties={properties}
+              deleteTenant={deleteTenant}
+              fetchTenants={fetchTenants}
+            />
           </TabsContent>
 
           <TabsContent value="all-tenants" className="space-y-6">
-            
-            {filteredTenants.length === 0 ? (
-              <div className="text-center py-12 bg-ulomu-beige rounded-lg">
-                <Users className="h-16 w-16 text-forest mx-auto mb-4 opacity-50" />
-                <h3 className="text-lg font-semibold text-forest mb-2">
-                  {searchTerm || filterProperty !== 'all' ? 'No tenants found' : 'No tenants yet'}
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  {searchTerm || filterProperty !== 'all' 
-                    ? 'Try adjusting your search terms or filters' 
-                    : 'Start by adding your first tenant'
-                  }
-                </p>
-                {!searchTerm && filterProperty === 'all' && <CreateTenantModal />}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-ulomu-beige-dark">
-                      <TableHead className="text-forest font-semibold">Tenant</TableHead>
-                      <TableHead className="text-forest font-semibold">Contact</TableHead>
-                      <TableHead className="text-forest font-semibold">Property & Unit</TableHead>
-                      <TableHead className="text-forest font-semibold">Rent</TableHead>
-                      <TableHead className="text-forest font-semibold">Status</TableHead>
-                      <TableHead className="text-forest font-semibold text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTenants.map((tenant) => (
-                      <TableRow key={tenant.id} className="border-ulomu-beige-dark hover:bg-ulomu-beige/50 transition-colors">
-                        <TableCell>
-                          <div>
-                            <p className="font-semibold text-forest">
-                              {tenant.first_name} {tenant.last_name}
-                            </p>
-                            <p className="text-sm text-gray-500 flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              Joined {new Date(tenant.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <Mail className="h-3 w-3 text-terracotta" />
-                              <span className="text-sm">{tenant.email}</span>
-                            </div>
-                            {tenant.phone && (
-                              <div className="flex items-center gap-2">
-                                <Phone className="h-3 w-3 text-forest" />
-                                <span className="text-sm">{tenant.phone}</span>
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {tenant.units && tenant.units.length > 0 ? (
-                            <div className="space-y-1">
-                              {tenant.units.map((unit) => (
-                                <div key={unit.id} className="flex items-center gap-2">
-                                  <Building className="h-3 w-3 text-forest" />
-                                  <span className="text-sm font-medium">{unit.properties.name}</span>
-                                  <span className="text-xs text-gray-500">- Unit {unit.unit_number}</span>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-sm text-gray-500">No units assigned</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {tenant.units && tenant.units.length > 0 ? (
-                            <div className="space-y-1">
-                              {tenant.units.map((unit) => (
-                                <div key={unit.id} className="text-sm font-semibold text-terracotta">
-                                  ₦{unit.rent_amount.toLocaleString()}
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-sm text-gray-500">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {tenant.units && tenant.units.length > 0 ? (
-                            <Badge className="bg-forest text-white">Active</Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-ulomu-gold/20 text-ulomu-gold border-ulomu-gold/30">
-                              Unassigned
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-end gap-2">
-                            {(!tenant.units || tenant.units.length === 0) && (
-                              <TenantUnitAssignment
-                                tenant={tenant}
-                                properties={properties}
-                                onAssignmentUpdated={fetchTenants}
-                              />
-                            )}
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm" className="text-red-600 border-red-600 hover:bg-red-50">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Tenant</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete {tenant.first_name} {tenant.last_name}? This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction 
-                                    onClick={() => deleteTenant(tenant.id)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    Delete Tenant
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+            <AllTenantsList
+              filteredTenants={filteredTenants}
+              properties={properties}
+              deleteTenant={deleteTenant}
+              fetchTenants={fetchTenants}
+              searchTerm={searchTerm}
+              filterProperty={filterProperty}
+            />
           </TabsContent>
         </Tabs>
       </CardContent>
