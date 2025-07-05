@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Table, TableHeader, TableHead, TableRow, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Property } from '@/hooks/useProperties';
 
 interface Payment {
   id: string;
@@ -16,10 +17,7 @@ interface Payment {
 
 interface PaymentsProps {
   payments: Payment[];
-  properties: {
-    id: string;
-    title: string;
-  }[];
+  properties: Property[];
 }
 
 const Payments = ({ payments, properties }: PaymentsProps) => {
@@ -45,7 +43,7 @@ const Payments = ({ payments, properties }: PaymentsProps) => {
             {payments.map((payment) => (
               <TableRow key={payment.id}>
                 <TableCell>{payment.tenant}</TableCell>
-                <TableCell>{properties.find(p => p.id === payment.propertyId)?.title}</TableCell>
+                <TableCell>{properties.find(p => p.id === payment.propertyId)?.name}</TableCell>
                 <TableCell>{payment.amount}</TableCell>
                 <TableCell>{payment.date}</TableCell>
                 <TableCell>
