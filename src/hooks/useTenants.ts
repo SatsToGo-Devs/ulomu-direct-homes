@@ -39,6 +39,7 @@ export const useTenants = () => {
   const fetchTenants = async () => {
     try {
       setLoading(true);
+      console.log('Fetching tenants for user:', user?.id);
       
       // Fetch tenants created by this landlord
       const { data: tenantsData, error: tenantsError } = await supabase
@@ -46,7 +47,12 @@ export const useTenants = () => {
         .select('*')
         .eq('user_id', user?.id);
 
-      if (tenantsError) throw tenantsError;
+      if (tenantsError) {
+        console.error('Error fetching tenants:', tenantsError);
+        throw tenantsError;
+      }
+
+      console.log('Fetched tenants:', tenantsData);
 
       // For each tenant, fetch their associated units
       const tenantsWithUnits = await Promise.all(
@@ -104,10 +110,11 @@ export const useTenants = () => {
     lastName: string;
     email: string;
     phone?: string;
-    unitId?: string;
   }) => {
     try {
       if (!user) throw new Error('User not authenticated');
+
+      console.log('Creating tenant with data:', tenantData);
 
       // Create tenant in the tenants table
       const { data: newTenant, error: tenantError } = await supabase
@@ -122,20 +129,12 @@ export const useTenants = () => {
         .select()
         .single();
 
-      if (tenantError) throw tenantError;
-
-      // If unitId is provided, link the tenant to the unit
-      if (tenantData.unitId) {
-        const { error: unitError } = await supabase
-          .from('units')
-          .update({ 
-            tenant_id: newTenant.id, 
-            status: 'OCCUPIED' 
-          })
-          .eq('id', tenantData.unitId);
-
-        if (unitError) throw unitError;
+      if (tenantError) {
+        console.error('Error creating tenant:', tenantError);
+        throw tenantError;
       }
+
+      console.log('Created tenant:', newTenant);
 
       await fetchTenants();
       toast({
