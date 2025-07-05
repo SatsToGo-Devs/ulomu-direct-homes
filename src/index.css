@@ -7,63 +7,82 @@
   :root {
     --background: 39 38% 95%;
     --foreground: 39 10% 15%;
-
     --card: 39 38% 98%;
     --card-foreground: 39 10% 15%;
-
     --popover: 39 38% 98%;
     --popover-foreground: 39 10% 15%;
-
     --primary: 15 56% 50%;
     --primary-foreground: 39 38% 95%;
-
     --secondary: 142 30% 25%;
     --secondary-foreground: 39 38% 95%;
-
     --muted: 39 20% 90%;
     --muted-foreground: 39 10% 45%;
-
     --accent: 40 60% 55%;
     --accent-foreground: 39 10% 15%;
-
     --destructive: 0 84% 60%;
     --destructive-foreground: 39 38% 95%;
-
     --border: 39 15% 85%;
     --input: 39 15% 85%;
     --ring: 15 56% 50%;
-
     --radius: 0.5rem;
   }
 
   .dark {
     --background: 39 10% 8%;
     --foreground: 39 38% 90%;
-
     --card: 39 10% 12%;
     --card-foreground: 39 38% 90%;
-
     --popover: 39 10% 12%;
     --popover-foreground: 39 38% 90%;
-
     --primary: 15 56% 50%;
     --primary-foreground: 39 38% 95%;
-
     --secondary: 142 30% 20%;
     --secondary-foreground: 39 38% 95%;
-
     --muted: 39 10% 20%;
     --muted-foreground: 39 20% 65%;
-
     --accent: 40 60% 45%;
     --accent-foreground: 39 38% 95%;
-
     --destructive: 0 62% 45%;
     --destructive-foreground: 39 38% 90%;
-
     --border: 39 10% 25%;
     --input: 39 10% 25%;
     --ring: 15 56% 50%;
+  }
+
+  /* Admin Theme - Deep Purple/Blue */
+  .admin-theme {
+    --primary: 258 100% 70%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 100% 25%;
+    --accent: 258 100% 85%;
+    --accent-foreground: 258 100% 20%;
+  }
+
+  /* Landlord Theme - Forest Green */
+  .landlord-theme {
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 142 30% 25%;
+    --accent: 142 50% 70%;
+    --accent-foreground: 142 30% 15%;
+  }
+
+  /* Vendor Theme - Warm Orange */
+  .vendor-theme {
+    --primary: 24 100% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 24 100% 35%;
+    --accent: 24 100% 80%;
+    --accent-foreground: 24 100% 25%;
+  }
+
+  /* Tenant Theme - Soft Blue */
+  .tenant-theme {
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 91% 35%;
+    --accent: 217 91% 85%;
+    --accent-foreground: 217 91% 25%;
   }
 }
 
@@ -79,5 +98,131 @@
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold;
+  }
+
+  /* Mobile-first responsive typography */
+  h1 {
+    @apply text-xl sm:text-2xl lg:text-3xl;
+  }
+
+  h2 {
+    @apply text-lg sm:text-xl lg:text-2xl;
+  }
+
+  h3 {
+    @apply text-base sm:text-lg lg:text-xl;
+  }
+}
+
+@layer components {
+  /* Mobile-responsive containers */
+  .container-responsive {
+    @apply w-full px-4 sm:px-6 lg:px-8 mx-auto;
+  }
+
+  /* Mobile-friendly buttons */
+  .btn-mobile {
+    @apply min-h-[44px] px-4 py-2 text-sm sm:text-base;
+  }
+
+  /* Responsive grid layouts */
+  .grid-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6;
+  }
+
+  /* Mobile navigation */
+  .nav-mobile {
+    @apply flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4;
+  }
+
+  /* Card responsive sizing */
+  .card-responsive {
+    @apply p-4 sm:p-6 rounded-lg shadow-sm border;
+  }
+
+  /* Dashboard layout */
+  .dashboard-layout {
+    @apply flex flex-col lg:flex-row min-h-screen;
+  }
+
+  .dashboard-sidebar {
+    @apply w-full lg:w-64 xl:w-80 bg-card border-r;
+  }
+
+  .dashboard-main {
+    @apply flex-1 p-4 sm:p-6 lg:p-8 overflow-auto;
+  }
+
+  /* Form responsiveness */
+  .form-responsive {
+    @apply space-y-4 sm:space-y-6;
+  }
+
+  .form-group-responsive {
+    @apply flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0;
+  }
+
+  /* Table responsiveness */
+  .table-responsive {
+    @apply overflow-x-auto -mx-4 sm:mx-0;
+  }
+
+  .table-responsive table {
+    @apply min-w-full;
+  }
+}
+
+@layer utilities {
+  /* Hide/show utilities for different screen sizes */
+  .mobile-only {
+    @apply block sm:hidden;
+  }
+
+  .desktop-only {
+    @apply hidden sm:block;
+  }
+
+  .tablet-up {
+    @apply hidden md:block;
+  }
+
+  /* Touch-friendly spacing */
+  .touch-spacing {
+    @apply space-y-3 sm:space-y-2;
+  }
+
+  /* Responsive text sizing */
+  .text-responsive {
+    @apply text-sm sm:text-base;
+  }
+
+  .text-responsive-lg {
+    @apply text-base sm:text-lg lg:text-xl;
+  }
+}
+
+/* Custom scrollbar for mobile */
+@media (max-width: 640px) {
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary));
+    border-radius: 2px;
+  }
+}
+
+/* Improved focus states for mobile accessibility */
+@media (max-width: 768px) {
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    @apply ring-2 ring-primary ring-offset-2 outline-none;
   }
 }
