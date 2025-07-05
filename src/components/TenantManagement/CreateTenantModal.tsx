@@ -21,7 +21,11 @@ const CreateTenantModal = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!tenantData.firstName || !tenantData.lastName || !tenantData.email) return;
+    
+    // Validate required fields
+    if (!tenantData.firstName || !tenantData.lastName || !tenantData.email) {
+      return;
+    }
 
     try {
       setLoading(true);
@@ -32,6 +36,7 @@ const CreateTenantModal = () => {
         phone: tenantData.phone,
       });
 
+      // Reset form and close modal on success
       setTenantData({
         firstName: '',
         lastName: '',
@@ -42,6 +47,7 @@ const CreateTenantModal = () => {
       setOpen(false);
     } catch (error) {
       console.error('Error creating tenant:', error);
+      // Error handling is done in the useTenants hook
     } finally {
       setLoading(false);
     }
@@ -62,7 +68,7 @@ const CreateTenantModal = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="firstName">First Name</Label>
+              <Label htmlFor="firstName">First Name *</Label>
               <Input
                 id="firstName"
                 value={tenantData.firstName}
@@ -71,7 +77,7 @@ const CreateTenantModal = () => {
               />
             </div>
             <div>
-              <Label htmlFor="lastName">Last Name</Label>
+              <Label htmlFor="lastName">Last Name *</Label>
               <Input
                 id="lastName"
                 value={tenantData.lastName}
@@ -82,7 +88,7 @@ const CreateTenantModal = () => {
           </div>
           
           <div>
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Email *</Label>
             <Input
               id="email"
               type="email"

@@ -116,6 +116,11 @@ export const useTenants = () => {
 
       console.log('Creating tenant with data:', tenantData);
 
+      // Validate required fields
+      if (!tenantData.firstName || !tenantData.lastName || !tenantData.email) {
+        throw new Error('First name, last name, and email are required');
+      }
+
       // Create tenant in the tenants table
       const { data: newTenant, error: tenantError } = await supabase
         .from('tenants')
@@ -124,7 +129,7 @@ export const useTenants = () => {
           first_name: tenantData.firstName,
           last_name: tenantData.lastName,
           email: tenantData.email,
-          phone: tenantData.phone,
+          phone: tenantData.phone || null,
         })
         .select()
         .single();
