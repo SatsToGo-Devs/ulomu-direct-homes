@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -15,10 +14,11 @@ import { CreditCard, Shield, DollarSign, Brain, Users, Home } from 'lucide-react
 
 interface EnhancedEscrowPaymentModalProps {
   trigger?: React.ReactNode;
+  defaultPurpose?: string;
   onPaymentComplete?: () => void;
 }
 
-const EnhancedPaymentForm = ({ onSuccess }: { onSuccess: () => void }) => {
+const EnhancedPaymentForm = ({ onSuccess, defaultPurpose }: { onSuccess: () => void; defaultPurpose?: string }) => {
   const { toast } = useToast();
   const { account, escrowRules } = useEscrowData();
   const [loading, setLoading] = useState(false);
@@ -28,7 +28,7 @@ const EnhancedPaymentForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [selectedRule, setSelectedRule] = useState<any>(null);
   const [formData, setFormData] = useState({
     amount: '',
-    purpose: '',
+    purpose: defaultPurpose || '',
     description: '',
     recipientEmail: '',
     propertyId: '',
@@ -42,6 +42,12 @@ const EnhancedPaymentForm = ({ onSuccess }: { onSuccess: () => void }) => {
     fetchProperties();
     fetchVendors();
   }, []);
+
+  useEffect(() => {
+    if (defaultPurpose) {
+      setFormData(prev => ({ ...prev, purpose: defaultPurpose }));
+    }
+  }, [defaultPurpose]);
 
   useEffect(() => {
     // Auto-select escrow rule based on purpose
@@ -185,7 +191,7 @@ const EnhancedPaymentForm = ({ onSuccess }: { onSuccess: () => void }) => {
       {/* Purpose Selection with AI Suggestions */}
       <div>
         <Label htmlFor="purpose">Payment Purpose</Label>
-        <Select onValueChange={(value) => setFormData({ ...formData, purpose: value })}>
+        <Select value={formData.purpose} onValueChange={(value) => setFormData({ ...formData, purpose: value })}>
           <SelectTrigger>
             <SelectValue placeholder="Select payment purpose" />
           </SelectTrigger>
@@ -386,7 +392,7 @@ const EnhancedPaymentForm = ({ onSuccess }: { onSuccess: () => void }) => {
   );
 };
 
-const EnhancedEscrowPaymentModal = ({ trigger, onPaymentComplete }: EnhancedEscrowPaymentModalProps) => {
+const EnhancedEscrowPaymentModal = ({ trigger, defaultPurpose, onPaymentComplete }: EnhancedEscrowPaymentModalProps) => {
   const [open, setOpen] = useState(false);
 
   const handleSuccess = () => {
@@ -415,7 +421,7 @@ const EnhancedEscrowPaymentModal = ({ trigger, onPaymentComplete }: EnhancedEscr
             Enhanced Escrow Payment System
           </DialogTitle>
         </DialogHeader>
-        <EnhancedPaymentForm onSuccess={handleSuccess} />
+        <EnhancedPaymentForm onSuccess={handleSuccess} defaultPurpose={defaultPurpose} />
       </DialogContent>
     </Dialog>
   );
