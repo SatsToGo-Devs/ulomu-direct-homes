@@ -23,15 +23,27 @@ const CreateTenantModal = () => {
     unitId: '',
   });
 
-  // Get available units (vacant units only)
-  const availableUnits = properties.flatMap(property => 
-    Array.from({ length: property.units_count || 0 }, (_, index) => ({
-      id: `${property.id}-unit-${index + 1}`,
-      displayName: `${property.name} - Unit ${index + 1}`,
-      propertyId: property.id,
-      unitNumber: `${index + 1}`
-    }))
-  );
+  // Get vacant units only
+  const [availableUnits, setAvailableUnits] = useState<{
+    id: string;
+    displayName: string;
+    propertyId: string;
+    unitNumber: string;
+  }[]>([]);
+
+  React.useEffect(() => {
+    // For now, we'll allow manual unit assignment through the form
+    // In a real app, you'd fetch actual vacant units from the database
+    const units = properties.flatMap(property => 
+      Array.from({ length: property.units_count || 0 }, (_, index) => ({
+        id: `${property.id}-unit-${index + 1}`,
+        displayName: `${property.name} - Unit ${index + 1}`,
+        propertyId: property.id,
+        unitNumber: `${index + 1}`
+      }))
+    );
+    setAvailableUnits(units);
+  }, [properties]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
