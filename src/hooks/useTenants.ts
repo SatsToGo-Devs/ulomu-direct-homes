@@ -37,6 +37,11 @@ export const useTenants = () => {
   }, [user]);
 
   const fetchTenants = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       console.log('Fetching tenants for user:', user?.id);
@@ -45,7 +50,8 @@ export const useTenants = () => {
       const { data: tenantsData, error: tenantsError } = await supabase
         .from('tenants')
         .select('*')
-        .eq('user_id', user?.id);
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
 
       if (tenantsError) {
         console.error('Error fetching tenants:', tenantsError);
@@ -73,7 +79,7 @@ export const useTenants = () => {
             .eq('properties.user_id', user?.id);
 
           if (unitsError) {
-            console.error('Error fetching units for tenant:', unitsError);
+            console.error('Error fetching units for tenant:', tenant.id, unitsError);
             return { ...tenant, units: [] };
           }
 
@@ -144,15 +150,15 @@ export const useTenants = () => {
       await fetchTenants();
       toast({
         title: "Success",
-        description: "Tenant created successfully!",
+        description: `Tenant ${tenantData.firstName} ${tenantData.lastName} created successfully!`,
       });
 
       return newTenant;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating tenant:', error);
       toast({
         title: "Error",
-        description: "Failed to create tenant",
+        description: error.message || "Failed to create tenant",
         variant: "destructive",
       });
       throw error;
@@ -161,31 +167,41 @@ export const useTenants = () => {
 
   const deleteTenant = async (tenantId: string) => {
     try {
+      if (!user) throw new Error('User not authenticated');
+
       // First, remove tenant from any units
-      await supabase
+      const { error: updateError } = await supabase
         .from('units')
         .update({ tenant_id: null, status: 'VACANT' })
         .eq('tenant_id', tenantId);
 
+      if (updateError) {
+        console.error('Error updating units:', updateError);
+        throw updateError;
+      }
+
       // Then delete the tenant record
-      const { error } = await supabase
+      const { error: deleteError } = await supabase
         .from('tenants')
         .delete()
         .eq('id', tenantId)
         .eq('user_id', user?.id);
 
-      if (error) throw error;
+      if (deleteError) {
+        console.error('Error deleting tenant:', deleteError);
+        throw deleteError;
+      }
 
       await fetchTenants();
       toast({
         title: "Success",
         description: "Tenant removed successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error removing tenant:', error);
       toast({
         title: "Error",
-        description: "Failed to remove tenant",
+        description: error.message || "Failed to remove tenant",
         variant: "destructive",
       });
     }

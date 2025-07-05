@@ -37,9 +37,33 @@ const TenantUnitManager: React.FC<TenantUnitManagerProps> = ({
     leaseEndDate: ''
   });
 
+  const resetForm = () => {
+    setFormData({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      unitNumber: '',
+      rentAmount: '',
+      depositAmount: '',
+      leaseStartDate: '',
+      leaseEndDate: ''
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !formData.firstName || !formData.lastName || !formData.email || !formData.unitNumber || !formData.rentAmount) {
+    
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to add tenants",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.unitNumber || !formData.rentAmount) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -64,54 +88,62 @@ const TenantUnitManager: React.FC<TenantUnitManagerProps> = ({
         .select()
         .single();
 
-      if (tenantError) throw tenantError;
+      if (tenantError) {
+        console.error('Error creating tenant:', tenantError);
+        throw tenantError;
+      }
 
       // Create unit with tenant assignment
+      const unitData = {
+        property_id: propertyId,
+        unit_number: formData.unitNumber,
+        rent_amount: parseFloat(formData.rentAmount),
+        deposit_amount: formData.depositAmount ? parseFloat(formData.depositAmount) : null,
+        status: 'OCCUPIED',
+        lease_start_date: formData.leaseStartDate || null,
+        lease_end_date: formData.leaseEndDate || null,
+        tenant_id: tenant.id
+      };
+
       const { error: unitError } = await supabase
         .from('units')
-        .insert({
-          property_id: propertyId,
-          unit_number: formData.unitNumber,
-          rent_amount: parseFloat(formData.rentAmount),
-          deposit_amount: formData.depositAmount ? parseFloat(formData.depositAmount) : null,
-          status: 'OCCUPIED',
-          lease_start_date: formData.leaseStartDate || null,
-          lease_end_date: formData.leaseEndDate || null,
-          tenant_id: tenant.id
-        });
+        .insert(unitData);
 
-      if (unitError) throw unitError;
+      if (unitError) {
+        console.error('Error creating unit:', unitError);
+        
+        // If unit creation fails, we should clean up the tenant
+        await supabase
+          .from('tenants')
+          .delete()
+          .eq('id', tenant.id);
+          
+        throw unitError;
+      }
 
       toast({
         title: "Success",
-        description: "Tenant and unit created successfully!",
+        description: `Tenant ${formData.firstName} ${formData.lastName} and unit ${formData.unitNumber} created successfully!`,
       });
 
-      // Reset form
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        unitNumber: '',
-        rentAmount: '',
-        depositAmount: '',
-        leaseStartDate: '',
-        leaseEndDate: ''
-      });
-      
+      resetForm();
       setOpen(false);
       onTenantAdded();
-    } catch (error) {
+      
+    } catch (error: any) {
       console.error('Error creating tenant and unit:', error);
       toast({
         title: "Error",
-        description: "Failed to create tenant and unit",
+        description: error.message || "Failed to create tenant and unit",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -135,18 +167,22 @@ const TenantUnitManager: React.FC<TenantUnitManagerProps> = ({
               <Label htmlFor="firstName">First Name *</Label>
               <Input
                 id="firstName"
+                type="text"
                 value={formData.firstName}
-                onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                onChange={(e) => handleInputChange('firstName', e.target.value)}
                 required
+                placeholder="Enter first name"
               />
             </div>
             <div>
               <Label htmlFor="lastName">Last Name *</Label>
               <Input
                 id="lastName"
+                type="text"
                 value={formData.lastName}
-                onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                onChange={(e) => handleInputChange('lastName', e.target.value)}
                 required
+                placeholder="Enter last name"
               />
             </div>
           </div>
@@ -157,8 +193,9 @@ const TenantUnitManager: React.FC<TenantUnitManagerProps> = ({
               id="email"
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              onChange={(e) => handleInputChange('email', e.target.value)}
               required
+              placeholder="Enter email address"
             />
           </div>
           
@@ -166,9 +203,10 @@ const TenantUnitManager: React.FC<TenantUnitManagerProps> = ({
             <Label htmlFor="phone">Phone</Label>
             <Input
               id="phone"
+              type="tel"
               value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
-              placeholder="Optional"
+              onChange={(e) => handleInputChange('phone', e.target.value)}
+              placeholder="Enter phone number (optional)"
             />
           </div>
 
@@ -177,9 +215,10 @@ const TenantUnitManager: React.FC<TenantUnitManagerProps> = ({
               <Label htmlFor="unitNumber">Unit Number *</Label>
               <Input
                 id="unitNumber"
+                type="text"
                 value={formData.unitNumber}
-                onChange={(e) => setFormData({...formData, unitNumber: e.target.value})}
-                placeholder="e.g., 1A, 2B"
+                onChange={(e) => handleInputChange('unitNumber', e.target.value)}
+                placeholder="e.g., 1A, 2B, 101"
                 required
               />
             </div>
@@ -188,8 +227,11 @@ const TenantUnitManager: React.FC<TenantUnitManagerProps> = ({
               <Input
                 id="rentAmount"
                 type="number"
+                min="0"
+                step="0.01"
                 value={formData.rentAmount}
-                onChange={(e) => setFormData({...formData, rentAmount: e.target.value})}
+                onChange={(e) => handleInputChange('rentAmount', e.target.value)}
+                placeholder="Enter monthly rent"
                 required
               />
             </div>
@@ -200,9 +242,11 @@ const TenantUnitManager: React.FC<TenantUnitManagerProps> = ({
             <Input
               id="depositAmount"
               type="number"
+              min="0"
+              step="0.01"
               value={formData.depositAmount}
-              onChange={(e) => setFormData({...formData, depositAmount: e.target.value})}
-              placeholder="Optional"
+              onChange={(e) => handleInputChange('depositAmount', e.target.value)}
+              placeholder="Enter security deposit (optional)"
             />
           </div>
 
@@ -213,7 +257,7 @@ const TenantUnitManager: React.FC<TenantUnitManagerProps> = ({
                 id="leaseStartDate"
                 type="date"
                 value={formData.leaseStartDate}
-                onChange={(e) => setFormData({...formData, leaseStartDate: e.target.value})}
+                onChange={(e) => handleInputChange('leaseStartDate', e.target.value)}
               />
             </div>
             <div>
@@ -222,16 +266,28 @@ const TenantUnitManager: React.FC<TenantUnitManagerProps> = ({
                 id="leaseEndDate"
                 type="date"
                 value={formData.leaseEndDate}
-                onChange={(e) => setFormData({...formData, leaseEndDate: e.target.value})}
+                onChange={(e) => handleInputChange('leaseEndDate', e.target.value)}
               />
             </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => {
+                resetForm();
+                setOpen(false);
+              }}
+              disabled={loading}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button 
+              type="submit" 
+              disabled={loading}
+              className="bg-terracotta hover:bg-terracotta/90"
+            >
               {loading ? 'Creating...' : 'Create Tenant & Unit'}
             </Button>
           </div>
