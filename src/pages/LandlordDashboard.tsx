@@ -1,10 +1,10 @@
-
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Sidebar from "@/components/LandlordDashboard/Sidebar";
 import Overview from "@/components/LandlordDashboard/Overview";
 import Properties from "@/components/LandlordDashboard/Properties";
+import Tenants from "@/components/LandlordDashboard/Tenants";
 import Payments from "@/components/LandlordDashboard/Payments";
 import Messages from "@/components/LandlordDashboard/Messages";
 import Invoices from "@/components/LandlordDashboard/Invoices";
@@ -100,6 +100,10 @@ const LandlordDashboard = () => {
               <Properties />
             )}
 
+            {activeTab === "tenants" && (
+              <Tenants />
+            )}
+
             {activeTab === "payments" && (
               <Payments payments={payments} properties={properties} />
             )}
@@ -112,10 +116,10 @@ const LandlordDashboard = () => {
               <Invoices />
             )}
 
-            {/* Placeholder for other tabs */}
-            {(activeTab === "tenants" || activeTab === "settings") && (
+            {/* Placeholder for settings */}
+            {activeTab === "settings" && (
               <div className="bg-white p-6 rounded-lg shadow border border-ulomu-beige-dark">
-                <h2 className="text-xl font-semibold mb-4">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h2>
+                <h2 className="text-xl font-semibold mb-4">Settings</h2>
                 <p className="text-gray-500">This feature is coming soon.</p>
               </div>
             )}
