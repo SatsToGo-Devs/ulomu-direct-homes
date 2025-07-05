@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import UlomuLogo from "./UlomuLogo";
 import ThemeToggle from "./ThemeToggle";
-import { Menu, X, Shield } from "lucide-react";
+import { Menu, X, Shield, Brain } from "lucide-react";
 
 const Navbar = () => {
   const { user } = useAuth();
@@ -48,71 +47,79 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
+    <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
               <UlomuLogo />
             </Link>
-          </div>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <ThemeToggle />
-            {user ? (
-              <>
-                <Link
-                  to={getDashboardLink()}
-                  className="text-gray-700 dark:text-gray-300 hover:text-terracotta px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Dashboard
-                </Link>
-                {isLandlord() && (
+            
+            <div className="hidden md:ml-6 md:flex md:space-x-8">
+              <ThemeToggle />
+              {user ? (
+                <>
                   <Link
-                    to="/properties"
+                    to={getDashboardLink()}
                     className="text-gray-700 dark:text-gray-300 hover:text-terracotta px-3 py-2 rounded-md text-sm font-medium transition-colors"
                   >
-                    Properties
+                    Dashboard
                   </Link>
-                )}
-                {isAdmin() && (
+                  {isLandlord() && (
+                    <Link
+                      to="/properties"
+                      className="text-gray-700 dark:text-gray-300 hover:text-terracotta px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      Properties
+                    </Link>
+                  )}
+                  {isAdmin() && (
+                    <Link
+                      to="/admin-dashboard"
+                      className="text-gray-700 dark:text-gray-300 hover:text-terracotta px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1"
+                    >
+                      <Shield className="h-4 w-4" />
+                      Admin
+                    </Link>
+                  )}
                   <Link
-                    to="/admin-dashboard"
-                    className="text-gray-700 dark:text-gray-300 hover:text-terracotta px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1"
+                    to="/profile"
+                    className="text-gray-700 dark:text-gray-300 hover:text-terracotta px-3 py-2 rounded-md text-sm font-medium transition-colors"
                   >
-                    <Shield className="h-4 w-4" />
-                    Admin
+                    Profile
                   </Link>
-                )}
-                <Link
-                  to="/profile"
-                  className="text-gray-700 dark:text-gray-300 hover:text-terracotta px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Profile
-                </Link>
-                <Button onClick={handleSignOut} variant="outline">
-                  Sign Out
-                </Button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/how-it-works"
-                  className="text-gray-700 dark:text-gray-300 hover:text-terracotta px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  How It Works
-                </Link>
-                <Link to="/auth">
-                  <Button variant="outline">Sign In</Button>
-                </Link>
-                <Link to="/signup">
-                  <Button className="bg-terracotta hover:bg-terracotta/90">
-                    Get Started
+                  {user && (
+                    <Link
+                      to="/ai-hub"
+                      className="text-gray-500 hover:text-terracotta px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+                    >
+                      <Brain className="h-4 w-4" />
+                      AI Hub
+                    </Link>
+                  )}
+                  <Button onClick={handleSignOut} variant="outline">
+                    Sign Out
                   </Button>
-                </Link>
-              </>
-            )}
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/how-it-works"
+                    className="text-gray-700 dark:text-gray-300 hover:text-terracotta px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    How It Works
+                  </Link>
+                  <Link to="/auth">
+                    <Button variant="outline">Sign In</Button>
+                  </Link>
+                  <Link to="/signup">
+                    <Button className="bg-terracotta hover:bg-terracotta/90">
+                      Get Started
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Mobile menu button */}

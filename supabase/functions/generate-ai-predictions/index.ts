@@ -4,8 +4,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const googleCloudProjectId = Deno.env.get('GOOGLE_CLOUD_PROJECT_ID');
-const googleCloudServiceKey = Deno.env.get('GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -20,39 +18,105 @@ serve(async (req) => {
   }
 
   try {
-    const { propertyId, userId, imageData, maintenanceHistory } = await req.json();
+    const { propertyId, userId, userRole } = await req.json();
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get property details
-    const { data: property } = await supabase
-      .from('properties')
-      .select('*')
-      .eq('id', propertyId)
-      .single();
+    // Get user role for context
+    const { data: userRoles } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId);
+
+    const roles = userRoles?.map(r => r.role) || [];
+
+    // Get property details if provided
+    let property = null;
+    if (propertyId) {
+      const { data: propertyData } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('id', propertyId)
+        .single();
+      property = propertyData;
+    }
 
     // Get recent maintenance history
     const { data: recentMaintenance } = await supabase
       .from('maintenance_requests')
       .select('*')
-      .eq('property_id', propertyId)
+      .eq(propertyId ? 'property_id' : 'tenant_id', propertyId || userId)
       .order('created_at', { ascending: false })
       .limit(5);
 
+    // Get financial data context
+    const { data: transactions } = await supabase
+      .from('escrow_transactions')
+      .select('*')
+      .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
     let predictions = [];
 
-    // Generate predictions using OpenAI based on property data and history
+    // Role-specific prediction prompts
+    const getRoleContextPrompt = (roles: string[]) => {
+      if (roles.includes('admin')) {
+        return `
+        Generate platform-wide predictions for a system administrator:
+        - System performance and scalability issues
+        - User growth and engagement trends
+        - Revenue optimization opportunities
+        - Security and compliance risks
+        - Platform maintenance requirements
+        `;
+      } else if (roles.includes('landlord')) {
+        return `
+        Generate property management predictions for a landlord:
+        - Property maintenance and repair forecasts
+        - Rental income optimization opportunities
+        - Tenant retention and vacancy predictions
+        - Market trends and property value changes
+        - Operational cost management insights
+        Property: ${property ? JSON.stringify(property) : 'Multiple properties'}
+        `;
+      } else if (roles.includes('vendor')) {
+        return `
+        Generate business insights for a service vendor:
+        - Job opportunity predictions and market demand
+        - Earnings potential and pricing optimization
+        - Skill development recommendations
+        - Competition analysis and positioning
+        - Business growth opportunities
+        `;
+      } else if (roles.includes('tenant')) {
+        return `
+        Generate cost and maintenance predictions for a tenant:
+        - Upcoming maintenance issues and costs
+        - Rent and utility expense forecasts
+        - Lease renewal considerations
+        - Property condition assessments
+        - Budget planning recommendations
+        `;
+      }
+      return 'Generate general property-related predictions';
+    };
+
     const contextPrompt = `
-    Analyze this property for potential maintenance issues:
-    - Property Type: ${property?.property_type || 'Unknown'}
-    - Property Age: ${property?.created_at ? new Date().getFullYear() - new Date(property.created_at).getFullYear() : 'Unknown'} years
-    - Recent Maintenance: ${JSON.stringify(recentMaintenance)}
+    ${getRoleContextPrompt(roles)}
     
-    Generate 3-5 predictive maintenance insights with:
-    1. Issue type and likelihood
-    2. Estimated timeline
-    3. Cost estimate
-    4. Prevention actions
+    Recent Activity Data:
+    - Maintenance History: ${JSON.stringify(recentMaintenance || [])}
+    - Financial Transactions: ${JSON.stringify(transactions || [])}
+    
+    Generate 3-5 predictive insights with:
+    1. Issue/opportunity type and likelihood (0-1 confidence score)
+    2. Estimated timeline (predicted_date)
+    3. Cost estimate or financial impact
+    4. Prevention/optimization actions
+    5. Priority level (HIGH/MEDIUM/LOW)
+    
+    Focus on actionable insights relevant to the user's role.
     `;
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -66,11 +130,12 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'You are a property maintenance expert. Provide JSON formatted predictions with fields: title, description, prediction_type, confidence_score (0-1), estimated_cost, predicted_date, prevention_actions (array).'
+            content: 'You are an expert property management and business analyst. Provide JSON formatted predictions with fields: predictions (array of objects with title, description, prediction_type, confidence_score (0-1), estimated_cost, predicted_date, prevention_actions (array), priority).'
           },
           { role: 'user', content: contextPrompt }
         ],
-        response_format: { type: "json_object" }
+        response_format: { type: "json_object" },
+        temperature: 0.3
       }),
     });
 
@@ -79,6 +144,13 @@ serve(async (req) => {
 
     // Store predictions in database
     for (const prediction of aiPredictions.predictions || []) {
+      const predictionType = prediction.prediction_type || (
+        roles.includes('admin') ? 'SYSTEM' :
+        roles.includes('landlord') ? 'MAINTENANCE' :
+        roles.includes('vendor') ? 'BUSINESS' :
+        'EXPENSE'
+      );
+
       const { data: savedPrediction } = await supabase
         .from('ai_predictions')
         .insert({
@@ -86,12 +158,13 @@ serve(async (req) => {
           property_id: propertyId,
           title: prediction.title,
           description: prediction.description,
-          prediction_type: prediction.prediction_type,
-          confidence_score: prediction.confidence_score,
+          prediction_type: predictionType,
+          confidence_score: prediction.confidence_score || 0.7,
           estimated_cost: prediction.estimated_cost,
           predicted_date: prediction.predicted_date,
-          prevention_actions: prediction.prevention_actions,
-          data_sources: ['maintenance_history', 'property_data']
+          prevention_actions: prediction.prevention_actions || [],
+          data_sources: ['user_activity', 'maintenance_history', 'financial_data'],
+          status: 'ACTIVE'
         })
         .select()
         .single();
@@ -101,7 +174,8 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       predictions,
-      summary: `Generated ${predictions.length} AI-powered maintenance predictions for your property.`
+      summary: `Generated ${predictions.length} role-specific AI predictions.`,
+      userRole: roles[0] || 'user'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

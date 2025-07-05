@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -27,18 +26,17 @@ import EscrowHub from "./pages/EscrowHub";
 import TenantPortal from "./pages/TenantPortal";
 import TenantsPage from "./pages/TenantsPage";
 import HowItWorks from "./pages/HowItWorks";
+import AIHub from "./pages/AIHub";
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TooltipProvider>
-          <AuthProvider>
-            <Toaster />
-            <Sonner />
-            <Router>
+    <QueryClient>
+      <AuthProvider>
+        <ThemeProvider>
+          <Router>
+            <div className="App">
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Login />} />
@@ -60,13 +58,15 @@ function App() {
                 <Route path="/property-insights" element={<AIInsights />} />
                 <Route path="/system-test" element={<SystemTest />} />
                 <Route path="/profile" element={<ProfileSettings />} />
+                <Route path="/ai-hub" element={<AIHub />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </Router>
-          </AuthProvider>
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+              <Toaster />
+            </div>
+          </Router>
+        </ThemeProvider>
+      </AuthProvider>
+    </QueryClient>
   );
 }
 

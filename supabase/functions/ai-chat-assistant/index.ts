@@ -18,7 +18,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, userId, propertyId, maintenanceRequestId } = await req.json();
+    const { message, userId, propertyId, maintenanceRequestId, roleContext } = await req.json();
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -45,20 +45,98 @@ serve(async (req) => {
       `${msg.message_type === 'user' ? 'User' : 'Assistant'}: ${msg.content}`
     ).join('\n') || '';
 
-    const systemPrompt = `You are Ulomu's AI assistant specializing in property management and tenant support. 
-    You help tenants with maintenance issues, property questions, and guide them through the platform.
+    // Role-specific system prompts
+    const getRolePrompt = (roleContext: any) => {
+      if (roleContext?.isAdmin) {
+        return `You are Ulomu's Admin AI Assistant. You specialize in:
+        - System management and platform monitoring
+        - User analytics and reporting
+        - Administrative tasks and policy management
+        - Security and compliance oversight
+        - Platform optimization and troubleshooting
+        Be professional, data-driven, and focus on administrative efficiency.`;
+      } else if (roleContext?.isLandlord) {
+        return `You are Ulomu's Property Manager AI. You specialize in:
+        - Property management and optimization
+        - Tenant relationship management
+        - Maintenance scheduling and cost analysis
+        - Rental income and financial insights
+        - Legal compliance and lease management
+        Be professional, strategic, and focus on property profitability and tenant satisfaction.`;
+      } else if (roleContext?.isVendor) {
+        return `You are Ulomu's Vendor Assistant AI. You specialize in:
+        - Job matching and opportunity identification
+        - Work proposal and quote generation
+        - Business growth and performance optimization
+        - Skill development and market trends
+        - Client relationship management
+        Be supportive, business-focused, and help maximize earning potential.`;
+      } else if (roleContext?.isTenant) {
+        return `You are Ulomu's Tenant Helper AI. You specialize in:
+        - Maintenance request assistance
+        - Payment and lease inquiries
+        - Landlord communication support
+        - Tenant rights and responsibilities
+        - Property-related problem solving
+        Be helpful, empathetic, and focus on tenant advocacy and support.`;
+      } else {
+        return `You are Ulomu's general AI assistant for property management and tenant support.`;
+      }
+    };
+
+    const systemPrompt = `${getRolePrompt(roleContext)}
     
     Key capabilities:
-    - Help tenants raise maintenance requests
-    - Provide cost estimates for common repairs
-    - Guide users through the escrow payment system
-    - Suggest maintenance categories and priorities
-    - Offer preventive maintenance tips
+    - Help users with their specific role-related tasks
+    - Provide cost estimates for maintenance and services
+    - Guide users through platform features
+    - Offer role-appropriate advice and recommendations
+    - Maintain context of ongoing conversations
     
-    Be helpful, professional, and concise. If you don't know something specific about their property, ask clarifying questions.
+    Be helpful, professional, and concise. Always consider the user's role when providing responses.
     
     Previous conversation:
     ${context}`;
+
+    // Get role-specific suggestions
+    const getRoleSuggestions = (roleContext: any) => {
+      if (roleContext?.isAdmin) {
+        return [
+          "Generate system report",
+          "Review user analytics",
+          "Check platform health",
+          "Manage user roles"
+        ];
+      } else if (roleContext?.isLandlord) {
+        return [
+          "Analyze property performance",
+          "Schedule maintenance",
+          "Review tenant payments",
+          "Generate financial report"
+        ];
+      } else if (roleContext?.isVendor) {
+        return [
+          "Find new jobs",
+          "Create work proposal",
+          "Track earnings",
+          "Update service profile"
+        ];
+      } else if (roleContext?.isTenant) {
+        return [
+          "Report maintenance issue",
+          "Check payment status",
+          "Contact landlord",
+          "View lease details"
+        ];
+      } else {
+        return [
+          "General assistance",
+          "Platform help",
+          "Account support",
+          "Contact support"
+        ];
+      }
+    };
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -72,7 +150,7 @@ serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
         ],
-        max_tokens: 500,
+        max_tokens: 800,
         temperature: 0.7
       }),
     });
@@ -91,12 +169,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       message: assistantReply,
-      suggestions: [
-        "Create maintenance request",
-        "Check payment status", 
-        "Contact landlord",
-        "View property info"
-      ]
+      suggestions: getRoleSuggestions(roleContext)
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
