@@ -20,14 +20,18 @@ const CreateTenantModal = () => {
     lastName: '',
     email: '',
     phone: '',
-    propertyId: '',
-    unitNumber: '',
+    unitId: '',
   });
 
-  // Get available units from selected property
-  const availableUnits = properties
-    .find(p => p.id === tenantData.propertyId)
-    ?.units_count || 0;
+  // Get available units (vacant units only)
+  const availableUnits = properties.flatMap(property => 
+    Array.from({ length: property.units_count || 0 }, (_, index) => ({
+      id: `${property.id}-unit-${index + 1}`,
+      displayName: `${property.name} - Unit ${index + 1}`,
+      propertyId: property.id,
+      unitNumber: `${index + 1}`
+    }))
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +44,7 @@ const CreateTenantModal = () => {
         lastName: tenantData.lastName,
         email: tenantData.email,
         phone: tenantData.phone,
+        unitId: tenantData.unitId || undefined,
       });
 
       setTenantData({
@@ -47,8 +52,7 @@ const CreateTenantModal = () => {
         lastName: '',
         email: '',
         phone: '',
-        propertyId: '',
-        unitNumber: '',
+        unitId: '',
       });
       
       setOpen(false);
@@ -110,7 +114,24 @@ const CreateTenantModal = () => {
               id="phone"
               value={tenantData.phone}
               onChange={(e) => setTenantData({...tenantData, phone: e.target.value})}
+              placeholder="Optional"
             />
+          </div>
+
+          <div>
+            <Label htmlFor="unit">Assign to Unit (Optional)</Label>
+            <Select value={tenantData.unitId} onValueChange={(value) => setTenantData({...tenantData, unitId: value})}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a unit" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableUnits.map((unit) => (
+                  <SelectItem key={unit.id} value={unit.id}>
+                    {unit.displayName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">

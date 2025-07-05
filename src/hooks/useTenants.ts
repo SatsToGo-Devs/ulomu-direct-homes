@@ -40,45 +40,53 @@ export const useTenants = () => {
     try {
       setLoading(true);
       
-      // Since the tenants table might not be available in types yet,
-      // let's fetch units with tenant information instead
-      const { data: units, error } = await supabase
-        .from('units')
-        .select(`
-          *,
-          properties!inner(
-            name,
-            user_id
-          )
-        `)
-        .not('tenant_id', 'is', null)
-        .eq('properties.user_id', user?.id);
+      // Fetch tenants created by this landlord
+      const { data: tenantsData, error: tenantsError } = await supabase
+        .from('tenants')
+        .select('*')
+        .eq('user_id', user?.id);
 
-      if (error) throw error;
+      if (tenantsError) throw tenantsError;
 
-      // For now, create mock tenant data from units
-      // This will be replaced once the database types are updated
-      const mockTenants: Tenant[] = units?.map((unit, index) => ({
-        id: unit.tenant_id || `tenant-${index}`,
-        user_id: user!.id,
-        first_name: `Tenant`,
-        last_name: `${index + 1}`,
-        email: `tenant${index + 1}@example.com`,
-        phone: undefined,
-        created_at: unit.created_at || new Date().toISOString(),
-        updated_at: unit.updated_at || new Date().toISOString(),
-        units: [{
-          id: unit.id,
-          unit_number: unit.unit_number,
-          rent_amount: unit.rent_amount,
-          property_id: unit.property_id,
-          properties: {
-            name: unit.properties?.name || 'Unknown Property'
+      // For each tenant, fetch their associated units
+      const tenantsWithUnits = await Promise.all(
+        (tenantsData || []).map(async (tenant) => {
+          const { data: units, error: unitsError } = await supabase
+            .from('units')
+            .select(`
+              id,
+              unit_number,
+              rent_amount,
+              property_id,
+              properties!inner(
+                name,
+                user_id
+              )
+            `)
+            .eq('tenant_id', tenant.id)
+            .eq('properties.user_id', user?.id);
+
+          if (unitsError) {
+            console.error('Error fetching units for tenant:', unitsError);
+            return { ...tenant, units: [] };
           }
-        }]
-      })) || [];
 
-      setTenants(mockTenants);
+          return {
+            ...tenant,
+            units: units?.map(unit => ({
+              id: unit.id,
+              unit_number: unit.unit_number,
+              rent_amount: unit.rent_amount,
+              property_id: unit.property_id,
+              properties: {
+                name: unit.properties?.name || 'Unknown Property'
+              }
+            })) || []
+          };
+        })
+      );
+
+      setTenants(tenantsWithUnits);
     } catch (error) {
       console.error('Error fetching tenants:', error);
       toast({
@@ -101,25 +109,27 @@ export const useTenants = () => {
     try {
       if (!user) throw new Error('User not authenticated');
 
-      // For now, we'll create a simplified tenant record
-      // This will be improved once the database types are updated
-      const mockTenant = {
-        id: `tenant-${Date.now()}`,
-        user_id: user.id,
-        first_name: tenantData.firstName,
-        last_name: tenantData.lastName,
-        email: tenantData.email,
-        phone: tenantData.phone,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+      // Create tenant in the tenants table
+      const { data: newTenant, error: tenantError } = await supabase
+        .from('tenants')
+        .insert({
+          user_id: user.id,
+          first_name: tenantData.firstName,
+          last_name: tenantData.lastName,
+          email: tenantData.email,
+          phone: tenantData.phone,
+        })
+        .select()
+        .single();
+
+      if (tenantError) throw tenantError;
 
       // If unitId is provided, link the tenant to the unit
       if (tenantData.unitId) {
         const { error: unitError } = await supabase
           .from('units')
           .update({ 
-            tenant_id: mockTenant.id, 
+            tenant_id: newTenant.id, 
             status: 'OCCUPIED' 
           })
           .eq('id', tenantData.unitId);
@@ -133,7 +143,7 @@ export const useTenants = () => {
         description: "Tenant created successfully!",
       });
 
-      return mockTenant;
+      return newTenant;
     } catch (error) {
       console.error('Error creating tenant:', error);
       toast({
@@ -152,6 +162,15 @@ export const useTenants = () => {
         .from('units')
         .update({ tenant_id: null, status: 'VACANT' })
         .eq('tenant_id', tenantId);
+
+      // Then delete the tenant record
+      const { error } = await supabase
+        .from('tenants')
+        .delete()
+        .eq('id', tenantId)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
 
       await fetchTenants();
       toast({
