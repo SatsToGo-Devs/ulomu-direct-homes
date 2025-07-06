@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 import { useEscrowData } from '@/hooks/useEscrowData';
+import ResponsiveDashboardCard from './ResponsiveDashboardCard';
+import ResponsiveQuickActions from './ResponsiveQuickActions';
 import { 
   Home, 
   Users, 
@@ -51,11 +52,11 @@ const LandlordDashboard = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="container-responsive space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
+            <Card key={i} className="animate-pulse bg-ulomu-beige">
+              <CardContent className="p-4 sm:p-6">
                 <div className="h-4 bg-ulomu-beige-dark rounded w-3/4 mb-2"></div>
                 <div className="h-8 bg-ulomu-beige-dark rounded w-1/2"></div>
               </CardContent>
@@ -67,108 +68,54 @@ const LandlordDashboard = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8 bg-ulomu-beige min-h-screen">
+    <div className="container-responsive space-y-6 sm:space-y-8 bg-ulomu-beige min-h-screen">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-forest to-forest/90 text-white rounded-lg p-6">
-        <h1 className="text-3xl font-bold mb-2">Landlord Command Center</h1>
-        <p className="text-white/90">Manage your properties, tenants, and revenue streams efficiently</p>
+      <div className="bg-gradient-to-r from-forest to-forest/90 text-white rounded-lg p-4 sm:p-6">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Landlord Command Center</h1>
+        <p className="text-white/90 text-sm sm:text-base">Manage your properties, tenants, and revenue streams efficiently</p>
       </div>
 
       {/* Key Performance Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-forest/10 to-forest/20 border-forest/30">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-forest rounded-lg">
-                <DollarSign className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-forest">Rent Collected</p>
-                <p className="text-2xl font-bold text-forest">₦{totalRentCollected.toLocaleString()}</p>
-              </div>
-            </div>
-            <p className="text-xs text-forest/80">{rentTransactions.filter(t => t.status === 'COMPLETED').length} payments received</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <ResponsiveDashboardCard
+          title="Rent Collected"
+          icon={<DollarSign className="h-5 w-5 text-white" />}
+          value={`₦${totalRentCollected.toLocaleString()}`}
+          description={`${rentTransactions.filter(t => t.status === 'COMPLETED').length} payments received`}
+          variant="forest"
+        />
 
-        <Card className="bg-gradient-to-br from-ulomu-gold/10 to-ulomu-gold/20 border-ulomu-gold/30">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-ulomu-gold rounded-lg">
-                <PiggyBank className="h-5 w-5 text-black" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-ulomu-gold">Service Charges</p>
-                <p className="text-2xl font-bold text-ulomu-gold">₦{totalServiceCharges.toLocaleString()}</p>
-              </div>
-            </div>
-            <p className="text-xs text-ulomu-gold/80">{serviceCharges.length} active charges</p>
-          </CardContent>
-        </Card>
+        <ResponsiveDashboardCard
+          title="Service Charges"
+          icon={<PiggyBank className="h-5 w-5 text-black" />}
+          value={`₦${totalServiceCharges.toLocaleString()}`}
+          description={`${serviceCharges.length} active charges`}
+          variant="gold"
+        />
 
-        <Card className="bg-gradient-to-br from-terracotta/10 to-terracotta/20 border-terracotta/30">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-terracotta rounded-lg">
-                <Home className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-terracotta">Properties</p>
-                <p className="text-2xl font-bold text-terracotta">5</p>
-              </div>
-            </div>
-            <p className="text-xs text-terracotta/80">92% occupancy rate</p>
-          </CardContent>
-        </Card>
+        <ResponsiveDashboardCard
+          title="Properties"
+          icon={<Home className="h-5 w-5 text-white" />}
+          value={5}
+          description="92% occupancy rate"
+          variant="terracotta"
+        />
 
-        <Card className="bg-gradient-to-br from-terracotta/10 to-terracotta/20 border-terracotta/30">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-terracotta rounded-lg">
-                <Clock className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-terracotta">Pending Releases</p>
-                <p className="text-2xl font-bold text-terracotta">{pendingReleases.length}</p>
-              </div>
-            </div>
-            <p className="text-xs text-terracotta/80">₦{pendingReleases.reduce((sum, t) => sum + t.amount, 0).toLocaleString()} held</p>
-          </CardContent>
-        </Card>
+        <ResponsiveDashboardCard
+          title="Pending Releases"
+          icon={<Clock className="h-5 w-5 text-white" />}
+          value={pendingReleases.length}
+          description={`₦${pendingReleases.reduce((sum, t) => sum + t.amount, 0).toLocaleString()} held`}
+          variant="terracotta"
+        />
       </div>
 
       {/* Quick Actions */}
-      <Card className="bg-white border-ulomu-beige-dark">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-forest" />
-            Management Tools
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {quickActions.map((action, index) => (
-              <Card 
-                key={index}
-                className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-l-4 border-l-transparent hover:border-l-forest bg-ulomu-beige"
-                onClick={() => navigate(action.route)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className={`p-2 ${action.color} rounded-lg group-hover:scale-110 transition-transform`}>
-                      <action.icon className="h-4 w-4 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{action.label}</h3>
-                      <p className="text-sm text-gray-500">{action.description}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <ResponsiveQuickActions
+        title="Management Tools"
+        actions={quickActions}
+        roleColor="forest"
+      />
 
       {/* Property Performance Overview */}
       <Card className="bg-white border-ulomu-beige-dark">
@@ -181,18 +128,19 @@ const LandlordDashboard = () => {
         <CardContent>
           <div className="space-y-4">
             {propertyPerformance.map((property, index) => (
-              <div key={index} className="p-4 bg-ulomu-beige rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h3 className="font-semibold">{property.name}</h3>
-                    <p className="text-sm text-gray-500">Monthly Revenue: ₦{property.revenue.toLocaleString()}</p>
+              <div key={index} className="p-3 sm:p-4 bg-ulomu-beige rounded-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-sm sm:text-base truncate">{property.name}</h3>
+                    <p className="text-xs sm:text-sm text-gray-500">Monthly Revenue: ₦{property.revenue.toLocaleString()}</p>
                   </div>
                   <Badge 
-                    className={
+                    className={cn(
+                      "self-start sm:self-center",
                       property.status === 'excellent' ? 'bg-forest text-white' :
                       property.status === 'good' ? 'bg-terracotta text-white' :
                       'bg-ulomu-gold text-black'
-                    }
+                    )}
                   >
                     {property.status.replace('-', ' ')}
                   </Badge>
@@ -222,17 +170,20 @@ const LandlordDashboard = () => {
           <CardContent>
             <div className="space-y-3">
               {transactions.slice(0, 5).map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-3 bg-ulomu-beige rounded-lg">
-                  <div>
-                    <p className="font-medium">{transaction.purpose || transaction.type}</p>
-                    <p className="text-sm text-gray-500">
+                <div key={transaction.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-ulomu-beige rounded-lg gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate text-sm sm:text-base">{transaction.purpose || transaction.type}</p>
+                    <p className="text-xs sm:text-sm text-gray-500">
                       {new Date(transaction.created_at).toLocaleDateString()}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold">₦{transaction.amount.toLocaleString()}</p>
+                  <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2">
+                    <p className="font-bold text-sm sm:text-base">₦{transaction.amount.toLocaleString()}</p>
                     <Badge 
-                      className={transaction.status === 'COMPLETED' ? 'bg-forest text-white' : 'bg-ulomu-beige-dark text-gray-700'}
+                      className={cn(
+                        "text-xs",
+                        transaction.status === 'COMPLETED' ? 'bg-forest text-white' : 'bg-ulomu-beige-dark text-gray-700'
+                      )}
                     >
                       {transaction.status}
                     </Badge>
@@ -253,26 +204,26 @@ const LandlordDashboard = () => {
           <CardContent className="space-y-3">
             <div className="p-3 bg-terracotta/10 border border-terracotta/30 rounded-lg">
               <div className="flex items-center gap-2 mb-1">
-                <AlertCircle className="h-4 w-4 text-terracotta" />
-                <span className="font-medium text-terracotta">Maintenance Request</span>
+                <AlertCircle className="h-4 w-4 text-terracotta flex-shrink-0" />
+                <span className="font-medium text-terracotta text-sm sm:text-base">Maintenance Request</span>
               </div>
-              <p className="text-sm text-terracotta/80">Unit 2A - Plumbing issue reported</p>
+              <p className="text-xs sm:text-sm text-terracotta/80">Unit 2A - Plumbing issue reported</p>
             </div>
             
             <div className="p-3 bg-ulomu-gold/10 border border-ulomu-gold/30 rounded-lg">
               <div className="flex items-center gap-2 mb-1">
-                <Calendar className="h-4 w-4 text-ulomu-gold" />
-                <span className="font-medium text-ulomu-gold">Rent Due</span>
+                <Calendar className="h-4 w-4 text-ulomu-gold flex-shrink-0" />
+                <span className="font-medium text-ulomu-gold text-sm sm:text-base">Rent Due</span>
               </div>
-              <p className="text-sm text-ulomu-gold/80">3 tenants have rent due in 3 days</p>
+              <p className="text-xs sm:text-sm text-ulomu-gold/80">3 tenants have rent due in 3 days</p>
             </div>
             
             <div className="p-3 bg-forest/10 border border-forest/30 rounded-lg">
               <div className="flex items-center gap-2 mb-1">
-                <CheckCircle2 className="h-4 w-4 text-forest" />
-                <span className="font-medium text-forest">Payment Received</span>
+                <CheckCircle2 className="h-4 w-4 text-forest flex-shrink-0" />
+                <span className="font-medium text-forest text-sm sm:text-base">Payment Received</span>
               </div>
-              <p className="text-sm text-forest/80">Unit 1B - Rent payment completed</p>
+              <p className="text-xs sm:text-sm text-forest/80">Unit 1B - Rent payment completed</p>
             </div>
           </CardContent>
         </Card>

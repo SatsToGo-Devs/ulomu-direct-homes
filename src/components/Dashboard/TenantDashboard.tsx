@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 import { useEscrowData } from '@/hooks/useEscrowData';
+import ResponsiveDashboardCard from './ResponsiveDashboardCard';
+import ResponsiveQuickActions from './ResponsiveQuickActions';
 import { 
   Home, 
   CreditCard, 
@@ -17,8 +18,7 @@ import {
   Clock,
   AlertTriangle,
   CheckCircle2,
-  Bell,
-  TrendingUp
+  Bell
 } from 'lucide-react';
 
 const TenantDashboard = () => {
@@ -48,11 +48,11 @@ const TenantDashboard = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="container-responsive space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
+            <Card key={i} className="animate-pulse bg-ulomu-beige">
+              <CardContent className="p-4 sm:p-6">
                 <div className="h-4 bg-ulomu-beige-dark rounded w-3/4 mb-2"></div>
                 <div className="h-8 bg-ulomu-beige-dark rounded w-1/2"></div>
               </CardContent>
@@ -64,114 +64,60 @@ const TenantDashboard = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8 bg-ulomu-beige min-h-screen">
+    <div className="container-responsive space-y-6 sm:space-y-8 bg-ulomu-beige min-h-screen">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-terracotta to-terracotta/90 text-white rounded-lg p-6">
-        <h1 className="text-3xl font-bold mb-2">Welcome to Your Tenant Portal</h1>
-        <p className="text-white/90">Manage your rental payments, maintenance requests, and communications</p>
+      <div className="bg-gradient-to-r from-terracotta to-terracotta/90 text-white rounded-lg p-4 sm:p-6">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Welcome to Your Tenant Portal</h1>
+        <p className="text-white/90 text-sm sm:text-base">Manage your rental payments, maintenance requests, and communications</p>
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-forest/10 to-forest/20 border-forest/30">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-forest rounded-lg">
-                <DollarSign className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-forest">Total Paid</p>
-                <p className="text-2xl font-bold text-forest">₦{totalPaid.toLocaleString()}</p>
-              </div>
-            </div>
-            <p className="text-xs text-forest/80">{rentPayments.filter(t => t.status === 'COMPLETED').length} payments made</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <ResponsiveDashboardCard
+          title="Total Paid"
+          icon={<DollarSign className="h-5 w-5 text-white" />}
+          value={`₦${totalPaid.toLocaleString()}`}
+          description={`${rentPayments.filter(t => t.status === 'COMPLETED').length} payments made`}
+          variant="forest"
+        />
 
-        <Card className="bg-gradient-to-br from-terracotta/10 to-terracotta/20 border-terracotta/30">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-terracotta rounded-lg">
-                <Clock className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-terracotta">Pending</p>
-                <p className="text-2xl font-bold text-terracotta">{pendingPayments}</p>
-              </div>
-            </div>
-            <p className="text-xs text-terracotta/80">Awaiting processing</p>
-          </CardContent>
-        </Card>
+        <ResponsiveDashboardCard
+          title="Pending"
+          icon={<Clock className="h-5 w-5 text-white" />}
+          value={pendingPayments}
+          description="Awaiting processing"
+          variant="terracotta"
+        />
 
-        <Card className="bg-gradient-to-br from-ulomu-gold/10 to-ulomu-gold/20 border-ulomu-gold/30">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-ulomu-gold rounded-lg">
-                <Calendar className="h-5 w-5 text-black" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-ulomu-gold">Due Soon</p>
-                <p className="text-2xl font-bold text-ulomu-gold">{upcomingPayments.length}</p>
-              </div>
-            </div>
-            <p className="text-xs text-ulomu-gold/80">Next 7 days</p>
-          </CardContent>
-        </Card>
+        <ResponsiveDashboardCard
+          title="Due Soon"
+          icon={<Calendar className="h-5 w-5 text-black" />}
+          value={upcomingPayments.length}
+          description="Next 7 days"
+          variant="gold"
+        />
 
-        <Card className="bg-gradient-to-br from-forest/10 to-forest/20 border-forest/30">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-forest rounded-lg">
-                <Home className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-forest">Rental Status</p>
-                <p className="text-lg font-bold text-forest">Active</p>
-              </div>
-            </div>
-            <p className="text-xs text-forest/80">Lease in good standing</p>
-          </CardContent>
-        </Card>
+        <ResponsiveDashboardCard
+          title="Rental Status"
+          icon={<Home className="h-5 w-5 text-white" />}
+          value="Active"
+          description="Lease in good standing"
+          variant="forest"
+        />
       </div>
 
       {/* Quick Actions */}
-      <Card className="bg-white border-ulomu-beige-dark">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-terracotta" />
-            Quick Actions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {quickActions.map((action, index) => (
-              <Card 
-                key={index}
-                className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-l-4 border-l-transparent hover:border-l-terracotta bg-ulomu-beige"
-                onClick={() => navigate(action.route)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className={`p-2 ${action.color} rounded-lg group-hover:scale-110 transition-transform`}>
-                      <action.icon className="h-4 w-4 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{action.label}</h3>
-                      <p className="text-sm text-gray-500">{action.description}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <ResponsiveQuickActions
+        title="Quick Actions"
+        actions={quickActions}
+        roleColor="terracotta"
+      />
 
       {/* Upcoming Payments Alert */}
       {upcomingPayments.length > 0 && (
         <Card className="border-terracotta/30 bg-terracotta/10">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-terracotta">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-terracotta text-lg">
               <AlertTriangle className="h-5 w-5" />
               Upcoming Payments
             </CardTitle>
@@ -179,18 +125,18 @@ const TenantDashboard = () => {
           <CardContent>
             <div className="space-y-3">
               {upcomingPayments.slice(0, 3).map((charge) => (
-                <div key={charge.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-ulomu-beige-dark">
-                  <div>
-                    <p className="font-medium">{charge.description}</p>
+                <div key={charge.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-white rounded-lg border border-ulomu-beige-dark gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate">{charge.description}</p>
                     <p className="text-sm text-gray-500">
                       Due: {new Date(charge.next_due_date).toLocaleDateString()}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2">
                     <p className="font-bold text-terracotta">₦{charge.amount.toLocaleString()}</p>
                     <Button 
                       size="sm" 
-                      className="mt-1 bg-terracotta hover:bg-terracotta/90"
+                      className="bg-terracotta hover:bg-terracotta/90 w-full sm:w-auto"
                       onClick={() => navigate('/escrow')}
                     >
                       Pay Now
@@ -214,27 +160,30 @@ const TenantDashboard = () => {
           </CardHeader>
           <CardContent>
             {transactions.length === 0 ? (
-              <div className="text-center py-8">
-                <CreditCard className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500 mb-4">No payment history yet</p>
-                <Button onClick={() => navigate('/escrow')} className="bg-terracotta hover:bg-terracotta/90">
+              <div className="text-center py-6 sm:py-8">
+                <CreditCard className="h-10 w-10 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 mb-4 text-sm sm:text-base">No payment history yet</p>
+                <Button onClick={() => navigate('/escrow')} className="bg-terracotta hover:bg-terracotta/90 w-full sm:w-auto">
                   Make First Payment
                 </Button>
               </div>
             ) : (
               <div className="space-y-3">
                 {transactions.slice(0, 5).map((transaction) => (
-                  <div key={transaction.id} className="flex items-center justify-between p-3 bg-ulomu-beige rounded-lg">
-                    <div>
-                      <p className="font-medium">{transaction.purpose || transaction.type}</p>
-                      <p className="text-sm text-gray-500">
+                  <div key={transaction.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-ulomu-beige rounded-lg gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate text-sm sm:text-base">{transaction.purpose || transaction.type}</p>
+                      <p className="text-xs sm:text-sm text-gray-500">
                         {new Date(transaction.created_at).toLocaleDateString()}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold">₦{transaction.amount.toLocaleString()}</p>
+                    <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2">
+                      <p className="font-bold text-sm sm:text-base">₦{transaction.amount.toLocaleString()}</p>
                       <Badge 
-                        className={transaction.status === 'COMPLETED' ? 'bg-forest text-white' : 'bg-ulomu-beige-dark text-gray-700'}
+                        className={cn(
+                          "text-xs",
+                          transaction.status === 'COMPLETED' ? 'bg-forest text-white' : 'bg-ulomu-beige-dark text-gray-700'
+                        )}
                       >
                         {transaction.status}
                       </Badge>
