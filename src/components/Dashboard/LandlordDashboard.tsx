@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 import { useEscrowData } from '@/hooks/useEscrowData';
+import { cn } from '@/lib/utils';
 import ResponsiveDashboardCard from './ResponsiveDashboardCard';
 import ResponsiveQuickActions from './ResponsiveQuickActions';
 import { 
