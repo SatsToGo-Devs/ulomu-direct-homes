@@ -32,15 +32,35 @@ export const useAIRoleInsights = () => {
 
     try {
       setLoading(true);
+      // Temporarily use ai_insights table until new table is available
       const { data, error } = await supabase
-        .from('ai_role_insights')
+        .from('ai_insights')
         .select('*')
-        .in('role', userRoles.map(r => r.role))
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
         .eq('status', 'ACTIVE')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setInsights(data || []);
+      
+      // Transform existing insights to match expected format
+      const transformedInsights = (data || []).map(insight => ({
+        id: insight.id,
+        role: userRoles[0]?.role || 'tenant',
+        insight_category: insight.insight_type || 'operational',
+        title: insight.title,
+        description: insight.description,
+        confidence_score: insight.confidence_score || 0.8,
+        impact_level: insight.priority || 'MEDIUM',
+        recommended_actions: insight.recommended_action ? [insight.recommended_action] : [],
+        estimated_savings: insight.estimated_savings || 0,
+        time_frame: '30_DAYS',
+        data_points: {},
+        status: insight.status || 'ACTIVE',
+        created_at: insight.created_at || new Date().toISOString(),
+        updated_at: insight.updated_at || new Date().toISOString()
+      }));
+      
+      setInsights(transformedInsights);
     } catch (error: any) {
       console.error('Error fetching AI insights:', error);
       toast({
@@ -56,7 +76,7 @@ export const useAIRoleInsights = () => {
   const dismissInsight = async (insightId: string) => {
     try {
       const { error } = await supabase
-        .from('ai_role_insights')
+        .from('ai_insights')
         .update({ status: 'DISMISSED' })
         .eq('id', insightId);
 

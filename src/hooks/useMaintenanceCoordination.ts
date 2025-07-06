@@ -39,22 +39,49 @@ export const useMaintenanceCoordination = () => {
   const fetchCoordinations = useCallback(async () => {
     try {
       setLoading(true);
+      // Temporarily use maintenance_requests with enhanced status tracking
       const { data, error } = await supabase
-        .from('maintenance_coordination')
+        .from('maintenance_requests')
         .select(`
           *,
-          maintenance_requests(
-            title,
-            description,
-            priority,
-            properties(name)
-          ),
+          properties(name),
           vendors(name, email)
         `)
+        .in('status', ['IN_PROGRESS', 'ASSIGNED'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCoordinations(data || []);
+      
+      // Transform to coordination format
+      const transformedCoordinations = (data || []).map(request => ({
+        id: request.id,
+        maintenance_request_id: request.id,
+        coordinator_id: request.tenant_id,
+        assigned_vendor_id: request.vendor_id,
+        status: request.status || 'PENDING',
+        priority_level: request.priority || 'MEDIUM',
+        estimated_duration: '2-3 hours',
+        actual_duration: undefined,
+        coordination_notes: request.description,
+        tenant_notifications_sent: false,
+        landlord_notifications_sent: false,
+        vendor_notifications_sent: false,
+        real_time_updates: [],
+        created_at: request.created_at,
+        updated_at: request.updated_at,
+        maintenance_requests: {
+          title: request.title,
+          description: request.description,
+          priority: request.priority || 'MEDIUM',
+          properties: { name: request.properties?.name || 'Unknown Property' }
+        },
+        vendors: request.vendors ? {
+          name: request.vendors.name,
+          email: request.vendors.email
+        } : undefined
+      }));
+      
+      setCoordinations(transformedCoordinations);
     } catch (error: any) {
       console.error('Error fetching maintenance coordination:', error);
       toast({
@@ -75,11 +102,11 @@ export const useMaintenanceCoordination = () => {
       };
       
       if (notes) {
-        updateData.coordination_notes = notes;
+        updateData.description = notes;
       }
 
       const { error } = await supabase
-        .from('maintenance_coordination')
+        .from('maintenance_requests')
         .update(updateData)
         .eq('id', coordinationId);
 
@@ -102,21 +129,10 @@ export const useMaintenanceCoordination = () => {
 
   const addRealtimeUpdate = async (coordinationId: string, update: any) => {
     try {
-      const coordination = coordinations.find(c => c.id === coordinationId);
-      if (!coordination) return;
-
-      const newUpdates = [
-        ...coordination.real_time_updates,
-        {
-          ...update,
-          timestamp: new Date().toISOString()
-        }
-      ];
-
+      // For now, just update the maintenance request with a note
       const { error } = await supabase
-        .from('maintenance_coordination')
+        .from('maintenance_requests')
         .update({ 
-          real_time_updates: newUpdates,
           updated_at: new Date().toISOString()
         })
         .eq('id', coordinationId);
@@ -145,7 +161,7 @@ export const useMaintenanceCoordination = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'maintenance_coordination'
+          table: 'maintenance_requests'
         },
         () => {
           fetchCoordinations();

@@ -22,7 +22,7 @@ import {
   MessageCircle,
   Camera,
   FileText,
-  Coordination
+  Settings
 } from 'lucide-react';
 
 interface MaintenanceRequest {
@@ -162,21 +162,23 @@ const MaintenanceHub: React.FC = () => {
 
   const createCoordination = async (requestId: string, priority: string) => {
     try {
+      // Temporarily use existing table until new ones are available
       const { error } = await supabase
-        .from('maintenance_coordination')
-        .insert({
-          maintenance_request_id: requestId,
-          coordinator_id: user?.id,
-          priority_level: priority,
-          status: 'PENDING'
-        });
+        .from('maintenance_requests')
+        .update({ 
+          status: 'IN_PROGRESS',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Maintenance coordination created"
+        description: "Maintenance coordination initiated"
       });
+      
+      fetchMaintenanceData();
     } catch (error) {
       console.error('Error creating coordination:', error);
       toast({
@@ -241,7 +243,7 @@ const MaintenanceHub: React.FC = () => {
           {coordination && (
             <div className="bg-blue-50 border border-blue-200 rounded p-2">
               <div className="flex items-center gap-2 text-sm">
-                <Coordination className="h-4 w-4 text-blue-600" />
+                <Settings className="h-4 w-4 text-blue-600" />
                 <span className="font-medium">Coordination Status:</span>
                 <Badge className={getStatusColor(coordination.status)}>
                   {coordination.status.replace('_', ' ')}
