@@ -32,8 +32,16 @@ export const useSmartNotifications = () => {
 
       if (error) throw error;
 
-      setNotifications(data || []);
-      setUnreadCount(data?.filter(n => !n.read).length || 0);
+      // Transform the data to match our interface, handling the Json type for metadata
+      const transformedNotifications = (data || []).map(notification => ({
+        ...notification,
+        metadata: typeof notification.metadata === 'string' 
+          ? JSON.parse(notification.metadata) 
+          : (notification.metadata as Record<string, any>) || {}
+      }));
+
+      setNotifications(transformedNotifications);
+      setUnreadCount(transformedNotifications.filter(n => !n.read).length);
     } catch (error: any) {
       console.error('Error fetching notifications:', error);
       toast({
@@ -104,7 +112,13 @@ export const useSmartNotifications = () => {
           table: 'notifications'
         },
         (payload) => {
-          const newNotification = payload.new as SmartNotification;
+          const newNotification = {
+            ...payload.new,
+            metadata: typeof payload.new.metadata === 'string' 
+              ? JSON.parse(payload.new.metadata) 
+              : (payload.new.metadata as Record<string, any>) || {}
+          } as SmartNotification;
+          
           setNotifications(prev => [newNotification, ...prev]);
           setUnreadCount(prev => prev + 1);
           

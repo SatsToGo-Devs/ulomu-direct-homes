@@ -25,7 +25,7 @@ export const useAIRoleInsights = () => {
   const [insights, setInsights] = useState<AIRoleInsight[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { userRoles } = useUserRole();
+  const { userRoles, getPrimaryRole } = useUserRole();
 
   const fetchInsights = useCallback(async () => {
     if (!userRoles.length) return;
@@ -45,7 +45,7 @@ export const useAIRoleInsights = () => {
       // Transform existing insights to match expected format
       const transformedInsights = (data || []).map(insight => ({
         id: insight.id,
-        role: userRoles[0]?.role || 'tenant',
+        role: getPrimaryRole(),
         insight_category: insight.insight_type || 'operational',
         title: insight.title,
         description: insight.description,
@@ -71,7 +71,7 @@ export const useAIRoleInsights = () => {
     } finally {
       setLoading(false);
     }
-  }, [userRoles, toast]);
+  }, [userRoles, toast, getPrimaryRole]);
 
   const dismissInsight = async (insightId: string) => {
     try {
@@ -102,7 +102,7 @@ export const useAIRoleInsights = () => {
       const { data, error } = await supabase.functions.invoke('generate-ai-predictions', {
         body: {
           userId: (await supabase.auth.getUser()).data.user?.id,
-          userRole: userRoles[0]?.role || 'tenant'
+          userRole: getPrimaryRole()
         }
       });
 
