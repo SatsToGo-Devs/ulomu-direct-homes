@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import ChatAssistant from '@/components/AI/ChatAssistant';
 import VendorManagement from '@/components/Vendor/VendorManagement';
+import { useMaintenanceCoordination } from '@/hooks/useMaintenanceCoordination';
+import { useSmartNotifications } from '@/hooks/useSmartNotifications';
 import { 
   Wrench, 
   Bot, 
@@ -20,7 +21,8 @@ import {
   DollarSign,
   MessageCircle,
   Camera,
-  FileText
+  FileText,
+  Coordination
 } from 'lucide-react';
 
 interface MaintenanceRequest {
@@ -56,6 +58,10 @@ const MaintenanceHub: React.FC = () => {
   const [predictions, setPredictions] = useState<MaintenancePrediction[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('requests');
+  
+  // Enhanced with coordination and notifications
+  const { coordinations, updateCoordinationStatus, addRealtimeUpdate } = useMaintenanceCoordination();
+  const { notifications } = useSmartNotifications();
 
   useEffect(() => {
     if (user) {
@@ -154,6 +160,33 @@ const MaintenanceHub: React.FC = () => {
     }
   };
 
+  const createCoordination = async (requestId: string, priority: string) => {
+    try {
+      const { error } = await supabase
+        .from('maintenance_coordination')
+        .insert({
+          maintenance_request_id: requestId,
+          coordinator_id: user?.id,
+          priority_level: priority,
+          status: 'PENDING'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Maintenance coordination created"
+      });
+    } catch (error) {
+      console.error('Error creating coordination:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create coordination",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'pending': return 'bg-yellow-100 text-yellow-800';
@@ -175,82 +208,108 @@ const MaintenanceHub: React.FC = () => {
     }
   };
 
-  const RequestCard: React.FC<{ request: MaintenanceRequest }> = ({ request }) => (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg">{request.title}</CardTitle>
-          <div className="flex gap-2">
-            <Badge className={getStatusColor(request.status)}>
-              {request.status.replace('_', ' ')}
-            </Badge>
-            <Badge className={getPriorityColor(request.priority)}>
-              {request.priority}
-            </Badge>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="text-sm text-gray-600">
-          <p><strong>Property:</strong> {request.properties?.name}</p>
-          {request.units && <p><strong>Unit:</strong> {request.units.unit_number}</p>}
-          {request.category && <p><strong>Category:</strong> {request.category}</p>}
-        </div>
-        
-        {request.description && (
-          <p className="text-sm text-gray-700">{request.description}</p>
-        )}
-
-        {request.vendors && (
-          <div className="flex items-center gap-2 text-sm">
-            <Users className="h-4 w-4" />
-            <span>Assigned to: {request.vendors.name}</span>
-            <div className="flex items-center">
-              {Array.from({ length: 5 }, (_, i) => (
-                <div
-                  key={i}
-                  className={`h-3 w-3 ${
-                    i < Math.floor(request.vendors?.rating || 0) 
-                      ? 'text-yellow-400' 
-                      : 'text-gray-300'
-                  }`}
-                >
-                  ★
-                </div>
-              ))}
+  const RequestCard: React.FC<{ request: MaintenanceRequest }> = ({ request }) => {
+    const coordination = coordinations.find(c => c.maintenance_request_id === request.id);
+    
+    return (
+      <Card className="hover:shadow-md transition-shadow">
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-start">
+            <CardTitle className="text-lg">{request.title}</CardTitle>
+            <div className="flex gap-2">
+              <Badge className={getStatusColor(request.status)}>
+                {request.status.replace('_', ' ')}
+              </Badge>
+              <Badge className={getPriorityColor(request.priority)}>
+                {request.priority}
+              </Badge>
             </div>
           </div>
-        )}
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="text-sm text-gray-600">
+            <p><strong>Property:</strong> {request.properties?.name}</p>
+            {request.units && <p><strong>Unit:</strong> {request.units.unit_number}</p>}
+            {request.category && <p><strong>Category:</strong> {request.category}</p>}
+          </div>
+          
+          {request.description && (
+            <p className="text-sm text-gray-700">{request.description}</p>
+          )}
 
-        <div className="flex justify-between items-center pt-2 border-t text-sm">
-          <span className="text-gray-500">
-            {new Date(request.created_at).toLocaleDateString()}
-          </span>
-          {request.estimated_cost && (
-            <span className="font-medium text-green-600">
-              Est: ${request.estimated_cost.toLocaleString()}
+          {/* Coordination Status */}
+          {coordination && (
+            <div className="bg-blue-50 border border-blue-200 rounded p-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Coordination className="h-4 w-4 text-blue-600" />
+                <span className="font-medium">Coordination Status:</span>
+                <Badge className={getStatusColor(coordination.status)}>
+                  {coordination.status.replace('_', ' ')}
+                </Badge>
+              </div>
+              {coordination.real_time_updates.length > 0 && (
+                <p className="text-xs text-gray-600 mt-1">
+                  Latest: {coordination.real_time_updates[coordination.real_time_updates.length - 1]?.message}
+                </p>
+              )}
+            </div>
+          )}
+
+          {request.vendors && (
+            <div className="flex items-center gap-2 text-sm">
+              <Users className="h-4 w-4" />
+              <span>Assigned to: {request.vendors.name}</span>
+              <div className="flex items-center">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <div
+                    key={i}
+                    className={`h-3 w-3 ${
+                      i < Math.floor(request.vendors?.rating || 0) 
+                        ? 'text-yellow-400' 
+                        : 'text-gray-300'
+                    }`}
+                  >
+                    ★
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-between items-center pt-2 border-t text-sm">
+            <span className="text-gray-500">
+              {new Date(request.created_at).toLocaleDateString()}
             </span>
-          )}
-        </div>
+            {request.estimated_cost && (
+              <span className="font-medium text-green-600">
+                Est: ${request.estimated_cost.toLocaleString()}
+              </span>
+            )}
+          </div>
 
-        <div className="flex gap-2 pt-2">
-          <Button size="sm" variant="outline" className="flex-1">
-            <FileText className="h-3 w-3 mr-1" />
-            Details
-          </Button>
-          <Button size="sm" variant="outline" className="flex-1">
-            <MessageCircle className="h-3 w-3 mr-1" />
-            Chat
-          </Button>
-          {request.status === 'PENDING' && (
-            <Button size="sm" className="bg-terracotta hover:bg-terracotta/90">
-              Assign Vendor
+          <div className="flex gap-2 pt-2">
+            <Button size="sm" variant="outline" className="flex-1">
+              <FileText className="h-3 w-3 mr-1" />
+              Details
             </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
+            <Button size="sm" variant="outline" className="flex-1">
+              <MessageCircle className="h-3 w-3 mr-1" />
+              Chat
+            </Button>
+            {request.status === 'PENDING' && !coordination && (
+              <Button 
+                size="sm" 
+                className="bg-terracotta hover:bg-terracotta/90"
+                onClick={() => createCoordination(request.id, request.priority)}
+              >
+                Coordinate
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   const PredictionCard: React.FC<{ prediction: MaintenancePrediction }> = ({ prediction }) => (
     <Card className="border-l-4 border-l-orange-500">
@@ -358,6 +417,20 @@ const MaintenanceHub: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Enhanced notification banner for urgent items */}
+      {notifications.filter(n => n.priority === 'urgent' && !n.read).length > 0 && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-red-800">
+              <AlertTriangle className="h-5 w-5" />
+              <span className="font-medium">
+                {notifications.filter(n => n.priority === 'urgent' && !n.read).length} urgent notifications requiring attention
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>

@@ -58,6 +58,7 @@ serve(async (req) => {
       .limit(10);
 
     let predictions = [];
+    let roleInsights = [];
 
     // Role-specific prediction prompts
     const getRoleContextPrompt = (roles: string[]) => {
@@ -130,7 +131,7 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'You are an expert property management and business analyst. Provide JSON formatted predictions with fields: predictions (array of objects with title, description, prediction_type, confidence_score (0-1), estimated_cost, predicted_date, prevention_actions (array), priority).'
+            content: 'You are an expert property management and business analyst. Provide JSON formatted predictions with fields: predictions (array of objects with title, description, prediction_type, confidence_score (0-1), estimated_cost, predicted_date, prevention_actions (array), priority), role_insights (array of objects with title, description, insight_category, confidence_score, impact_level, recommended_actions (array), estimated_savings, time_frame).'
           },
           { role: 'user', content: contextPrompt }
         ],
@@ -142,7 +143,7 @@ serve(async (req) => {
     const aiData = await openAIResponse.json();
     const aiPredictions = JSON.parse(aiData.choices[0].message.content);
 
-    // Store predictions in database
+    // Store traditional predictions in ai_predictions table
     for (const prediction of aiPredictions.predictions || []) {
       const predictionType = prediction.prediction_type || (
         roles.includes('admin') ? 'SYSTEM' :
@@ -172,9 +173,59 @@ serve(async (req) => {
       predictions.push(savedPrediction);
     }
 
+    // Store role-specific insights in ai_role_insights table
+    for (const insight of aiPredictions.role_insights || []) {
+      for (const role of roles) {
+        const { data: savedInsight } = await supabase
+          .from('ai_role_insights')
+          .insert({
+            user_id: userId,
+            role: role,
+            insight_category: insight.insight_category || 'operational',
+            title: insight.title,
+            description: insight.description,
+            confidence_score: insight.confidence_score || 0.8,
+            impact_level: insight.impact_level || 'MEDIUM',
+            recommended_actions: insight.recommended_actions || [],
+            estimated_savings: insight.estimated_savings || 0,
+            time_frame: insight.time_frame || '30_DAYS',
+            data_points: {
+              source: 'ai_analysis',
+              generated_at: new Date().toISOString(),
+              maintenance_requests: recentMaintenance?.length || 0,
+              transactions: transactions?.length || 0
+            },
+            status: 'ACTIVE'
+          })
+          .select()
+          .single();
+
+        roleInsights.push(savedInsight);
+
+        // Create smart notifications for high-impact insights
+        if (insight.impact_level === 'HIGH' || insight.impact_level === 'CRITICAL') {
+          await supabase
+            .from('notifications')
+            .insert({
+              user_id: userId,
+              title: 'New AI Insight Available',
+              message: `We've identified a ${insight.insight_category} opportunity: ${insight.title}. Potential savings: $${insight.estimated_savings || 0}.`,
+              type: 'ai_insight',
+              priority: insight.impact_level === 'CRITICAL' ? 'urgent' : 'high',
+              metadata: {
+                insight_id: savedInsight?.id,
+                category: insight.insight_category,
+                estimated_savings: insight.estimated_savings
+              }
+            });
+        }
+      }
+    }
+
     return new Response(JSON.stringify({ 
       predictions,
-      summary: `Generated ${predictions.length} role-specific AI predictions.`,
+      role_insights: roleInsights,
+      summary: `Generated ${predictions.length} predictions and ${roleInsights.length} role-specific insights.`,
       userRole: roles[0] || 'user'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

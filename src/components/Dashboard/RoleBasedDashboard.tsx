@@ -12,6 +12,11 @@ import LandlordDashboard from './LandlordDashboard';
 import VendorDashboard from './VendorDashboard';
 import AdminDashboard from './AdminDashboard';
 
+// Import AI-powered widgets
+import AIInsightsWidget from './AIInsightsWidget';
+import SmartNotificationsWidget from './SmartNotificationsWidget';
+import MaintenanceCoordinationWidget from './MaintenanceCoordinationWidget';
+
 const RoleBasedDashboard = () => {
   const { user } = useAuth();
   const { userRoles, loading, isAdmin, isLandlord, isVendor, isTenant } = useUserRole();
@@ -74,22 +79,39 @@ const RoleBasedDashboard = () => {
     );
   }
 
+  // Enhanced dashboard layout with AI widgets
+  const renderEnhancedDashboard = (MainDashboard: React.ComponentType) => {
+    return (
+      <div className="space-y-6">
+        {/* AI-Powered Widgets Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <AIInsightsWidget />
+          <SmartNotificationsWidget />
+          <MaintenanceCoordinationWidget />
+        </div>
+        
+        {/* Main Dashboard Content */}
+        <MainDashboard />
+      </div>
+    );
+  };
+
   // Determine which dashboard to show based on user's primary role
   // Priority order: admin > landlord > vendor > tenant
   if (isAdmin()) {
-    return <AdminDashboard />;
+    return renderEnhancedDashboard(AdminDashboard);
   }
   
   if (isLandlord()) {
-    return <LandlordDashboard />;
+    return renderEnhancedDashboard(LandlordDashboard);
   }
   
   if (isVendor()) {
-    return <VendorDashboard />;
+    return renderEnhancedDashboard(VendorDashboard);
   }
   
   // Default to tenant dashboard (most common role)
-  return <TenantDashboard />;
+  return renderEnhancedDashboard(TenantDashboard);
 };
 
 export default RoleBasedDashboard;
